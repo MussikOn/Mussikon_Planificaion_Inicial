@@ -23,11 +23,11 @@
 
 ### Registro de Líderes
 
-#### Información Requerida
+#### Información Requerida (MVP)
 - **Datos Personales:**
   - Nombre completo
   - Email
-  - Teléfono
+  - Teléfono (obligatorio, sin validación)
   - Contraseña
   - Confirmación de contraseña
 
@@ -45,11 +45,11 @@
   - Teléfono de contacto
   - Email de contacto
 
-#### Validación
+#### Validación (MVP)
 - **Email:** Verificación por código
-- **Teléfono:** Verificación por SMS
-- **Dirección:** Validación automática
-- **Identidad:** Opcional
+- **Teléfono:** Campo obligatorio, sin validación de existencia
+- **Dirección:** Solo formato básico
+- **Identidad:** No requerida
 
 #### Flujo de Registro
 ```
@@ -63,52 +63,47 @@
 
 ### Registro de Músicos
 
-#### Información Requerida
+#### Información Requerida (MVP)
 - **Datos Personales:**
   - Nombre completo
   - Email
-  - Teléfono
+  - Teléfono (obligatorio, sin validación)
   - Contraseña
   - Confirmación de contraseña
   - Cédula de identidad
 
 - **Información Musical:**
   - Instrumentos que toca (múltiples)
-  - Años de experiencia
+  - Años de experiencia por cada instrumento
   - Géneros musicales
   - Estilo de música cristiana
   - Disponibilidad
 
-- **Referencias:**
+- **Referencias (Opcional en MVP):**
   - Iglesia anterior (opcional)
-  - Pastor de referencia
-  - Teléfono de referencia
-  - Email de referencia
+  - Pastor de referencia (opcional)
+  - Teléfono de referencia (opcional)
+  - Email de referencia (opcional)
 
-- **Portafolio:**
-  - Fotos musicales
-  - Videos de presentación
-  - Audio de muestra
-  - Certificaciones (opcional)
+- **Portafolio:** No requerido en MVP
 
-#### Validación
+#### Validación (MVP)
 - **Email:** Verificación por código
-- **Teléfono:** Verificación por SMS
-- **Cédula:** Validación automática
-- **Referencias:** Verificación manual
-- **Portafolio:** Revisión manual
+- **Teléfono:** Campo obligatorio, sin validación de existencia
+- **Cédula:** Solo formato básico
+- **Referencias:** No validadas en MVP
+- **Portafolio:** No requerido
 
-#### Flujo de Registro
+#### Flujo de Registro (MVP)
 ```
 1. Ingresar datos personales
 2. Seleccionar instrumentos
-3. Ingresar experiencia musical
-4. Agregar referencias
-5. Subir portafolio
-6. Verificar email y teléfono
-7. Enviar para validación
-8. Esperar aprobación (24-48 horas)
-9. Acceso a la app
+3. Ingresar años de experiencia por instrumento
+4. Agregar referencias (opcional)
+5. Verificar email
+6. Enviar para validación
+7. Esperar aprobación (24-48 horas)
+8. Acceso a la app
 ```
 
 ## Sistema de Validación de Músicos

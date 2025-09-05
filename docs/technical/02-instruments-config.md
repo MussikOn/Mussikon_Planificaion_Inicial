@@ -7,24 +7,24 @@
   - Código: GUITAR_ACOUSTIC
   - Nombre: Guitarra Acústica
   - Categoría: Cuerda
-  - Precio mínimo: 600 DOP/hora
-  - Precio máximo: 1,200 DOP/hora
+  - Precio mínimo: 300 DOP/hora
+  - Precio máximo: 1,000 DOP/hora
   - Equipos: Amplificador, cables, púas
 
 - **Guitarra Eléctrica**
   - Código: GUITAR_ELECTRIC
   - Nombre: Guitarra Eléctrica
   - Categoría: Cuerda
-  - Precio mínimo: 600 DOP/hora
-  - Precio máximo: 1,200 DOP/hora
+  - Precio mínimo: 300 DOP/hora
+  - Precio máximo: 1,000 DOP/hora
   - Equipos: Amplificador, cables, púas
 
 - **Bajo Eléctrico**
   - Código: BASS_ELECTRIC
   - Nombre: Bajo Eléctrico
   - Categoría: Cuerda
-  - Precio mínimo: 600 DOP/hora
-  - Precio máximo: 1,200 DOP/hora
+  - Precio mínimo: 300 DOP/hora
+  - Precio máximo: 1,100 DOP/hora
   - Equipos: Amplificador, cables
 
 - **Violín**
@@ -40,16 +40,16 @@
   - Código: PIANO
   - Nombre: Piano
   - Categoría: Teclado
-  - Precio mínimo: 800 DOP/hora
-  - Precio máximo: 1,500 DOP/hora
+  - Precio mínimo: 400 DOP/hora
+  - Precio máximo: 1,100 DOP/hora
   - Equipos: Piano, banqueta
 
 - **Teclado/Órgano**
   - Código: KEYBOARD
   - Nombre: Teclado/Órgano
   - Categoría: Teclado
-  - Precio mínimo: 800 DOP/hora
-  - Precio máximo: 1,500 DOP/hora
+  - Precio mínimo: 400 DOP/hora
+  - Precio máximo: 1,100 DOP/hora
   - Equipos: Teclado, soporte, pedal
 
 ### Instrumentos de Percusión
@@ -57,8 +57,8 @@
   - Código: DRUMS
   - Nombre: Batería
   - Categoría: Percusión
-  - Precio mínimo: 1,000 DOP/hora
-  - Precio máximo: 1,800 DOP/hora
+  - Precio mínimo: 500 DOP/hora
+  - Precio máximo: 1,200 DOP/hora
   - Equipos: Batería completa, platillos
 
 - **Percusión Menor**
@@ -107,7 +107,7 @@
   - Código: VOCAL_LEAD
   - Nombre: Cantante Principal
   - Categoría: Voz
-  - Precio mínimo: 800 DOP/hora
+  - Precio mínimo: 400 DOP/hora
   - Precio máximo: 1,500 DOP/hora
   - Equipos: Micrófono, monitor
 

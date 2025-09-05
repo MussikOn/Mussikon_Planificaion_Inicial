@@ -51,24 +51,19 @@ Bautizo:              1,000 DOP
 
 ## Rangos de Precio
 
-### Servicios por Hora
-- **Guitarrista:** 600 - 1,200 DOP/hora
-- **Pianista:** 800 - 1,500 DOP/hora
-- **Baterista:** 1,000 - 1,800 DOP/hora
-- **Bajista:** 600 - 1,200 DOP/hora
-- **Cantante:** 800 - 1,500 DOP/hora
+### Servicios por Hora (MVP - duración mínima 2 horas)
+- **Guitarrista:** 300 - 1,000 DOP/hora
+- **Pianista:** 400 - 1,100 DOP/hora
+- **Baterista:** 500 - 1,200 DOP/hora
+- **Bajista:** 300 - 1,100 DOP/hora
+- **Cantante:** 400 - 1,500 DOP/hora
 - **Violinista:** 1,000 - 1,800 DOP/hora
-- **Trompetista:** 800 - 1,500 DOP/hora
-- **Saxofonista:** 800 - 1,500 DOP/hora
 
-### Servicios por Evento
-- **Servicio Dominical:** 1,500 - 3,000 DOP
-- **Boda Cristiana:** 3,000 - 8,000 DOP
-- **Conferencia:** 2,000 - 5,000 DOP
+### Servicios por Evento (MVP)
+- **Servicio Dominical:** 850 - 3,000 DOP
+- **Boda Cristiana:** 1,000 - 8,000 DOP
+- **Conferencia:** 900 - 5,000 DOP
 - **Retiro Juvenil:** 1,500 - 4,000 DOP
-- **Evento Especial:** 2,000 - 6,000 DOP
-- **Funeral Cristiano:** 1,500 - 3,500 DOP
-- **Bautizo:** 1,000 - 2,500 DOP
 
 ### Servicios por Duración
 - **Por Hora:** 600 - 1,800 DOP

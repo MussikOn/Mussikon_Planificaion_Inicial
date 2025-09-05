@@ -24,69 +24,30 @@
 
 ### Criterios de Validación
 
-#### Requisitos Obligatorios
+#### Requisitos Obligatorios (MVP)
 - **Datos Personales:**
   - Nombre completo válido
   - Email verificado
-  - Teléfono verificado
-  - Cédula de identidad válida
+  - Teléfono (formato válido, sin verificación)
+  - Cédula de identidad (formato válido)
 
 - **Información Musical:**
   - Al menos 1 instrumento seleccionado
-  - Mínimo 1 año de experiencia
+  - Años de experiencia por cada instrumento
   - Al menos 1 género musical
   - Disponibilidad real
 
-- **Referencias:**
-  - Al menos 1 referencia válida
-  - Contacto verificado
-  - Referencia positiva
+- **Referencias:** No requeridas en MVP
 
-- **Portafolio:**
-  - Al menos 1 video de calidad
-  - Audio de muestra
-  - Fotos musicales
+- **Portafolio:** No requerido en MVP
 
-#### Criterios de Calidad
-
-##### Portafolio Musical
-- **Video de Presentación:**
-  - Duración: 2-5 minutos
-  - Calidad: Mínimo 720p
-  - Contenido: Música cristiana
-  - Audio: Claro y sin distorsión
-
-- **Audio de Muestra:**
-  - Duración: 1-3 minutos
-  - Formato: MP3, WAV
-  - Calidad: Mínimo 128 kbps
-  - Contenido: Música original o covers
-
-- **Fotos Musicales:**
-  - Cantidad: Mínimo 3 fotos
-  - Calidad: Mínimo 1080p
-  - Contenido: Tocando instrumentos
-  - Profesionalidad: Fotos de calidad
-
-##### Referencias
-- **Iglesia Anterior:**
-  - Nombre de la iglesia
-  - Pastor de referencia
-  - Teléfono de contacto
-  - Email de contacto
-  - Período de servicio
-
-- **Verificación de Referencias:**
-  - Llamada telefónica
-  - Email de confirmación
-  - Verificación de identidad
-  - Evaluación de desempeño
+#### Criterios de Calidad (MVP)
 
 ##### Experiencia Musical
-- **Años de Experiencia:**
-  - Mínimo: 1 año
-  - Preferido: 3+ años
-  - Verificación: Referencias
+- **Años de Experiencia por Instrumento:**
+  - Mínimo: 1 año en al menos un instrumento
+  - Preferido: 3+ años en instrumento principal
+  - Verificación: Solo formato de datos
 
 - **Tipos de Experiencia:**
   - Servicios dominicales
@@ -94,6 +55,12 @@
   - Bodas cristianas
   - Conferencias
   - Retiros
+
+##### Validación Simplificada (MVP)
+- **Datos básicos:** Formato correcto
+- **Experiencia:** Años declarados por instrumento
+- **Disponibilidad:** Horarios realistas
+- **Sin verificación externa:** Solo validación de formato
 
 ### Proceso de Revisión
 

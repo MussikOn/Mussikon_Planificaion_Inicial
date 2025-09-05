@@ -43,27 +43,34 @@ Mussikon es una plataforma móvil que conecta músicos cristianos con líderes d
 - [**Configuración de Instrumentos**](./docs/technical/02-instruments-config.md) - Gestión de instrumentos musicales
 - [**Configuración de Roles**](./docs/technical/03-roles-config.md) - Sistema de roles y permisos
 
-## Características Principales
+### 🚀 MVP (Producto Mínimo Viable)
+- [**Documentación MVP**](./docs/mvp/README.md) - Documentación completa del MVP
+- [**Especificaciones MVP**](./docs/mvp/01-mvp-specifications.md) - Funcionalidades y limitaciones del MVP
+- [**Funcionalidades Core**](./docs/mvp/02-core-features.md) - Las 4 funcionalidades esenciales
+- [**Flujos de Usuario MVP**](./docs/mvp/03-user-flows-mvp.md) - Flujos simplificados de usuario
+- [**Arquitectura MVP**](./docs/mvp/04-architecture-mvp.md) - Stack tecnológico simplificado
+
+## Características Principales (MVP)
 
 ### Para Líderes de Iglesias
 - Publicar solicitudes de servicios musicales
 - Establecer presupuesto mínimo (600 DOP)
 - Recibir y evaluar ofertas de músicos
 - Seleccionar la mejor oferta
-- Gestionar eventos y pagos
+- Gestionar eventos básicos
 
 ### Para Músicos
 - Ver solicitudes disponibles
 - Hacer ofertas competitivas
-- Gestionar múltiples instrumentos
+- Gestionar múltiples instrumentos con años de experiencia
 - Validación por administrador
-- Recibir pagos automáticos
+- Registro simplificado (sin portafolio)
 
 ### Para Administradores
 - Validar nuevos músicos
-- Gestionar usuarios y contenido
-- Monitorear transacciones
-- Configurar parámetros del sistema
+- Ver solicitudes pendientes
+- Aprobar/rechazar músicos
+- Gestionar estado de validaciones
 
 ## Moneda y Precios
 
@@ -71,14 +78,14 @@ Mussikon es una plataforma móvil que conecta músicos cristianos con líderes d
 - **Precio Mínimo por Solicitud:** 600 DOP
 - **Comisión de la Plataforma:** 15-20% por transacción
 
-## Tecnologías
+## Tecnologías (MVP)
 
 - **Frontend:** React Native
 - **Backend:** Node.js + Express
-- **Base de Datos:** PostgreSQL
-- **Pagos:** Stripe
-- **Notificaciones:** Firebase
-- **Maps:** Google Maps API
+- **Base de Datos:** SQLite (local)
+- **Pagos:** Manual (fuera de la app)
+- **Notificaciones:** Push nativas básicas
+- **Maps:** Sin integración (solo texto de ubicación)
 
 ## Estado del Proyecto
 

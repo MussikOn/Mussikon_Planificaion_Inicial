@@ -14,30 +14,31 @@
 - **No se permiten solicitudes** por debajo de este monto
 - **Validación automática** en el frontend y backend
 
-#### Rangos de Precio Sugeridos
+#### Rangos de Precio Sugeridos (MVP)
 ```
-Servicios por Hora:
-- Guitarrista: 600-1,200 DOP/hora
-- Pianista: 800-1,500 DOP/hora
-- Baterista: 1,000-1,800 DOP/hora
-- Bajista: 600-1,200 DOP/hora
-- Cantante: 800-1,500 DOP/hora
+Servicios por Hora (duración mínima 2 horas):
+- Guitarrista: 300-1,000 DOP/hora
+- Pianista: 400-1,100 DOP/hora
+- Baterista: 500-1,200 DOP/hora
+- Bajista: 300-1,100 DOP/hora
+- Cantante: 400-1,500 DOP/hora
 - Violinista: 1,000-1,800 DOP/hora
 
 Servicios por Evento:
-- Servicio Dominical: 1,500-3,000 DOP
-- Boda Cristiana: 3,000-8,000 DOP
-- Conferencia: 2,000-5,000 DOP
+- Servicio Dominical: 850-3,000 DOP
+- Boda Cristiana: 1,000-8,000 DOP
+- Conferencia: 900-5,000 DOP
 - Retiro Juvenil: 1,500-4,000 DOP
 ```
 
-### 2. Sistema de Comisiones
+### 2. Sistema de Comisiones (MVP)
 
 #### Comisión de la Plataforma
 - **Porcentaje:** 15-20% del valor total del servicio
 - **Cálculo:** Comisión = (Precio del Servicio × 0.15) o (Precio del Servicio × 0.20)
 - **Mínimo:** 100 DOP por transacción
 - **Máximo:** 2,000 DOP por transacción
+- **Nota MVP:** Los pagos se manejan fuera de la app por ahora
 
 #### Distribución de Pagos
 ```
@@ -49,16 +50,17 @@ Ejemplo: Servicio de 2,000 DOP
 
 ### 3. Validación de Usuarios
 
-#### Líderes de Iglesias
+#### Líderes de Iglesias (MVP)
 - **Registro inmediato** sin validación
-- **Verificación opcional** de identidad
+- **Verificación de email** obligatoria
+- **Teléfono:** Campo obligatorio sin validación
 - **Límite de solicitudes:** 5 activas simultáneamente (gratuito)
-- **Límite premium:** Ilimitado con suscripción
 
-#### Músicos
+#### Músicos (MVP)
 - **Registro pendiente** de validación
 - **Aprobación manual** por administrador
-- **Documentos requeridos:** Cédula, referencias musicales
+- **Documentos requeridos:** Solo cédula
+- **Portafolio:** No requerido en MVP
 - **Tiempo de validación:** 24-48 horas hábiles
 
 ### 4. Sistema de Ofertas
