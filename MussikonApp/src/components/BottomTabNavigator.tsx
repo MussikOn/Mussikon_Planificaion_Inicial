@@ -3,48 +3,54 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native
 import { router, usePathname } from 'expo-router';
 import { theme } from '../theme/theme';
 import ElegantIcon from './ElegantIcon';
+import { useAuth } from '../context/AuthContext';
+import { hasRole, UserRole } from '../hooks/useRolePermissions';
 
 const BottomTabNavigator: React.FC = () => {
   const pathname = usePathname();
+  const { user } = useAuth();
 
-  const tabs = [
+  const allTabs = [
     {
       name: 'Dashboard',
       route: '/dashboard',
       icon: 'home',
-      roles: ['leader', 'musician', 'admin']
+      roles: ['leader', 'musician', 'admin'] as UserRole[]
     },
     {
       name: 'Solicitudes',
       route: '/requests',
       icon: 'requests',
-      roles: ['leader', 'musician']
+      roles: ['leader', 'musician'] as UserRole[]
     },
     {
       name: 'Ofertas',
       route: '/offers',
       icon: 'offers',
-      roles: ['leader', 'musician']
+      roles: ['leader', 'musician'] as UserRole[]
     },
     {
       name: 'Perfil',
       route: '/profile',
       icon: 'profile',
-      roles: ['leader', 'musician', 'admin']
+      roles: ['leader', 'musician', 'admin'] as UserRole[]
     },
     {
       name: 'Admin',
       route: '/admin',
       icon: 'admin',
-      roles: ['admin']
+      roles: ['admin'] as UserRole[]
     },
     {
       name: 'Usuarios',
       route: '/users-management',
       icon: 'users',
-      roles: ['admin']
+      roles: ['admin'] as UserRole[]
     }
   ];
+
+  // Filter tabs based on user role
+  const tabs = allTabs.filter(tab => hasRole(user?.role, tab.roles));
 
   const handleNavigation = (route: string) => {
     router.push(route);

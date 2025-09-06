@@ -14,9 +14,11 @@ import ScreenHeader from '../components/ScreenHeader';
 import { ElegantIcon } from '../components';
 import { router } from 'expo-router';
 import ErrorHandler from '../utils/errorHandler';
+import { useRolePermissions } from '../hooks/useRolePermissions';
 
 const DashboardScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const permissions = useRolePermissions();
 
   return (
     <GradientBackground>
@@ -54,25 +56,19 @@ const DashboardScreen: React.FC = () => {
 
           {/* Quick Actions */}
           <View style={styles.actionsContainer}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={() => {
-                if (user?.role === 'leader') {
-                  router.push('/create-request');
-                } else {
-                  router.push('/requests');
-                }
-              }}
-            >
-              <Text style={styles.actionButtonText}>
-                {user?.role === 'leader' ? 'Nueva Solicitud' : 'Ver Solicitudes'}
-              </Text>
-            </TouchableOpacity>
+            {permissions.canCreateRequests && (
+              <TouchableOpacity 
+                style={styles.actionButton}
+                onPress={() => router.push('/create-request')}
+              >
+                <Text style={styles.actionButtonText}>Nueva Solicitud</Text>
+              </TouchableOpacity>
+            )}
             
             <TouchableOpacity 
               style={styles.actionButtonSecondary}
               onPress={() => {
-                if (user?.role === 'leader') {
+                if (permissions.canCreateRequests) {
                   router.push('/requests');
                 } else {
                   router.push('/offers');
@@ -80,9 +76,18 @@ const DashboardScreen: React.FC = () => {
               }}
             >
               <Text style={styles.actionButtonSecondaryText}>
-                {user?.role === 'leader' ? 'Mis Solicitudes' : 'Mis Ofertas'}
+                {permissions.canCreateRequests ? 'Mis Solicitudes' : 'Mis Ofertas'}
               </Text>
             </TouchableOpacity>
+
+            {permissions.canViewAdminPanel && (
+              <TouchableOpacity 
+                style={[styles.actionButton, { backgroundColor: theme.colors.accent }]}
+                onPress={() => router.push('/admin')}
+              >
+                <Text style={styles.actionButtonText}>Panel Admin</Text>
+              </TouchableOpacity>
+            )}
           </View>
           </View>
 

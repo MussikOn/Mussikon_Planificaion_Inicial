@@ -89,6 +89,13 @@ class ApiService {
           // If we can't parse the error response, use the status text
         }
         
+        // Handle specific error cases
+        if (response.status === 403) {
+          errorMessage = 'Acceso denegado. No tienes permisos para realizar esta acción.';
+        } else if (response.status === 401) {
+          errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+        }
+        
         throw new Error(errorMessage);
       }
 
