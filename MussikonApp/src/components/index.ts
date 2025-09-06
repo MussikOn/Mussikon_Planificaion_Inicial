@@ -1,0 +1,14 @@
+// Exportar todos los componentes
+export { default as Button } from './Button';
+export { default as Input } from './Input';
+export { default as Card } from './Card';
+export { default as Header } from './Header';
+export { default as Loading } from './Loading';
+export { default as Logo } from './Logo';
+export { default as GradientBackground } from './GradientBackground';
+export { default as AppNavigator } from './AppNavigator';
+export { default as TransparentHeader } from './TransparentHeader';
+export { default as BottomTabNavigator } from './BottomTabNavigator';
+export { default as ScreenHeader } from './ScreenHeader';
+export { default as Icon } from './Icon';
+export { default as ElegantIcon } from './ElegantIcon';
