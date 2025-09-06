@@ -634,6 +634,32 @@ class ApiService {
       body: JSON.stringify({ reason }),
     });
   }
+
+  // Balance methods
+  async getUserBalance(token?: string): Promise<{ success: boolean; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/balances/my-balance', token);
+    }
+    return this.makeRequest('/balances/my-balance');
+  }
+
+  async getUserTransactions(filters?: any, token?: string): Promise<{ success: boolean; data?: any[] }> {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          queryParams.append(key, filters[key]);
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/balances/my-transactions?${queryString}` : '/balances/my-transactions';
+    
+    if (token) {
+      return this.makeAuthenticatedRequest(endpoint, token);
+    }
+    return this.makeRequest(endpoint);
+  }
 }
 
 export const apiService = new ApiService();

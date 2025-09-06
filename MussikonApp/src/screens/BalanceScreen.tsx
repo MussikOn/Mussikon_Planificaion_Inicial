@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
 import { ElegantIcon } from '../components';
 import { ErrorHandler } from '../utils/errorHandler';
+import { apiService } from '../services/api';
 
 interface UserBalance {
   id: string;
@@ -67,19 +68,17 @@ const BalanceScreen: React.FC = () => {
 
   const loadBalance = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/balances/my-balance', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch balance');
+      if (!token) {
+        console.error('No token available for balance');
+        return;
       }
 
-      const result = await response.json();
-      setBalance(result.data);
+      const response = await apiService.getUserBalance(token);
+      if (response.success) {
+        setBalance(response.data);
+      } else {
+        console.error('Failed to fetch balance:', response);
+      }
     } catch (error) {
       console.error('Error loading balance:', error);
     }
@@ -87,19 +86,17 @@ const BalanceScreen: React.FC = () => {
 
   const loadTransactions = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/balances/my-transactions?limit=10', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch transactions');
+      if (!token) {
+        console.error('No token available for transactions');
+        return;
       }
 
-      const result = await response.json();
-      setTransactions(result.data || []);
+      const response = await apiService.getUserTransactions({ limit: 10 }, token);
+      if (response.success) {
+        setTransactions(response.data || []);
+      } else {
+        console.error('Failed to fetch transactions:', response);
+      }
     } catch (error) {
       console.error('Error loading transactions:', error);
     }
