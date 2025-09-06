@@ -18,18 +18,22 @@ import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
 import { Button, ElegantIcon } from '../components';
 import ErrorHandler from '../utils/errorHandler';
+import PriceCalculator from '../components/PriceCalculator';
 
 const CreateRequestScreen: React.FC = () => {
   const { user, token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState(new Date());
+  const [selectedStartTime, setSelectedStartTime] = useState(new Date());
+  const [selectedEndTime, setSelectedEndTime] = useState(new Date());
   const [formData, setFormData] = useState({
     event_type: '',
     event_date: '',
-    event_time: '',
+    start_time: '',
+    end_time: '',
     location: '',
     budget: '',
     required_instrument: '',
@@ -73,12 +77,21 @@ const CreateRequestScreen: React.FC = () => {
     }
   };
 
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
+  const handleStartTimeChange = (event: any, selectedTime?: Date) => {
+    setShowStartTimePicker(false);
     if (selectedTime) {
-      setSelectedTime(selectedTime);
+      setSelectedStartTime(selectedTime);
       const timeString = selectedTime.toTimeString().split(' ')[0].substring(0, 5);
-      setFormData(prev => ({ ...prev, event_time: timeString }));
+      setFormData(prev => ({ ...prev, start_time: timeString }));
+    }
+  };
+
+  const handleEndTimeChange = (event: any, selectedTime?: Date) => {
+    setShowEndTimePicker(false);
+    if (selectedTime) {
+      setSelectedEndTime(selectedTime);
+      const timeString = selectedTime.toTimeString().split(' ')[0].substring(0, 5);
+      setFormData(prev => ({ ...prev, end_time: timeString }));
     }
   };
 
@@ -107,8 +120,16 @@ const CreateRequestScreen: React.FC = () => {
       ErrorHandler.showError('Selecciona la fecha del evento', 'Validación');
       return false;
     }
-    if (!formData.event_time) {
-      ErrorHandler.showError('Selecciona la hora del evento', 'Validación');
+    if (!formData.start_time) {
+      ErrorHandler.showError('Selecciona la hora de inicio', 'Validación');
+      return false;
+    }
+    if (!formData.end_time) {
+      ErrorHandler.showError('Selecciona la hora de finalización', 'Validación');
+      return false;
+    }
+    if (formData.start_time >= formData.end_time) {
+      ErrorHandler.showError('La hora de finalización debe ser posterior a la hora de inicio', 'Validación');
       return false;
     }
     if (!formData.location.trim()) {
@@ -138,7 +159,9 @@ const CreateRequestScreen: React.FC = () => {
       
       const requestData = {
         event_type: formData.event_type,
-        event_date: `${formData.event_date}T${formData.event_time}:00.000Z`,
+        event_date: formData.event_date,
+        start_time: formData.start_time,
+        end_time: formData.end_time,
         location: formData.location.trim(),
         budget: parseFloat(formData.budget),
         required_instrument: formData.required_instrument,
@@ -261,25 +284,50 @@ const CreateRequestScreen: React.FC = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Hora del Evento *</Text>
+            <Text style={styles.inputLabel}>Hora de Inicio *</Text>
             {Platform.OS === 'web' ? (
               <View style={styles.webInputContainer}>
                 <ElegantIcon name="clock" size={20} color={theme.colors.primary} />
                 <input
                   type="time"
-                  value={formData.event_time}
-                  onChange={(e) => handleInputChange('event_time', e.target.value)}
+                  value={formData.start_time}
+                  onChange={(e) => handleInputChange('start_time', e.target.value)}
                   style={styles.webTimeInput}
                 />
               </View>
             ) : (
               <TouchableOpacity
                 style={styles.dateTimeButton}
-                onPress={() => setShowTimePicker(true)}
+                onPress={() => setShowStartTimePicker(true)}
               >
                 <ElegantIcon name="clock" size={20} color={theme.colors.primary} />
                 <Text style={styles.dateTimeButtonText}>
-                  {formData.event_time ? formatTime(selectedTime) : 'Seleccionar hora'}
+                  {formData.start_time ? formatTime(selectedStartTime) : 'Seleccionar hora de inicio'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Hora de Finalización *</Text>
+            {Platform.OS === 'web' ? (
+              <View style={styles.webInputContainer}>
+                <ElegantIcon name="clock" size={20} color={theme.colors.primary} />
+                <input
+                  type="time"
+                  value={formData.end_time}
+                  onChange={(e) => handleInputChange('end_time', e.target.value)}
+                  style={styles.webTimeInput}
+                />
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.dateTimeButton}
+                onPress={() => setShowEndTimePicker(true)}
+              >
+                <ElegantIcon name="clock" size={20} color={theme.colors.primary} />
+                <Text style={styles.dateTimeButtonText}>
+                  {formData.end_time ? formatTime(selectedEndTime) : 'Seleccionar hora de finalización'}
                 </Text>
               </TouchableOpacity>
             )}
@@ -307,6 +355,16 @@ const CreateRequestScreen: React.FC = () => {
             />
             <Text style={styles.inputHint}>Mínimo: $600 DOP</Text>
           </View>
+
+          {/* Price Calculator */}
+          {formData.start_time && formData.end_time && (
+            <PriceCalculator
+              startTime={formData.start_time}
+              endTime={formData.end_time}
+              token={token}
+              showDetails={true}
+            />
+          )}
 
           {renderInstrumentSelector()}
 
@@ -350,13 +408,24 @@ const CreateRequestScreen: React.FC = () => {
         />
       )}
 
-      {/* Time Picker */}
-      {showTimePicker && (
+      {/* Start Time Picker */}
+      {showStartTimePicker && (
         <DateTimePicker
-          value={selectedTime}
+          value={selectedStartTime}
           mode="time"
           display={Platform.OS === 'web' ? 'default' : Platform.OS === 'ios' ? 'spinner' : 'default'}
-          onChange={handleTimeChange}
+          onChange={handleStartTimeChange}
+          is24Hour={true}
+        />
+      )}
+
+      {/* End Time Picker */}
+      {showEndTimePicker && (
+        <DateTimePicker
+          value={selectedEndTime}
+          mode="time"
+          display={Platform.OS === 'web' ? 'default' : Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleEndTimeChange}
           is24Hour={true}
         />
       )}

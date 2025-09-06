@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 import GradientBackground from '../components/GradientBackground';
 import { Button } from '../components';
+import RoleSwitcher from '../components/RoleSwitcher';
 import ErrorHandler from '../utils/errorHandler';
 
 const ProfileScreen: React.FC = () => {
@@ -178,6 +179,8 @@ const ProfileScreen: React.FC = () => {
             </Text>
           </View>
 
+
+
           {/* Edit Button */}
           <View style={styles.editButtonContainer}>
             <TouchableOpacity
@@ -241,6 +244,8 @@ const ProfileScreen: React.FC = () => {
               />
             </View>
           )}
+                    {/* Role Switcher for Musicians */}
+                    <RoleSwitcher />tar 
 
           {/* Logout Button */}
           <View style={styles.logoutContainer}>

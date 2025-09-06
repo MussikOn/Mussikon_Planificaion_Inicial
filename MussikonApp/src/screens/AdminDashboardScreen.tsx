@@ -216,6 +216,19 @@ const AdminDashboardScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.actionCard}
                 onPress={() => {
+                  router.push('/pricing-management');
+                }}
+              >
+                <Text style={styles.actionIcon}>💰</Text>
+                <Text style={styles.actionTitle}>Gestión de Tarifas</Text>
+                <Text style={styles.actionDescription}>
+                  Configurar precios y comisiones
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => {
                   // TODO: Navigate to reports
                   console.log('Navigate to reports');
                 }}

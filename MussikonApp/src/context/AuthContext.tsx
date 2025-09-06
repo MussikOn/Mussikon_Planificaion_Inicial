@@ -10,6 +10,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   register: (userData: any) => Promise<boolean>;
+  changeRole: (newRole: 'leader' | 'musician') => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,8 +44,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       ]);
 
       if (storedUser && storedToken) {
+        console.log('Loading stored auth - User:', storedUser ? 'Present' : 'Missing', 'Token:', storedToken ? 'Present' : 'Missing');
         setUser(JSON.parse(storedUser));
         setToken(storedToken);
+      } else {
+        console.log('No stored auth found - User:', storedUser ? 'Present' : 'Missing', 'Token:', storedToken ? 'Present' : 'Missing');
       }
     } catch (error) {
       console.error('Error loading stored auth:', error);
@@ -55,10 +59,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const storeAuth = async (userData: User, authToken: string) => {
     try {
+      console.log('Storing auth data - User:', userData.email, 'Token:', authToken ? 'Present' : 'Missing');
       await Promise.all([
         AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData)),
         AsyncStorage.setItem(STORAGE_KEYS.TOKEN, authToken),
       ]);
+      console.log('Auth data stored successfully');
     } catch (error) {
       console.error('Error storing auth:', error);
     }
@@ -81,6 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await apiService.login({ email, password });
       
       if (response.success) {
+        console.log('Login successful - Storing token:', response.token ? 'Present' : 'Missing');
         setUser(response.user);
         setToken(response.token);
         await storeAuth(response.user, response.token);
@@ -133,6 +140,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const changeRole = async (newRole: 'leader' | 'musician'): Promise<boolean> => {
+    try {
+      if (!token) {
+        throw new Error('No token available');
+      }
+
+      const response = await apiService.changeRole(newRole, token);
+      
+      if (response.success) {
+             // Update user's active role
+             setUser(prevUser => prevUser ? { ...prevUser, active_role: newRole } : null);
+             await storeAuth({ ...user!, active_role: newRole }, token);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Change role error:', error);
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -141,6 +169,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     register,
+    changeRole,
   };
 
   return (

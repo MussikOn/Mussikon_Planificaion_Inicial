@@ -11,6 +11,7 @@ export interface User {
   email: string;
   phone: string;
   role: 'leader' | 'musician' | 'admin';
+  active_role?: 'leader' | 'musician';
   status: 'active' | 'pending' | 'rejected';
   church_name?: string;
   location?: string;
@@ -435,9 +436,9 @@ class ApiService {
   // User History
   async getUserRequests(userId: string, token?: string): Promise<{ success: boolean; data: any[] }> {
     if (token) {
-      return this.makeAuthenticatedRequest(`/users/${userId}/requests`, token);
+      return this.makeAuthenticatedRequest('/requests/my-requests', token);
     }
-    return this.makeRequest(`/users/${userId}/requests`);
+    return this.makeRequest('/requests/my-requests');
   }
 
   async getUserOffers(userId: string, token?: string): Promise<{ success: boolean; data: any[] }> {
@@ -445,6 +446,75 @@ class ApiService {
       return this.makeAuthenticatedRequest(`/users/${userId}/offers`, token);
     }
     return this.makeRequest(`/users/${userId}/offers`);
+  }
+
+  // Change user role
+  async changeRole(newRole: 'leader' | 'musician', token?: string): Promise<{ success: boolean; message: string; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/users/change-role', token, {
+        method: 'POST',
+        body: JSON.stringify({ new_role: newRole }),
+      });
+    }
+    return this.makeRequest('/users/change-role', {
+      method: 'POST',
+      body: JSON.stringify({ new_role: newRole }),
+    });
+  }
+
+  // Pricing Methods
+  async getPricingConfig(token?: string): Promise<{ success: boolean; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/pricing/config', token);
+    }
+    return this.makeRequest('/pricing/config');
+  }
+
+  async updatePricingConfig(config: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/pricing/config', token, {
+        method: 'PUT',
+        body: JSON.stringify(config),
+      });
+    }
+    return this.makeRequest('/pricing/config', {
+      method: 'PUT',
+      body: JSON.stringify(config),
+    });
+  }
+
+  async calculatePrice(startTime: string, endTime: string, customRate?: number, token?: string): Promise<{ success: boolean; data: any }> {
+    const params = new URLSearchParams({
+      start_time: startTime,
+      end_time: endTime
+    });
+    
+    if (customRate) {
+      params.append('custom_rate', customRate.toString());
+    }
+
+    if (token) {
+      return this.makeAuthenticatedRequest(`/pricing/calculate?${params}`, token);
+    }
+    return this.makeRequest(`/pricing/calculate?${params}`);
+  }
+
+  async getPricingHistory(token?: string): Promise<{ success: boolean; data: any[] }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/pricing/history', token);
+    }
+    return this.makeRequest('/pricing/history');
+  }
+
+  async initializeDefaultPricing(token?: string): Promise<{ success: boolean; message: string; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/pricing/initialize', token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest('/pricing/initialize', {
+      method: 'POST',
+    });
   }
 }
 

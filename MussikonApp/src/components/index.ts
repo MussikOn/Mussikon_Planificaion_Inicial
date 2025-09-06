@@ -14,3 +14,4 @@ export { default as Icon } from './Icon';
 export { default as ElegantIcon } from './ElegantIcon';
 export { default as RoleGuard } from './RoleGuard';
 export { default as UserEditModal } from './UserEditModal';
+export { default as RoleSwitcher } from './RoleSwitcher';

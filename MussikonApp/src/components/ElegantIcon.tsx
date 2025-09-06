@@ -65,6 +65,8 @@ const ElegantIcon: React.FC<ElegantIconProps> = ({
     'sort': '↕',
     'refresh': '↻',
     'download': '⬇',
+    'calculator': '🧮',
+    'alert-circle': '⚠',
     'upload': '⬆',
     'send': '➤',
     'receive': '◀',

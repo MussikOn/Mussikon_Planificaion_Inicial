@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform, Text } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { DashboardScreen, RequestsListScreen, OffersListScreen, ProfileScreen } from '../screens';
+import { DashboardScreen, RequestsListScreen, OffersListScreen, ProfileScreen, BalanceScreen } from '../screens';
 
 const Tab = createBottomTabNavigator();
 
@@ -10,7 +10,7 @@ const TabNavigator: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <Tab.Navigator id="TabNavigator"
+    <Tab.Navigator {...({ id: "TabNavigator" } as any)}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -43,7 +43,7 @@ const TabNavigator: React.FC = () => {
         name="Requests"
         component={RequestsListScreen}
         options={{
-          tabBarLabel: user?.role === 'leader' ? 'Mis Solicitudes' : 'Solicitudes',
+           tabBarLabel: (user?.active_role === 'leader' || user?.role === 'leader') ? 'Mis Solicitudes' : 'Solicitudes',
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>📝</Text>
           ),
@@ -54,12 +54,25 @@ const TabNavigator: React.FC = () => {
         name="Offers"
         component={OffersListScreen}
         options={{
-          tabBarLabel: user?.role === 'leader' ? 'Ofertas' : 'Mis Ofertas',
+           tabBarLabel: (user?.active_role === 'leader' || user?.role === 'leader') ? 'Ofertas' : 'Mis Ofertas',
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>💰</Text>
           ),
         }}
       />
+      
+      {user?.role === 'musician' && (
+        <Tab.Screen
+          name="Balance"
+          component={BalanceScreen}
+          options={{
+            tabBarLabel: 'Saldo',
+            tabBarIcon: ({ color }) => (
+              <Text style={{ fontSize: 20, color }}>💳</Text>
+            ),
+          }}
+        />
+      )}
       
       <Tab.Screen
         name="Profile"

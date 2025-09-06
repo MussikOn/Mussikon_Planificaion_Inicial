@@ -28,7 +28,7 @@ const AuthNavigator: React.FC = () => {
   };
 
   return (
-    <Stack.Navigator id="AuthNavigator" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator {...({ id: "AuthNavigator" } as any)} screenOptions={{ headerShown: false }}>
       {currentScreen === 'Welcome' && (
         <Stack.Screen name="Welcome">
           {() => (
