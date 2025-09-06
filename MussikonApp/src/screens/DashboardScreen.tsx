@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { theme } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
@@ -15,19 +16,162 @@ import { ElegantIcon } from '../components';
 import { router } from 'expo-router';
 import ErrorHandler from '../utils/errorHandler';
 import { useRolePermissions } from '../hooks/useRolePermissions';
+import { apiService } from '../services/api';
+import { useNotifications } from '../context/NotificationsContext';
+
+interface DashboardStats {
+  requests: {
+    total: number;
+    active: number;
+    recent: any[];
+  };
+  offers: {
+    total: number;
+    selected: number;
+    recent: any[];
+  };
+  users?: {
+    total: number;
+    musicians: number;
+    leaders: number;
+  };
+}
 
 const DashboardScreen: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, token } = useAuth();
   const permissions = useRolePermissions();
+  const { unreadCount, addNotification } = useNotifications();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [requestsResponse, offersResponse, adminStatsResponse] = await Promise.all([
+        apiService.getRequests({ limit: 5 }, token || undefined),
+        apiService.getOffers({ limit: 5 }, token || undefined),
+        user?.role === 'admin' ? apiService.getAdminStats(token || undefined) : Promise.resolve(null)
+      ]);
+
+      const dashboardStats: DashboardStats = {
+        requests: {
+          total: requestsResponse.data?.length || 0,
+          active: requestsResponse.data?.filter((r: any) => r.status === 'active').length || 0,
+          recent: requestsResponse.data || []
+        },
+        offers: {
+          total: offersResponse.data?.length || 0,
+          selected: offersResponse.data?.filter((o: any) => o.status === 'selected').length || 0,
+          recent: offersResponse.data || []
+        }
+      };
+
+      if (adminStatsResponse?.success) {
+        dashboardStats.users = {
+          total: adminStatsResponse.data.users.total,
+          musicians: adminStatsResponse.data.users.musicians,
+          leaders: adminStatsResponse.data.users.leaders
+        };
+      }
+
+      setStats(dashboardStats);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      ErrorHandler.showError('Error al cargar datos del dashboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+    setRefreshing(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <GradientBackground>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Cargando dashboard...</Text>
+        </View>
+      </GradientBackground>
+    );
+  }
 
   return (
     <GradientBackground>
-      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Header */}
         <ScreenHeader 
           title={`¡Bienvenido, ${user?.name}!`}
-          subtitle={user?.role === 'leader' ? 'Líder de Iglesia' : 'Músico'}
+          subtitle={user?.role === 'leader' ? 'Líder de Iglesia' : user?.role === 'musician' ? 'Músico' : 'Administrador'}
+          rightElement={
+            unreadCount > 0 ? (
+              <TouchableOpacity 
+                style={styles.notificationBadge}
+                onPress={() => router.push('/notifications')}
+              >
+                <ElegantIcon name="bell" size={20} color={theme.colors.white} />
+                {unreadCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{unreadCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ) : null
+          }
         />
+
+        {/* Stats Cards */}
+        {stats && (
+          <View style={styles.statsContainer}>
+            <View style={styles.statsRow}>
+              <View style={styles.statCard}>
+                <ElegantIcon name="requests" size={24} color={theme.colors.primary} />
+                <Text style={styles.statNumber}>{stats.requests.total}</Text>
+                <Text style={styles.statLabel}>Solicitudes</Text>
+                <Text style={styles.statSubLabel}>{stats.requests.active} activas</Text>
+              </View>
+              
+              <View style={styles.statCard}>
+                <ElegantIcon name="offers" size={24} color={theme.colors.success} />
+                <Text style={styles.statNumber}>{stats.offers.total}</Text>
+                <Text style={styles.statLabel}>Ofertas</Text>
+                <Text style={styles.statSubLabel}>{stats.offers.selected} seleccionadas</Text>
+              </View>
+              
+              {stats.users && (
+                <View style={styles.statCard}>
+                  <ElegantIcon name="users" size={24} color={theme.colors.warning} />
+                  <Text style={styles.statNumber}>{stats.users.total}</Text>
+                  <Text style={styles.statLabel}>Usuarios</Text>
+                  <Text style={styles.statSubLabel}>{stats.users.musicians} músicos</Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Main Content */}
         <View style={styles.mainContent}>
@@ -48,76 +192,151 @@ const DashboardScreen: React.FC = () => {
               </View>
               <Text style={styles.cardDescription}>
                 {user?.role === 'leader' 
-                  ? 'Publica solicitudes para eventos y encuentra músicos talentosos para tu iglesia.'
-                  : 'Explora las solicitudes disponibles y haz ofertas para mostrar tu talento musical.'
+                  ? 'Crea solicitudes para encontrar músicos para tus eventos' 
+                  : 'Explora solicitudes y haz ofertas para mostrar tus talentos'
                 }
               </Text>
-            </View>
-
-          {/* Quick Actions */}
-          <View style={styles.actionsContainer}>
-            {permissions.canCreateRequests && (
               <TouchableOpacity 
-                style={styles.actionButton}
-                onPress={() => router.push('/create-request')}
+                style={styles.cardButton}
+                onPress={() => router.push(user?.role === 'leader' ? '/requests' : '/offers')}
               >
-                <Text style={styles.actionButtonText}>Nueva Solicitud</Text>
+                <Text style={styles.cardButtonText}>
+                  {user?.role === 'leader' ? 'Ver Solicitudes' : 'Ver Ofertas'}
+                </Text>
+                <ElegantIcon name="forward" size={16} color={theme.colors.white} />
               </TouchableOpacity>
-            )}
-            
-            <TouchableOpacity 
-              style={styles.actionButtonSecondary}
-              onPress={() => {
-                if (permissions.canCreateRequests) {
-                  router.push('/requests');
-                } else {
-                  router.push('/offers');
-                }
-              }}
-            >
-              <Text style={styles.actionButtonSecondaryText}>
-                {permissions.canCreateRequests ? 'Mis Solicitudes' : 'Mis Ofertas'}
-              </Text>
-            </TouchableOpacity>
-
-            {permissions.canViewAdminPanel && (
-              <TouchableOpacity 
-                style={[styles.actionButton, { backgroundColor: theme.colors.accent }]}
-                onPress={() => router.push('/admin')}
-              >
-                <Text style={styles.actionButtonText}>Panel Admin</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          </View>
-
-          {/* User Info */}
-          <View style={styles.userInfoCard}>
-            <Text style={styles.userInfoTitle}>Información de tu cuenta</Text>
-            <View style={styles.userInfoRow}>
-              <Text style={styles.userInfoLabel}>Email:</Text>
-              <Text style={styles.userInfoValue}>{user?.email}</Text>
             </View>
-            <View style={styles.userInfoRow}>
-              <Text style={styles.userInfoLabel}>Teléfono:</Text>
-              <Text style={styles.userInfoValue}>{user?.phone}</Text>
-            </View>
-            {user?.role === 'leader' && user?.church_name && (
-              <View style={styles.userInfoRow}>
-                <Text style={styles.userInfoLabel}>Iglesia:</Text>
-                <Text style={styles.userInfoValue}>{user.church_name}</Text>
-              </View>
-            )}
-            {user?.role === 'musician' && user?.instruments && user.instruments.length > 0 && (
-              <View style={styles.userInfoRow}>
-                <Text style={styles.userInfoLabel}>Instrumentos:</Text>
-                <Text style={styles.userInfoValue}>
-                  {user.instruments.map(inst => inst.instrument).join(', ')}
+
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <ElegantIcon 
+                  name={user?.role === 'leader' ? 'offers' : 'requests'} 
+                  size={24} 
+                  color={theme.colors.success} 
+                />
+                <Text style={styles.cardTitle}>
+                  {user?.role === 'leader' 
+                    ? 'Revisa las ofertas recibidas' 
+                    : 'Crea una nueva oferta'
+                  }
                 </Text>
               </View>
-            )}
+              <Text style={styles.cardDescription}>
+                {user?.role === 'leader' 
+                  ? 'Ve las propuestas de músicos y selecciona la mejor' 
+                  : 'Responde a solicitudes y muestra tu talento musical'
+                }
+              </Text>
+              <TouchableOpacity 
+                style={styles.cardButton}
+                onPress={() => router.push(user?.role === 'leader' ? '/offers' : '/requests')}
+              >
+                <Text style={styles.cardButtonText}>
+                  {user?.role === 'leader' ? 'Ver Ofertas' : 'Ver Solicitudes'}
+                </Text>
+                <ElegantIcon name="forward" size={16} color={theme.colors.white} />
+              </TouchableOpacity>
+            </View>regla esto 
           </View>
 
+          {/* Recent Activity */}
+          {stats && (stats.requests.recent.length > 0 || stats.offers.recent.length > 0) && (
+            <View style={styles.recentActivityContainer}>
+              <Text style={styles.sectionTitle}>Actividad Reciente</Text>
+              
+              {stats.requests.recent.length > 0 && (
+                <View style={styles.activitySection}>
+                  <Text style={styles.activitySectionTitle}>Solicitudes Recientes</Text>
+                  {stats.requests.recent.slice(0, 3).map((request: any, index: number) => (
+                    <View key={index} style={styles.activityItem}>
+                      <ElegantIcon name="requests" size={16} color={theme.colors.primary} />
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle}>{request.event_type}</Text>
+                        <Text style={styles.activitySubtitle}>
+                          {request.location} • {formatDate(request.event_date)}
+                        </Text>
+                      </View>
+                      <Text style={styles.activityPrice}>${request.budget}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {stats.offers.recent.length > 0 && (
+                <View style={styles.activitySection}>
+                  <Text style={styles.activitySectionTitle}>Ofertas Recientes</Text>
+                  {stats.offers.recent.slice(0, 3).map((offer: any, index: number) => (
+                    <View key={index} style={styles.activityItem}>
+                      <ElegantIcon name="offers" size={16} color={theme.colors.success} />
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle}>
+                          {offer.request?.event_type || 'Oferta'}
+                        </Text>
+                        <Text style={styles.activitySubtitle}>
+                          {offer.musician?.name || 'Músico'} • {formatDate(offer.created_at)}
+                        </Text>
+                      </View>
+                      <Text style={styles.activityPrice}>${offer.proposed_price}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
+
+          {/* Quick Actions */}
+          <View style={styles.quickActionsContainer}>
+            <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
+            <View style={styles.quickActions}>
+              {permissions.canCreateRequests && (
+                <TouchableOpacity 
+                  style={styles.quickActionButton}
+                  onPress={() => router.push('/create-request')}
+                >
+                  <ElegantIcon name="add" size={20} color={theme.colors.primary} />
+                  <Text style={styles.quickActionText}>Nueva Solicitud</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                style={styles.quickActionButton}
+                onPress={() => router.push('/request-history')}
+              >
+                <ElegantIcon name="history" size={20} color={theme.colors.primary} />
+                <Text style={styles.quickActionText}>Historial</Text>
+              </TouchableOpacity>
+
+              {permissions.canCreateOffers && (
+                <TouchableOpacity 
+                  style={styles.quickActionButton}
+                  onPress={() => router.push('/requests')}
+                >
+                  <ElegantIcon name="offers" size={20} color={theme.colors.primary} />
+                  <Text style={styles.quickActionText}>Nueva Oferta</Text>
+                </TouchableOpacity>
+              )}
+              
+              {permissions.canViewAdminPanel && (
+                <TouchableOpacity 
+                  style={styles.quickActionButton}
+                  onPress={() => router.push('/admin')}
+                >
+                  <ElegantIcon name="admin" size={20} color={theme.colors.primary} />
+                  <Text style={styles.quickActionText}>Panel Admin</Text>
+                </TouchableOpacity>
+              )}
+
+              {permissions.canManageUsers && (
+                <TouchableOpacity 
+                  style={styles.quickActionButton}
+                  onPress={() => router.push('/users-management')}
+                >
+                  <ElegantIcon name="users" size={20} color={theme.colors.primary} />
+                  <Text style={styles.quickActionText}>Gestionar Usuarios</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
         </View>
       </ScrollView>
     </GradientBackground>
@@ -127,144 +346,232 @@ const DashboardScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
   contentContainer: {
-    flexGrow: 1,
-    paddingBottom: Platform.OS === 'web' ? 40 : 20,
-    maxWidth: Platform.OS === 'web' ? 800 : undefined,
-    alignSelf: Platform.OS === 'web' ? 'center' : 'stretch',
-    width: Platform.OS === 'web' ? '100%' : undefined,
+    paddingBottom: Platform.OS === 'web' ? 100 : 80,
   },
-  header: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: Platform.OS === 'web' ? 60 : 40,
-    paddingBottom: Platform.OS === 'web' ? 40 : 30,
-    paddingHorizontal: Platform.OS === 'web' ? 40 : 20,
   },
-  welcomeText: {
-    fontSize: Platform.OS === 'web' ? 28 : 24,
-    fontWeight: 'bold',
-    color: theme.colors.text.primary,
-    marginTop: 20,
-    textAlign: 'center',
-  },
-  roleText: {
-    fontSize: Platform.OS === 'web' ? 18 : 16,
-    color: theme.colors.text.secondary,
-    marginTop: 8,
+  loadingText: {
+    fontSize: 18,
+    color: theme.colors.white,
     textAlign: 'center',
   },
   mainContent: {
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 16,
+  },
+  statsContainer: {
+    marginBottom: 24,
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    ...(Platform.OS === 'web' && {
+      justifyContent: 'center',
+    }),
+  },
+  statCard: {
     flex: 1,
-    paddingHorizontal: Platform.OS === 'web' ? 40 : 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 150,
+    }),
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: theme.colors.text.primary,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  statSubLabel: {
+    fontSize: 12,
+    color: theme.colors.text.secondary,
+    marginTop: 2,
   },
   cardsContainer: {
-    flexDirection: Platform.OS === 'web' ? 'row' : 'column',
-    gap: Platform.OS === 'web' ? 24 : 0,
-    marginBottom: Platform.OS === 'web' ? 24 : 0,
+    gap: 16,
+    marginBottom: 24,
+    ...(Platform.OS === 'web' && {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: '16px',
+    }),
   },
   card: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 16,
-    padding: Platform.OS === 'web' ? 24 : 20,
-    marginBottom: Platform.OS === 'web' ? 0 : 24,
+    padding: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
-    flex: Platform.OS === 'web' ? 1 : undefined,
+    shadowRadius: 8,
+    elevation: 4,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    gap: 12,
   },
   cardTitle: {
-    fontSize: Platform.OS === 'web' ? 20 : 18,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: theme.colors.text.primary,
+    marginLeft: 12,
     flex: 1,
   },
   cardDescription: {
-    fontSize: Platform.OS === 'web' ? 16 : 14,
+    fontSize: 14,
     color: theme.colors.text.secondary,
-    lineHeight: Platform.OS === 'web' ? 24 : 20,
-    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 16,
   },
-  actionsContainer: {
-    marginBottom: Platform.OS === 'web' ? 0 : 24,
-    flex: Platform.OS === 'web' ? 1 : undefined,
-  },
-  actionButton: {
+  cardButton: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 12,
-    paddingVertical: Platform.OS === 'web' ? 16 : 14,
-    paddingHorizontal: 24,
-    marginBottom: 12,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    minHeight: Platform.OS === 'web' ? 56 : undefined,
-    justifyContent: 'center',
+    justifyContent: 'space-between',
   },
-  actionButtonText: {
-    color: theme.colors.text.white,
-    fontSize: Platform.OS === 'web' ? 16 : 14,
-    fontWeight: 'bold',
+  cardButtonText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
-  actionButtonSecondary: {
-    backgroundColor: 'transparent',
-    borderRadius: 12,
-    paddingVertical: Platform.OS === 'web' ? 16 : 14,
-    paddingHorizontal: 24,
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    alignItems: 'center',
-    minHeight: Platform.OS === 'web' ? 56 : undefined,
-    justifyContent: 'center',
-  },
-  actionButtonSecondaryText: {
-    color: theme.colors.primary,
-    fontSize: Platform.OS === 'web' ? 16 : 14,
-    fontWeight: 'bold',
-  },
-  userInfoCard: {
-    backgroundColor: theme.colors.white,
-    borderRadius: 16,
-    padding: Platform.OS === 'web' ? 24 : 16,
+  recentActivityContainer: {
     marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.white,
+    marginBottom: 16,
+    ...(Platform.OS === 'web' && {
+      textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)',
+    }),
+  },
+  activitySection: {
+    marginBottom: 16,
+  },
+  activitySectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.white,
+    marginBottom: 12,
+    ...(Platform.OS === 'web' && {
+      textShadow: '0px 1px 2px rgba(0, 0, 0, 0.3)',
+    }),
+  },
+  activityItem: {
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  activityContent: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  activityTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+  },
+  activitySubtitle: {
+    fontSize: 12,
+    color: theme.colors.text.secondary,
+    marginTop: 2,
+  },
+  activityPrice: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.success,
+  },
+  quickActionsContainer: {
+    marginBottom: 24,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    gap: 12,
+    ...(Platform.OS === 'web' && {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '12px',
+    }),
+  },
+  quickActionButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
-    maxWidth: Platform.OS === 'web' ? 600 : undefined,
-    alignSelf: Platform.OS === 'web' ? 'center' : 'stretch',
+    shadowRadius: 4,
+    elevation: 3,
+    ...(Platform.OS === 'web' && {
+      minHeight: 80,
+      cursor: 'pointer',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      ':hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
-  userInfoTitle: {
-    fontSize: Platform.OS === 'web' ? 18 : 16,
-    fontWeight: 'bold',
+  quickActionText: {
+    fontSize: 14,
+    fontWeight: '600',
     color: theme.colors.text.primary,
-    marginBottom: 16,
+    marginTop: 8,
     textAlign: 'center',
   },
-  userInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  notificationBadge: {
+    position: 'relative',
+    padding: 8,
+  },
+  badge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: theme.colors.error,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.lightGray,
   },
-  userInfoLabel: {
-    fontSize: Platform.OS === 'web' ? 14 : 12,
-    color: theme.colors.text.secondary,
-    fontWeight: '500',
-  },
-  userInfoValue: {
-    fontSize: Platform.OS === 'web' ? 14 : 12,
-    color: theme.colors.text.primary,
-    fontWeight: '500',
-    flex: 1,
-    textAlign: 'right',
+  badgeText: {
+    color: theme.colors.white,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

@@ -21,13 +21,13 @@ const BottomTabNavigator: React.FC = () => {
       name: 'Solicitudes',
       route: '/requests',
       icon: 'requests',
-      roles: ['leader', 'musician'] as UserRole[]
+      roles: ['leader', 'musician', 'admin'] as UserRole[]
     },
     {
       name: 'Ofertas',
       route: '/offers',
       icon: 'offers',
-      roles: ['leader', 'musician'] as UserRole[]
+      roles: ['leader', 'musician', 'admin'] as UserRole[]
     },
     {
       name: 'Perfil',
@@ -53,7 +53,7 @@ const BottomTabNavigator: React.FC = () => {
   const tabs = allTabs.filter(tab => hasRole(user?.role, tab.roles));
 
   const handleNavigation = (route: string) => {
-    router.push(route);
+    router.push(route as any);
   };
 
   const isActive = (route: string) => {

@@ -12,8 +12,9 @@ import {
   Montserrat_700Bold,
 } from '@expo-google-fonts/montserrat';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from 'react-native';
 import { AuthProvider, RequestsProvider, OffersProvider, AdminProvider } from '../src/context';
+import { NotificationsProvider } from '../src/context/NotificationsContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -64,9 +65,11 @@ function RootLayoutNav() {
       <RequestsProvider>
         <OffersProvider>
           <AdminProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-              <Stack screenOptions={{ headerShown: false }} />
-            </ThemeProvider>
+            <NotificationsProvider>
+              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                <Stack screenOptions={{ headerShown: false }} />
+              </ThemeProvider>
+            </NotificationsProvider>
           </AdminProvider>
         </OffersProvider>
       </RequestsProvider>

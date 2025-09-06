@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import { ReactNode } from 'react';
 import { theme } from '../theme/theme';
 import Logo from './Logo';
 
@@ -7,35 +8,60 @@ interface ScreenHeaderProps {
   title: string;
   subtitle?: string;
   showLogo?: boolean;
+  rightElement?: ReactNode;
 }
 
 const ScreenHeader: React.FC<ScreenHeaderProps> = ({ 
   title, 
   subtitle, 
-  showLogo = true 
+  showLogo = true,
+  rightElement
 }) => {
   return (
     <View style={styles.container}>
-      {showLogo && (
-        <View style={styles.logoContainer}>
-          <Logo size={Platform.OS === 'web' ? 'medium' : 'small'} />
+      <View style={styles.leftSection}>
+        {showLogo && (
+          <View style={styles.logoContainer}>
+            <Logo size={Platform.OS === 'web' ? 'medium' : 'small'} />
+          </View>
+        )}
+        <View style={styles.titleSection}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        </View>
+      </View>
+      {rightElement && (
+        <View style={styles.rightSection}>
+          {rightElement}
         </View>
       )}
-      <Text style={styles.title}>{title}</Text>
-      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
+  leftSection: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  rightSection: {
+    position: 'absolute',
+    right: 20,
+    top: Platform.OS === 'ios' ? 60 : 40,
+  },
   logoContainer: {
     marginBottom: 16,
+  },
+  titleSection: {
+    alignItems: 'center',
   },
   title: {
     fontSize: Platform.OS === 'web' ? 24 : 20,

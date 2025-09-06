@@ -93,7 +93,12 @@ class ApiService {
         if (response.status === 403) {
           errorMessage = 'Acceso denegado. No tienes permisos para realizar esta acción.';
         } else if (response.status === 401) {
-          errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+          // Check if it's a login endpoint to show appropriate message
+          if (endpoint.includes('/auth/login')) {
+            errorMessage = 'Email o contraseña incorrectos. Verifica tus credenciales.';
+          } else {
+            errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+          }
         }
         
         throw new Error(errorMessage);
@@ -197,37 +202,6 @@ class ApiService {
     });
   }
 
-  async getRequestById(id: string, token?: string): Promise<{ success: boolean; data: any }> {
-    if (token) {
-      return this.makeAuthenticatedRequest(`/requests/${id}`, token);
-    }
-    return this.makeRequest(`/requests/${id}`);
-  }
-
-  async updateRequest(id: string, requestData: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
-    if (token) {
-      return this.makeAuthenticatedRequest(`/requests/${id}`, token, {
-        method: 'PUT',
-        body: JSON.stringify(requestData),
-      });
-    }
-    return this.makeRequest(`/requests/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(requestData),
-    });
-  }
-
-  async deleteRequest(id: string, token?: string): Promise<{ success: boolean; message: string }> {
-    if (token) {
-      return this.makeAuthenticatedRequest(`/requests/${id}`, token, {
-        method: 'DELETE',
-      });
-    }
-    return this.makeRequest(`/requests/${id}`, {
-      method: 'DELETE',
-    });
-  }
-
   // Offers
   async getOffers(filters?: any, token?: string): Promise<{ success: boolean; data: any[] }> {
     const queryParams = new URLSearchParams();
@@ -247,46 +221,11 @@ class ApiService {
     return this.makeRequest(endpoint);
   }
 
-  async createOffer(offerData: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
-    if (token) {
-      return this.makeAuthenticatedRequest('/offers', token, {
-        method: 'POST',
-        body: JSON.stringify(offerData),
-      });
-    }
-    return this.makeRequest('/offers', {
-      method: 'POST',
-      body: JSON.stringify(offerData),
-    });
-  }
-
   async getOfferById(id: string, token?: string): Promise<{ success: boolean; data: any }> {
     if (token) {
       return this.makeAuthenticatedRequest(`/offers/${id}`, token);
     }
     return this.makeRequest(`/offers/${id}`);
-  }
-
-  async selectOffer(id: string, token?: string): Promise<{ success: boolean; message: string }> {
-    if (token) {
-      return this.makeAuthenticatedRequest(`/offers/${id}/select`, token, {
-        method: 'PUT',
-      });
-    }
-    return this.makeRequest(`/offers/${id}/select`, {
-      method: 'PUT',
-    });
-  }
-
-  async rejectOffer(id: string, token?: string): Promise<{ success: boolean; message: string }> {
-    if (token) {
-      return this.makeAuthenticatedRequest(`/offers/${id}/reject`, token, {
-        method: 'PUT',
-      });
-    }
-    return this.makeRequest(`/offers/${id}/reject`, {
-      method: 'PUT',
-    });
   }
 
   // Admin
@@ -339,6 +278,19 @@ class ApiService {
     });
   }
 
+  async updateUser(userId: string, userData: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/admin/users/${userId}`, token, {
+        method: 'PUT',
+        body: JSON.stringify(userData),
+      });
+    }
+    return this.makeRequest(`/admin/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
   async approveMusician(id: string, reason?: string): Promise<{ success: boolean; message: string }> {
     return this.makeRequest(`/admin/musicians/${id}/approve`, {
       method: 'PUT',
@@ -353,7 +305,10 @@ class ApiService {
     });
   }
 
-  async getAdminStats(): Promise<{ success: boolean; data: any }> {
+  async getAdminStats(token?: string): Promise<{ success: boolean; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/admin/stats', token);
+    }
     return this.makeRequest('/admin/stats');
   }
 
@@ -367,6 +322,129 @@ class ApiService {
 
   async getUserById(id: string): Promise<{ success: boolean; data: any }> {
     return this.makeRequest(`/users/${id}`);
+  }
+
+
+  // Notifications
+  async getNotifications(token?: string): Promise<{ success: boolean; data: any[] }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/notifications', token);
+    }
+    return this.makeRequest('/notifications');
+  }
+
+  async markNotificationAsRead(notificationId: string, token?: string): Promise<{ success: boolean }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/notifications/${notificationId}/read`, token, {
+        method: 'PUT'
+      });
+    }
+    return this.makeRequest(`/notifications/${notificationId}/read`, {
+      method: 'PUT'
+    });
+  }
+
+  // Activity History
+  async getActivityHistory(token?: string): Promise<{ success: boolean; data: any[] }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/users/activity', token);
+    }
+    return this.makeRequest('/users/activity');
+  }
+
+  // Request Details
+  async getRequestById(requestId: string, token?: string): Promise<{ success: boolean; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}`, token);
+    }
+    return this.makeRequest(`/requests/${requestId}`);
+  }
+
+  // Offer Management
+  async createOffer(offerData: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest('/offers', token, {
+        method: 'POST',
+        body: JSON.stringify(offerData),
+      });
+    }
+    return this.makeRequest('/offers', {
+      method: 'POST',
+      body: JSON.stringify(offerData),
+    });
+  }
+
+  async selectOffer(offerId: string, token?: string): Promise<{ success: boolean; message: string }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/offers/${offerId}/select`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/offers/${offerId}/select`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectOffer(offerId: string, token?: string): Promise<{ success: boolean; message: string }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/offers/${offerId}/reject`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/offers/${offerId}/reject`, {
+      method: 'POST',
+    });
+  }
+
+  // Request Management
+  async updateRequest(requestId: string, requestData: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}`, token, {
+        method: 'PUT',
+        body: JSON.stringify(requestData),
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}`, {
+      method: 'PUT',
+      body: JSON.stringify(requestData),
+    });
+  }
+
+  async cancelRequest(requestId: string, token?: string): Promise<{ success: boolean; message: string }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/cancel`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}/cancel`, {
+      method: 'POST',
+    });
+  }
+
+  async completeRequest(requestId: string, token?: string): Promise<{ success: boolean; message: string }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/complete`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}/complete`, {
+      method: 'POST',
+    });
+  }
+
+  // User History
+  async getUserRequests(userId: string, token?: string): Promise<{ success: boolean; data: any[] }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/users/${userId}/requests`, token);
+    }
+    return this.makeRequest(`/users/${userId}/requests`);
+  }
+
+  async getUserOffers(userId: string, token?: string): Promise<{ success: boolean; data: any[] }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/users/${userId}/offers`, token);
+    }
+    return this.makeRequest(`/users/${userId}/offers`);
   }
 }
 

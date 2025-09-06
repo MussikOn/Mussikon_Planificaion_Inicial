@@ -63,7 +63,7 @@ const OffersListScreen: React.FC = () => {
       if (response.success) {
         setOffers(response.data || []);
       } else {
-        ErrorHandler.showError(response.message || 'Error al cargar ofertas');
+        ErrorHandler.showError((response as any).message || 'Error al cargar ofertas');
       }
     } catch (error) {
       const errorMessage = ErrorHandler.getErrorMessage(error);
@@ -256,19 +256,19 @@ const OffersListScreen: React.FC = () => {
     <GradientBackground>
       <View style={styles.container}>
         <ScreenHeader
-          title={user?.role === 'leader' ? 'Ofertas Recibidas' : 'Mis Ofertas'}
-          subtitle={user?.role === 'leader' ? 'Gestiona las ofertas de músicos' : 'Gestiona tus ofertas enviadas'}
+          title={user?.role === 'admin' ? 'Todas las Ofertas' : user?.role === 'leader' ? 'Ofertas Recibidas' : 'Mis Ofertas'}
+          subtitle={user?.role === 'admin' ? 'Gestiona todas las ofertas de la plataforma' : user?.role === 'leader' ? 'Gestiona las ofertas de músicos' : 'Gestiona tus ofertas enviadas'}
         />
 
         <View style={styles.contentWrapper}>
           <View style={styles.header}>
-            {user?.role === 'musician' && (
-              <Button
-                title="Nueva Oferta"
-                onPress={() => router.push('/requests')}
-                size="small"
+            {(user?.role === 'musician' || user?.role === 'admin') && (
+              <TouchableOpacity
                 style={styles.newOfferButton}
-              />
+                onPress={() => router.push('/requests')}
+              >
+                <Text style={styles.newOfferButtonText}>Nueva Oferta</Text>
+              </TouchableOpacity>
             )}
           </View>
 
@@ -303,6 +303,11 @@ const OffersListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
   contentWrapper: {
     flex: 1,
@@ -333,6 +338,27 @@ const styles = StyleSheet.create({
   newOfferButton: {
     backgroundColor: theme.colors.white,
     marginLeft: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'transform 0.2s ease',
+      ':hover': {
+        transform: 'translateY(-1px)',
+      },
+    }),
+  },
+  newOfferButtonText: {
+    color: theme.colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
   filterTabs: {
     flexDirection: 'row',
@@ -375,6 +401,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      ':hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
   offerHeader: {
     flexDirection: 'row',

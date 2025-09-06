@@ -99,7 +99,6 @@ const ElegantIcon: React.FC<ElegantIconProps> = ({
     'shield': '🛡',
     'leader': '👑',
     'musician': '🎵',
-    'admin': '⚙',
     
     // Money icons
     'money': '💰',

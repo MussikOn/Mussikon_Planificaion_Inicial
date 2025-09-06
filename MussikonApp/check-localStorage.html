@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar localStorage - Mussikon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Verificador de localStorage - Mussikon</h1>
+        
+        <div class="section info">
+            <h3>Instrucciones:</h3>
+            <ol>
+                <li>Haz login en la aplicación Mussikon</li>
+                <li>Regresa a esta página</li>
+                <li>Haz clic en "Verificar localStorage"</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h3>Controles:</h3>
+            <button onclick="checkLocalStorage()">Verificar localStorage</button>
+            <button onclick="clearLocalStorage()">Limpiar localStorage</button>
+            <button onclick="testLogin()">Probar Login</button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function checkLocalStorage() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            // Verificar claves de AsyncStorage
+            const asyncStorageKeys = [
+                '@mussikon_user',
+                '@mussikon_token'
+            ];
+
+            let html = '<div class="section"><h3>📋 Resultados de localStorage:</h3>';
+
+            asyncStorageKeys.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value) {
+                    try {
+                        const parsed = JSON.parse(value);
+                        html += `<div class="section success">
+                            <h4>✅ ${key}</h4>
+                            <pre>${JSON.stringify(parsed, null, 2)}</pre>
+                        </div>`;
+                    } catch (e) {
+                        html += `<div class="section success">
+                            <h4>✅ ${key}</h4>
+                            <pre>${value}</pre>
+                        </div>`;
+                    }
+                } else {
+                    html += `<div class="section error">
+                        <h4>❌ ${key}</h4>
+                        <p>No encontrado en localStorage</p>
+                    </div>`;
+                }
+            });
+
+            // Verificar todas las claves de localStorage
+            html += '<div class="section info"><h4>🔍 Todas las claves en localStorage:</h4><ul>';
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                html += `<li><strong>${key}</strong>: ${localStorage.getItem(key).substring(0, 100)}${localStorage.getItem(key).length > 100 ? '...' : ''}</li>`;
+            }
+            html += '</ul></div>';
+
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            document.getElementById('results').innerHTML = '<div class="section success"><h4>✅ localStorage limpiado</h4></div>';
+        }
+
+        async function testLogin() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="section info"><h4>🔄 Probando login...</h4></div>';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'astaciosanchezjefryagustin@gmail.com',
+                        password: 'P0pok@tepel01'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Simular el almacenamiento como lo hace la app
+                    localStorage.setItem('@mussikon_user', JSON.stringify(data.user));
+                    localStorage.setItem('@mussikon_token', data.token);
+                    
+                    resultsDiv.innerHTML = `
+                        <div class="section success">
+                            <h4>✅ Login exitoso</h4>
+                            <p>Token almacenado en localStorage</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="section error">
+                            <h4>❌ Error en login</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="section error">
+                        <h4>❌ Error de conexión</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Verificar automáticamente al cargar la página
+        window.onload = function() {
+            checkLocalStorage();
+        };
+    </script>
+</body>
+</html>

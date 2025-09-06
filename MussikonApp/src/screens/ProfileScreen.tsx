@@ -9,6 +9,7 @@ import {
   Platform,
   TextInput,
   TextStyle,
+  Image,
 } from 'react-native';
 import { theme } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
@@ -136,75 +137,84 @@ const ProfileScreen: React.FC = () => {
     <GradientBackground>
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>Mi Perfil</Text>
+          {/* Instagram-style Header */}
+          <View style={styles.profileHeader}>
+            {/* Profile Picture */}
+            <View style={styles.profilePictureContainer}>
+              <Image
+                source={require('../../assets/images/profile.png')}
+                style={styles.profilePicture}
+                resizeMode="cover"
+              />
+            </View>
+
+            {/* Profile Stats */}
+            <View style={styles.profileStats}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>0</Text>
+                <Text style={styles.statLabel}>Solicitudes</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>0</Text>
+                <Text style={styles.statLabel}>Ofertas</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>0</Text>
+                <Text style={styles.statLabel}>Conectados</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Profile Info */}
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{user?.name}</Text>
+            <Text style={styles.profileRole}>
+              {user?.role === 'leader' ? 'Líder Musical' : 
+               user?.role === 'musician' ? 'Músico' : 'Administrador'}
+            </Text>
+            <Text style={styles.profileLocation}>{user?.location}</Text>
+            <Text style={styles.profileStatus}>
+              {user?.status === 'active' ? '🟢 Activo' : '🟡 Pendiente'}
+            </Text>
+          </View>
+
+          {/* Edit Button */}
+          <View style={styles.editButtonContainer}>
             <TouchableOpacity
-              style={styles.editButton}
+              style={styles.editProfileButton}
               onPress={() => setIsEditing(!isEditing)}
             >
-              <Text style={styles.editButtonText}>
-                {isEditing ? 'Cancelar' : 'Editar'}
+              <Text style={styles.editProfileButtonText}>
+                {isEditing ? 'Cancelar' : 'Editar Perfil'}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* User Info */}
+          {/* Profile Details */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Información Personal</Text>
-            {isEditing ? (
-              <>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Nombre Completo</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.name}
-                    onChangeText={(value) => handleInputChange('name', value)}
-                    placeholder="Nombre completo"
-                  />
-                </View>
-                <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Teléfono</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.phone}
-                    onChangeText={(value) => handleInputChange('phone', value)}
-                    placeholder="Teléfono"
-                    keyboardType="phone-pad"
-                  />
-                </View>
-              </>
-            ) : (
-              <>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Nombre:</Text>
-                  <Text style={styles.infoValue}>{user?.name}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Email:</Text>
-                  <Text style={styles.infoValue}>{user?.email}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Teléfono:</Text>
-                  <Text style={styles.infoValue}>{user?.phone}</Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Rol:</Text>
-                  <Text style={styles.infoValue}>
-                    {user?.role === 'leader' ? 'Líder de Iglesia' : 'Músico'}
-                  </Text>
-                </View>
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Estado:</Text>
-                  <Text style={[
-                    styles.infoValue,
-                    { color: user?.status === 'active' ? theme.colors.success : theme.colors.warning }
-                  ]}>
-                    {user?.status === 'active' ? 'Activo' : 'Pendiente'}
-                  </Text>
-                </View>
-              </>
-            )}
+            <Text style={styles.sectionTitle}>Información de Contacto</Text>
+            
+            {/* Email */}
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>📧 Email:</Text>
+              <Text style={styles.infoValue}>{user?.email}</Text>
+            </View>
+
+            {/* Phone */}
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>📱 Teléfono:</Text>
+              {isEditing ? (
+                <TextInput
+                  style={styles.input}
+                  value={formData.phone}
+                  onChangeText={(value) => handleInputChange('phone', value)}
+                  placeholder="Número de teléfono"
+                  keyboardType="phone-pad"
+                />
+              ) : (
+                <Text style={styles.infoValue}>{user?.phone}</Text>
+              )}
+            </View>
           </View>
 
           {/* Church Info (for leaders) */}
@@ -249,45 +259,120 @@ const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 800,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
   content: {
     paddingHorizontal: Platform.OS === 'web' ? 20 : 16,
     paddingVertical: Platform.OS === 'web' ? 20 : 16,
   },
-  header: {
+  // Instagram-style Profile Header
+  profileHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    marginBottom: 20,
   },
-  title: {
-    fontSize: Platform.OS === 'web' ? 28 : 24,
+  profilePictureContainer: {
+    marginRight: 20,
+  },
+  profilePicture: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 3,
+    borderColor: theme.colors.primary,
+  },
+  profileStats: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 20,
     fontWeight: 'bold',
     color: theme.colors.white,
-  } as TextStyle,
-  editButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  editButtonText: {
+  statLabel: {
+    fontSize: 12,
     color: theme.colors.white,
+    marginTop: 4,
+    opacity: 0.8,
+  },
+  profileInfo: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  profileName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: theme.colors.white,
+    marginBottom: 4,
+  },
+  profileRole: {
+    fontSize: 16,
+    color: theme.colors.accent,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  profileLocation: {
     fontSize: 14,
-    fontWeight: '500',
+    color: theme.colors.white,
+    marginBottom: 4,
+    opacity: 0.8,
+  },
+  profileStatus: {
+    fontSize: 14,
+    color: theme.colors.white,
+    opacity: 0.8,
+  },
+  editButtonContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  editProfileButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'background-color 0.2s ease',
+      ':hover': {
+        backgroundColor: theme.colors.primaryDark,
+      },
+    }),
+  },
+  editProfileButtonText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   section: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    ...(Platform.OS === 'web' && {
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+      transition: 'box-shadow 0.2s ease',
+      ':hover': {
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: theme.colors.text.primary,
+    color: theme.colors.primary,
     marginBottom: 16,
   },
   inputContainer: {
@@ -295,8 +380,8 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.text.primary,
+    fontWeight: '600',
+    color: theme.colors.primary,
     marginBottom: 8,
   },
   input: {
@@ -319,12 +404,12 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: theme.colors.text.secondary,
-    fontWeight: '500',
+    color: theme.colors.text.primary,
+    fontWeight: '600',
   },
   infoValue: {
     fontSize: 14,
-    color: theme.colors.text.primary,
+    color: theme.colors.text.secondary,
     fontWeight: '500',
     flex: 1,
     textAlign: 'right',
@@ -337,13 +422,14 @@ const styles = StyleSheet.create({
   },
   instrumentName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: theme.colors.text.primary,
+    fontWeight: '600',
+    color: theme.colors.primary,
     marginBottom: 4,
   },
   experience: {
     fontSize: 14,
     color: theme.colors.text.secondary,
+    fontWeight: '500',
   },
   actionsContainer: {
     marginBottom: 24,

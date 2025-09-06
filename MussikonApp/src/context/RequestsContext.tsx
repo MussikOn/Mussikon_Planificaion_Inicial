@@ -108,7 +108,7 @@ export const RequestsProvider: React.FC<RequestsProviderProps> = ({ children }) 
     try {
       setLoading(true);
       setError(null);
-      const response = await apiService.deleteRequest(id);
+      const response = await apiService.cancelRequest(id);
       if (response.success) {
         // Remove the request from the list
         setRequests(prev => prev.filter(req => req.id !== id));

@@ -2,6 +2,7 @@
 export const colors = {
   // Colores principales
   primary: '#0A2A5F',      // Azul marino principal
+  primaryDark: '#082048',  // Azul marino oscuro
   secondary: '#1F4E8C',    // Azul medio
   accent: '#5A8FD9',       // Azul claro
   white: '#FFFFFF',        // Blanco

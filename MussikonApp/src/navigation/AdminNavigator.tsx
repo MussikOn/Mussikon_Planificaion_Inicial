@@ -6,7 +6,7 @@ const Stack = createStackNavigator();
 
 const AdminNavigator: React.FC = () => {
   return (
-    <Stack.Navigator
+    <Stack.Navigator id="AdminNavigator"
       screenOptions={{
         headerStyle: {
           backgroundColor: '#1f4e8c',

@@ -16,7 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/api';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
-import { Button, ElegantIcon } from '../components';
+import { Button, ElegantIcon, UserEditModal } from '../components';
 import ErrorHandler from '../utils/errorHandler';
 
 interface User {
@@ -42,8 +42,10 @@ const UsersManagementScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [filters, setFilters] = useState({
     role: '',
     status: '',
@@ -61,7 +63,7 @@ const UsersManagementScreen: React.FC = () => {
       if (response.success) {
         setUsers(response.data || []);
       } else {
-        ErrorHandler.showError(response.message || 'Error al cargar usuarios');
+        ErrorHandler.showError((response as any).message || 'Error al cargar usuarios');
       }
     } catch (error) {
       const errorMessage = ErrorHandler.getErrorMessage(error);
@@ -96,7 +98,35 @@ const UsersManagementScreen: React.FC = () => {
   const handleChangePassword = (user: User) => {
     setSelectedUser(user);
     setNewPassword('');
+    setShowPassword(false);
     setShowPasswordModal(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleSaveUser = async (userData: any) => {
+    if (!selectedUser) return;
+
+    try {
+      const response = await apiService.updateUser(
+        selectedUser.id,
+        userData,
+        token || undefined
+      );
+
+      if (response.success) {
+        ErrorHandler.showSuccess('Usuario actualizado exitosamente', 'Éxito');
+        fetchUsers(); // Refresh the list
+      } else {
+        ErrorHandler.showError(response.message || 'Error al actualizar usuario');
+      }
+    } catch (error) {
+      const errorMessage = ErrorHandler.getErrorMessage(error);
+      ErrorHandler.showError(errorMessage, 'Error al actualizar usuario');
+    }
   };
 
   const confirmPasswordChange = async () => {
@@ -122,6 +152,7 @@ const UsersManagementScreen: React.FC = () => {
         setShowPasswordModal(false);
         setSelectedUser(null);
         setNewPassword('');
+        setShowPassword(false);
       } else {
         ErrorHandler.showError(response.message || 'Error al cambiar contraseña');
       }
@@ -235,6 +266,12 @@ const UsersManagementScreen: React.FC = () => {
 
       <View style={styles.userActions}>
         <Button
+          title="Editar Usuario"
+          onPress={() => handleEditUser(item)}
+          size="small"
+          style={styles.actionButton}
+        />
+        <Button
           title="Cambiar Contraseña"
           onPress={() => handleChangePassword(item)}
           size="small"
@@ -337,14 +374,26 @@ const UsersManagementScreen: React.FC = () => {
               Usuario: {selectedUser?.name} ({selectedUser?.email})
             </Text>
 
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Nueva contraseña (mínimo 6 caracteres)"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry={true}
-              autoCapitalize="none"
-            />
+            <View style={styles.passwordInputContainer}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Nueva contraseña (mínimo 6 caracteres)"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                secureTextEntry={!showPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity
+                style={styles.passwordToggle}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <ElegantIcon
+                  name={showPassword ? 'eye-off' : 'eye'}
+                  size={20}
+                  color={theme.colors.text.secondary}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.modalActions}>
@@ -421,6 +470,15 @@ const UsersManagementScreen: React.FC = () => {
       </View>
       {renderFiltersModal()}
       {renderPasswordModal()}
+      <UserEditModal
+        visible={showEditModal}
+        user={selectedUser}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedUser(null);
+        }}
+        onSave={handleSaveUser}
+      />
     </GradientBackground>
   );
 };
@@ -428,10 +486,19 @@ const UsersManagementScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
   contentWrapper: {
     flex: 1,
-    paddingHorizontal: Platform.OS === 'web' ? 20 : 16,
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 16,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 1000,
+      alignSelf: 'center',
+    }),
   },
   loadingContainer: {
     flex: 1,
@@ -447,16 +514,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Platform.OS === 'web' ? 20 : 16,
+    paddingVertical: Platform.OS === 'web' ? 24 : 16,
+    ...(Platform.OS === 'web' && {
+      flexWrap: 'wrap',
+      gap: 16,
+    }),
   },
   headerLeft: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      minWidth: 200,
+    }),
   },
   headerRight: {
     marginLeft: 12,
+    ...(Platform.OS === 'web' && {
+      marginLeft: 0,
+    }),
   },
   userCount: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     color: theme.colors.white,
     fontWeight: '600',
   },
@@ -465,14 +542,23 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.primary,
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: Platform.OS === 'web' ? 20 : 16,
+    paddingVertical: Platform.OS === 'web' ? 12 : 8,
     alignItems: 'center',
     justifyContent: 'center',
+    ...(Platform.OS === 'web' && {
+      minWidth: 120,
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      ':hover': {
+        backgroundColor: theme.colors.primary,
+        transform: 'translateY(-1px)',
+      },
+    }),
   },
   filterButtonText: {
     color: theme.colors.primary,
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     fontWeight: '600',
   },
   modalOverlay: {
@@ -480,142 +566,230 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    ...(Platform.OS === 'web' && {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
+    }),
   },
   modalContainer: {
     backgroundColor: theme.colors.white,
     borderRadius: 16,
-    width: Platform.OS === 'web' ? 500 : '90%',
+    width: Platform.OS === 'web' ? '90%' : '90%',
+    maxWidth: Platform.OS === 'web' ? 600 : '90%',
     maxHeight: '80%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
     elevation: 8,
+    ...(Platform.OS === 'web' && {
+      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    }),
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 20,
+    paddingVertical: Platform.OS === 'web' ? 20 : 16,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.lightGray,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: Platform.OS === 'web' ? 20 : 18,
     fontWeight: '600',
     color: theme.colors.text.primary,
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: Platform.OS === 'web' ? 36 : 32,
+    height: Platform.OS === 'web' ? 36 : 32,
+    borderRadius: Platform.OS === 'web' ? 18 : 16,
     backgroundColor: theme.colors.lightGray,
     justifyContent: 'center',
     alignItems: 'center',
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'background-color 0.2s ease',
+      ':hover': {
+        backgroundColor: theme.colors.error,
+      },
+    }),
   },
   closeButtonText: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     color: theme.colors.text.secondary,
     fontWeight: 'bold',
   },
   modalContent: {
-    padding: 20,
+    padding: Platform.OS === 'web' ? 24 : 20,
   },
   filterRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
+    flexDirection: Platform.OS === 'web' ? 'row' : 'row',
+    gap: Platform.OS === 'web' ? 12 : 8,
+    marginBottom: Platform.OS === 'web' ? 12 : 8,
+    ...(Platform.OS === 'web' && {
+      flexWrap: 'wrap',
+    }),
   },
   filterInput: {
     flex: 1,
     borderWidth: 1,
     borderColor: theme.colors.lightGray,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 13,
+    borderRadius: 8,
+    paddingHorizontal: Platform.OS === 'web' ? 14 : 10,
+    paddingVertical: Platform.OS === 'web' ? 10 : 6,
+    fontSize: Platform.OS === 'web' ? 15 : 13,
     color: theme.colors.text.primary,
+    ...(Platform.OS === 'web' && {
+      minWidth: 200,
+      transition: 'border-color 0.2s ease',
+      ':focus': {
+        borderColor: theme.colors.primary,
+        outline: 'none',
+      },
+    }),
   },
   passwordUserInfo: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     color: theme.colors.text.secondary,
     marginBottom: 16,
   },
+  passwordInputContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   passwordInput: {
+    flex: 1,
     borderWidth: 1,
     borderColor: theme.colors.lightGray,
-    borderRadius: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 14,
+    borderRadius: 8,
+    paddingHorizontal: Platform.OS === 'web' ? 14 : 10,
+    paddingVertical: Platform.OS === 'web' ? 12 : 8,
+    paddingRight: Platform.OS === 'web' ? 50 : 45,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     color: theme.colors.text.primary,
+    ...(Platform.OS === 'web' && {
+      transition: 'border-color 0.2s ease',
+      ':focus': {
+        borderColor: theme.colors.primary,
+        outline: 'none',
+      },
+    }),
+  },
+  passwordToggle: {
+    position: 'absolute',
+    right: Platform.OS === 'web' ? 12 : 10,
+    padding: Platform.OS === 'web' ? 8 : 6,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'opacity 0.2s ease',
+      ':hover': {
+        opacity: 0.7,
+      },
+    }),
   },
   modalActions: {
     flexDirection: 'row',
-    gap: 12,
-    padding: 20,
+    gap: Platform.OS === 'web' ? 16 : 12,
+    padding: Platform.OS === 'web' ? 24 : 20,
     borderTopWidth: 1,
     borderTopColor: theme.colors.lightGray,
+    ...(Platform.OS === 'web' && {
+      justifyContent: 'flex-end',
+    }),
   },
   modalButton: {
-    flex: 1,
+    flex: Platform.OS === 'web' ? 0 : 1,
+    ...(Platform.OS === 'web' && {
+      minWidth: 120,
+    }),
   },
   listContainer: {
-    paddingBottom: Platform.OS === 'web' ? 20 : 16,
+    paddingBottom: Platform.OS === 'web' ? 24 : 16,
     paddingTop: 8,
+    ...(Platform.OS === 'web' && {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
+      gap: '16px',
+    }),
   },
   userCard: {
     backgroundColor: theme.colors.white,
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: Platform.OS === 'web' ? 20 : 16,
+    marginBottom: Platform.OS === 'web' ? 0 : 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    ...(Platform.OS === 'web' && {
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      ':hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+      },
+    }),
   },
   userHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: 12,
+    ...(Platform.OS === 'web' && {
+      flexWrap: 'wrap',
+      gap: 8,
+    }),
   },
   userInfo: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      minWidth: 200,
+    }),
   },
   userName: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     fontWeight: '600',
     color: theme.colors.text.primary,
     marginBottom: 4,
   },
   userEmail: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     color: theme.colors.text.secondary,
+    ...(Platform.OS === 'web' && {
+      wordBreak: 'break-all',
+    }),
   },
   userBadges: {
     flexDirection: 'row',
     gap: 8,
+    ...(Platform.OS === 'web' && {
+      flexWrap: 'wrap',
+    }),
   },
   roleBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: Platform.OS === 'web' ? 10 : 8,
+    paddingVertical: Platform.OS === 'web' ? 6 : 4,
     borderRadius: 12,
   },
   roleText: {
-    fontSize: 12,
+    fontSize: Platform.OS === 'web' ? 13 : 12,
     fontWeight: '600',
     color: theme.colors.white,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: Platform.OS === 'web' ? 10 : 8,
+    paddingVertical: Platform.OS === 'web' ? 6 : 4,
     borderRadius: 12,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: Platform.OS === 'web' ? 13 : 12,
     fontWeight: '600',
     color: theme.colors.white,
   },
@@ -627,10 +801,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 6,
     gap: 8,
+    ...(Platform.OS === 'web' && {
+      flexWrap: 'wrap',
+    }),
   },
   detailText: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     color: theme.colors.text.secondary,
+    ...(Platform.OS === 'web' && {
+      wordBreak: 'break-word',
+    }),
   },
   instrumentsContainer: {
     marginTop: 8,
@@ -639,30 +819,42 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.lightGray,
   },
   instrumentsTitle: {
-    fontSize: 14,
+    fontSize: Platform.OS === 'web' ? 15 : 14,
     fontWeight: '600',
     color: theme.colors.text.primary,
     marginBottom: 4,
   },
   instrumentText: {
-    fontSize: 13,
+    fontSize: Platform.OS === 'web' ? 14 : 13,
     color: theme.colors.text.secondary,
     marginBottom: 2,
   },
   userActions: {
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'flex-end',
+    ...(Platform.OS === 'web' && {
+      flexWrap: 'wrap',
+      marginTop: 8,
+    }),
   },
   actionButton: {
-    minWidth: 140,
+    minWidth: Platform.OS === 'web' ? 140 : 120,
+    ...(Platform.OS === 'web' && {
+      flex: 0,
+    }),
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+    ...(Platform.OS === 'web' && {
+      gridColumn: '1 / -1',
+    }),
   },
   emptyText: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'web' ? 18 : 16,
     color: theme.colors.white,
     textAlign: 'center',
   },

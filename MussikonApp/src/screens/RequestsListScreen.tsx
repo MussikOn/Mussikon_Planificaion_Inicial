@@ -58,11 +58,13 @@ const RequestsListScreen: React.FC = () => {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getRequests(filters, token || undefined);
+      // Admins can see all requests, not just active ones
+      const requestFilters = user?.role === 'admin' ? filters : { ...filters, status: 'active' };
+      const response = await apiService.getRequests(requestFilters, token || undefined);
       if (response.success) {
         setRequests(response.data || []);
       } else {
-        ErrorHandler.showError(response.message || 'Error al cargar solicitudes');
+        ErrorHandler.showError((response as any).message || 'Error al cargar solicitudes');
       }
     } catch (error) {
       const errorMessage = ErrorHandler.getErrorMessage(error);
@@ -111,7 +113,10 @@ const RequestsListScreen: React.FC = () => {
   };
 
   const renderRequest = ({ item }: { item: Request }) => (
-    <TouchableOpacity style={styles.requestCard}>
+    <TouchableOpacity 
+      style={styles.requestCard}
+      onPress={() => router.push(`/request-details?requestId=${item.id}`)}
+    >
       <View style={styles.requestHeader}>
         <Text style={styles.eventType}>{item.event_type}</Text>
         <View style={styles.budgetContainer}>
@@ -151,8 +156,7 @@ const RequestsListScreen: React.FC = () => {
           title={user?.role === 'leader' ? 'Ver Detalles' : 'Hacer Oferta'}
           onPress={() => {
             if (user?.role === 'leader') {
-              // TODO: Navigate to request details
-              ErrorHandler.showWarning('Funcionalidad en desarrollo', 'Próximamente');
+              router.push(`/request-details?requestId=${item.id}`);
             } else {
               router.push(`/create-offer?requestId=${item.id}`);
             }
@@ -254,14 +258,14 @@ const RequestsListScreen: React.FC = () => {
     <GradientBackground>
       <View style={styles.container}>
         <ScreenHeader 
-          title={user?.role === 'leader' ? 'Mis Solicitudes' : 'Solicitudes Disponibles'}
-          subtitle={user?.role === 'leader' ? 'Gestiona tus solicitudes musicales' : 'Encuentra oportunidades musicales'}
+          title={user?.role === 'admin' ? 'Todas las Solicitudes' : user?.role === 'leader' ? 'Mis Solicitudes' : 'Solicitudes Disponibles'}
+          subtitle={user?.role === 'admin' ? 'Gestiona todas las solicitudes de la plataforma' : user?.role === 'leader' ? 'Gestiona tus solicitudes musicales' : 'Encuentra oportunidades musicales'}
         />
         
         <View style={styles.contentWrapper}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
-              {user?.role === 'leader' && (
+              {(user?.role === 'leader' || user?.role === 'admin') && (
                 <TouchableOpacity
                   style={styles.newRequestButton}
                   onPress={() => router.push('/create-request')}
@@ -310,6 +314,11 @@ const RequestsListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 1200,
+      alignSelf: 'center',
+      width: '100%',
+    }),
   },
   contentWrapper: {
     flex: 1,
@@ -457,6 +466,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    ...(Platform.OS === 'web' && {
+      cursor: 'pointer',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      ':hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
   requestHeader: {
     flexDirection: 'row',

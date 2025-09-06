@@ -35,7 +35,7 @@ interface AdminStats {
 }
 
 const AdminDashboardScreen: React.FC = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,9 +46,13 @@ const AdminDashboardScreen: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getAdminStats();
+      console.log('Fetching admin stats with token:', token ? 'Token present' : 'No token');
+      const response = await apiService.getAdminStats(token || undefined);
+      console.log('Admin stats response:', response);
       if (response.success) {
         setStats(response.data);
+      } else {
+        console.error('Failed to fetch stats:', response);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);

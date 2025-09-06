@@ -12,6 +12,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { theme } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationsContext';
 import { apiService } from '../services/api';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
@@ -22,6 +23,7 @@ interface Request {
   id: string;
   event_type: string;
   event_date: string;
+  event_time: string;
   location: string;
   budget: number;
   description: string;
@@ -33,15 +35,19 @@ interface Request {
   };
 }
 
-const CreateOfferScreen: React.FC = () => {
+interface CreateOfferScreenProps {
+  requestId: string;
+}
+
+const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
   const { user, token } = useAuth();
-  const { requestId } = useLocalSearchParams();
-  const [loading, setLoading] = useState(false);
+  const { user: currentUser } = useAuth();
+  const { addNotification } = useNotifications();
   const [request, setRequest] = useState<Request | null>(null);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    price: '',
+    proposed_price: '',
     message: '',
-    availability_confirmed: true,
   });
 
   useEffect(() => {
@@ -52,63 +58,65 @@ const CreateOfferScreen: React.FC = () => {
 
   const fetchRequestDetails = async () => {
     try {
-      setLoading(true);
-      const response = await apiService.getRequests({ id: requestId as string }, token || undefined);
-      if (response.success && response.data && response.data.length > 0) {
-        setRequest(response.data[0]);
+      const response = await apiService.getRequestById(requestId, token);
+      if (response.success) {
+        setRequest(response.data);
       } else {
-        ErrorHandler.showError('Solicitud no encontrada');
+        ErrorHandler.showError('Error al cargar los detalles de la solicitud');
         router.back();
       }
     } catch (error) {
       const errorMessage = ErrorHandler.getErrorMessage(error);
       ErrorHandler.showError(errorMessage, 'Error al cargar solicitud');
       router.back();
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const validateForm = () => {
-    if (!formData.price || parseFloat(formData.price) <= 0) {
-      ErrorHandler.showError('Ingresa un precio válido', 'Validación');
-      return false;
+  const handleSubmit = async () => {
+    if (!formData.proposed_price) {
+      ErrorHandler.showError('Por favor ingresa un precio propuesto');
+      return;
     }
-    if (parseFloat(formData.price) > (request?.budget || 0)) {
-      ErrorHandler.showError('El precio no puede ser mayor al presupuesto de la solicitud', 'Validación');
-      return false;
+
+    const price = parseFloat(formData.proposed_price);
+    if (isNaN(price) || price <= 0) {
+      ErrorHandler.showError('Por favor ingresa un precio válido');
+      return;
     }
-    if (!formData.message.trim()) {
-      ErrorHandler.showError('Ingresa un mensaje personal', 'Validación');
-      return false;
+
+    if (request && price > request.budget) {
+      Alert.alert(
+        'Precio Superior al Presupuesto',
+        `El precio propuesto ($${price.toLocaleString()}) es superior al presupuesto máximo ($${request.budget.toLocaleString()}). ¿Deseas continuar?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Continuar', onPress: () => submitOffer(price) }
+        ]
+      );
+    } else {
+      submitOffer(price);
     }
-    return true;
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm() || !request) return;
-
+  const submitOffer = async (price: number) => {
     try {
       setLoading(true);
-      
-      const offerData = {
-        request_id: request.id,
-        proposed_price: parseFloat(formData.price),
-        message: formData.message.trim(),
-        availability_confirmed: formData.availability_confirmed,
-      };
-
-      const response = await apiService.createOffer(offerData, token || undefined);
+      const response = await apiService.createOffer({
+        request_id: requestId,
+        proposed_price: price,
+        message: formData.message,
+      }, token);
       
       if (response.success) {
-        ErrorHandler.showSuccess('Oferta enviada exitosamente', 'Éxito');
+        ErrorHandler.showSuccess('Oferta enviada exitosamente');
+        addNotification('offer_received', 'Oferta Enviada', 'Tu oferta ha sido enviada exitosamente');
         router.back();
       } else {
-        ErrorHandler.showError(response.message || 'Error al enviar la oferta');
+        ErrorHandler.showError('Error al enviar la oferta');
       }
     } catch (error) {
       const errorMessage = ErrorHandler.getErrorMessage(error);
@@ -121,34 +129,25 @@ const CreateOfferScreen: React.FC = () => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
       year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
-  const formatPrice = (price: number) => {
-    return `$${price.toLocaleString('es-DO')} DOP`;
+  const formatTime = (timeString: string) => {
+    const time = new Date(`2000-01-01T${timeString}`);
+    return time.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
-
-  if (loading && !request) {
-    return (
-      <GradientBackground>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando solicitud...</Text>
-        </View>
-      </GradientBackground>
-    );
-  }
 
   if (!request) {
     return (
       <GradientBackground>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Solicitud no encontrada</Text>
-          <Button title="Volver" onPress={() => router.back()} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Cargando detalles...</Text>
         </View>
       </GradientBackground>
     );
@@ -156,97 +155,111 @@ const CreateOfferScreen: React.FC = () => {
 
   return (
     <GradientBackground>
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        <ScreenHeader 
+      <ScrollView style={styles.container}>
+        <ScreenHeader
           title="Hacer Oferta"
-          subtitle="Propon tu servicio para esta solicitud musical"
+          subtitle={request.event_type}
         />
 
-        <View style={styles.requestCard}>
-          <Text style={styles.requestTitle}>{request.event_type}</Text>
-          <View style={styles.requestInfoRow}>
-            <ElegantIcon name="music" size={16} color={theme.colors.text.secondary} />
-            <Text style={styles.requestInstrument}>{request.required_instrument}</Text>
-          </View>
-          <View style={styles.requestInfoRow}>
-            <ElegantIcon name="calendar" size={16} color={theme.colors.text.secondary} />
-            <Text style={styles.requestDate}>{formatDate(request.event_date)}</Text>
-          </View>
-          <View style={styles.requestInfoRow}>
-            <ElegantIcon name="location" size={16} color={theme.colors.text.secondary} />
-            <Text style={styles.requestLocation}>{request.location}</Text>
-          </View>
-          <View style={styles.requestInfoRow}>
-            <ElegantIcon name="money" size={16} color={theme.colors.primary} />
-            <Text style={styles.requestBudget}>Presupuesto: {formatPrice(request.budget)}</Text>
-          </View>
-          
-          {request.description && (
-            <Text style={styles.requestDescription}>{request.description}</Text>
-          )}
-          
-          <View style={styles.leaderInfo}>
-            <Text style={styles.leaderName}>{request.leader.name}</Text>
-            <Text style={styles.churchName}>{request.leader.church_name}</Text>
-          </View>
-        </View>
+        <View style={styles.content}>
+          {/* Request Summary */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Resumen de la Solicitud</Text>
+            
+            <View style={styles.requestCard}>
+              <View style={styles.requestHeader}>
+                <Text style={styles.eventType}>{request.event_type}</Text>
+                <Text style={styles.budget}>${request.budget.toLocaleString()} DOP</Text>
+              </View>
 
-        <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Precio Propuesto (DOP) *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.price}
-              onChangeText={(value) => handleInputChange('price', value)}
-              placeholder="0"
-              keyboardType="numeric"
-            />
-            <Text style={styles.inputHint}>
-              Máximo: {formatPrice(request.budget)}
-            </Text>
-          </View>
+              <View style={styles.requestDetails}>
+                <View style={styles.detailItem}>
+                  <ElegantIcon name="calendar" size={16} color={theme.colors.primary} />
+                  <Text style={styles.detailText}>{formatDate(request.event_date)}</Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <ElegantIcon name="clock" size={16} color={theme.colors.primary} />
+                  <Text style={styles.detailText}>{formatTime(request.event_time)}</Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <ElegantIcon name="location" size={16} color={theme.colors.primary} />
+                  <Text style={styles.detailText}>{request.location}</Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <ElegantIcon name="music" size={16} color={theme.colors.primary} />
+                  <Text style={styles.detailText}>{request.required_instrument}</Text>
+                </View>
+              </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Mensaje Personal *</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={formData.message}
-              onChangeText={(value) => handleInputChange('message', value)}
-              placeholder="Presenta tu experiencia, disponibilidad y por qué eres la mejor opción para este evento..."
-              multiline
-              numberOfLines={4}
-            />
-          </View>
+              <View style={styles.leaderInfo}>
+                <Text style={styles.leaderLabel}>Líder:</Text>
+                <Text style={styles.leaderName}>{request.leader.name}</Text>
+                <Text style={styles.churchName}>{request.leader.church_name}</Text>
+              </View>
 
-          <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => handleInputChange('availability_confirmed', !formData.availability_confirmed)}
-          >
-            <View style={[
-              styles.checkbox,
-              formData.availability_confirmed && styles.checkboxChecked
-            ]}>
-              {formData.availability_confirmed && (
-                <Text style={styles.checkmark}>✓</Text>
+              {request.description && (
+                <View style={styles.descriptionContainer}>
+                  <Text style={styles.descriptionLabel}>Descripción:</Text>
+                  <Text style={styles.descriptionText}>{request.description}</Text>
+                </View>
               )}
             </View>
-            <Text style={styles.checkboxLabel}>
-              Confirmo mi disponibilidad para esta fecha y hora
-            </Text>
-          </TouchableOpacity>
+          </View>
 
-          <View style={styles.buttonContainer}>
-            <Button
-              title="Enviar Oferta"
-              onPress={handleSubmit}
-              loading={loading}
-              style={styles.submitButton}
-            />
+          {/* Offer Form */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tu Oferta</Text>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.inputLabel}>Precio Propuesto (DOP) *</Text>
+              <View style={styles.priceInputContainer}>
+                <Text style={styles.currencySymbol}>$</Text>
+                <TextInput
+                  style={styles.priceInput}
+                  value={formData.proposed_price}
+                  onChangeText={(value) => handleInputChange('proposed_price', value)}
+                  placeholder="0"
+                  keyboardType="numeric"
+                  placeholderTextColor={theme.colors.text.hint}
+                />
+              </View>
+              <Text style={styles.inputHint}>
+                Presupuesto máximo: ${request.budget.toLocaleString()} DOP
+              </Text>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.inputLabel}>Mensaje Personal (Opcional)</Text>
+              <TextInput
+                style={styles.messageInput}
+                value={formData.message}
+                onChangeText={(value) => handleInputChange('message', value)}
+                placeholder="Escribe un mensaje personal para el líder..."
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+                placeholderTextColor={theme.colors.text.hint}
+              />
+              <Text style={styles.inputHint}>
+                {formData.message.length}/500 caracteres
+              </Text>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionsContainer}>
             <Button
               title="Cancelar"
               onPress={() => router.back()}
               variant="outline"
               style={styles.cancelButton}
+            />
+            <Button
+              title="Enviar Oferta"
+              onPress={handleSubmit}
+              loading={loading}
+              disabled={loading || !formData.proposed_price}
+              style={styles.submitButton}
             />
           </View>
         </View>
@@ -258,6 +271,14 @@ const CreateOfferScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 600,
+      alignSelf: 'center',
+      width: '100%',
+    }),
+  },
+  content: {
+    padding: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -266,154 +287,152 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 18,
-    color: theme.colors.text.white,
-    textAlign: 'center',
+    color: theme.colors.white,
   },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  errorText: {
-    fontSize: 18,
-    color: theme.colors.text.white,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  requestCard: {
+  section: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 12,
     padding: 16,
-    marginHorizontal: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 16,
+    ...(Platform.OS === 'web' && {
+      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    }),
   },
-  requestTitle: {
+  sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.text.primary,
-    marginBottom: 12,
-  },
-  requestInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
-  },
-  requestInstrument: {
-    fontSize: 14,
-    color: theme.colors.text.secondary,
-  },
-  requestDate: {
-    fontSize: 14,
-    color: theme.colors.text.secondary,
-  },
-  requestLocation: {
-    fontSize: 14,
-    color: theme.colors.text.secondary,
-  },
-  requestBudget: {
-    fontSize: 16,
     fontWeight: '600',
     color: theme.colors.primary,
+    marginBottom: 16,
   },
-  requestDescription: {
-    fontSize: 14,
+  requestCard: {
+    backgroundColor: theme.colors.white,
+    borderRadius: 8,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.lightGray,
+  },
+  requestHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  eventType: {
+    fontSize: 18,
+    fontWeight: '600',
     color: theme.colors.text.primary,
-    lineHeight: 20,
-    marginBottom: 12,
   },
-  leaderInfo: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.lightGray,
-    paddingTop: 8,
+  budget: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
   },
-  leaderName: {
+  requestDetails: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  detailText: {
     fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.text.primary,
-  },
-  churchName: {
-    fontSize: 12,
     color: theme.colors.text.secondary,
   },
-  formContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
+  leaderInfo: {
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.lightGray,
   },
-  inputGroup: {
+  leaderLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+    marginBottom: 4,
+  },
+  leaderName: {
+    fontSize: 16,
+    color: theme.colors.text.primary,
+    fontWeight: '500',
+  },
+  churchName: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+  },
+  descriptionContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.lightGray,
+  },
+  descriptionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text.primary,
+    marginBottom: 8,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+    lineHeight: 20,
+  },
+  formGroup: {
     marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.text.white,
+    color: theme.colors.text.primary,
     marginBottom: 8,
   },
-  input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  priceInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.lightGray,
     borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: theme.colors.white,
+  },
+  currencySymbol: {
     fontSize: 16,
     color: theme.colors.text.primary,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginRight: 4,
   },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
+  priceInput: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.colors.text.primary,
+    paddingVertical: 12,
+  },
+  messageInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.lightGray,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: theme.colors.text.primary,
+    backgroundColor: theme.colors.white,
+    minHeight: 100,
   },
   inputHint: {
     fontSize: 12,
-    color: theme.colors.text.white,
+    color: theme.colors.text.hint,
     marginTop: 4,
-    opacity: 0.8,
   },
-  checkboxContainer: {
+  actionsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: theme.colors.text.white,
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  checkmark: {
-    color: theme.colors.text.white,
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  checkboxLabel: {
-    fontSize: 14,
-    color: theme.colors.text.white,
-    flex: 1,
-  },
-  buttonContainer: {
-    marginTop: 32,
     gap: 12,
-  },
-  submitButton: {
-    backgroundColor: theme.colors.primary,
+    marginTop: 20,
   },
   cancelButton: {
-    backgroundColor: 'transparent',
-    borderColor: theme.colors.text.white,
+    flex: 1,
+    borderColor: theme.colors.primary,
+  },
+  submitButton: {
+    flex: 1,
+    backgroundColor: theme.colors.primary,
   },
 });
 
