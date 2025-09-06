@@ -3,12 +3,16 @@ import { v4 as uuidv4 } from 'uuid';
 import supabase from '../config/database';
 import { AppError, createError } from '../utils/errorHandler';
 import { CreateOfferRequest } from '../types';
+import { balanceService } from '../services/balanceService';
+import { availabilityService } from '../services/availabilityService';
+import { socketService } from '../server';
 
 export class OfferController {
   // Get offers with filters
   public getOffers = async (req: Request, res: Response): Promise<void> => {
     try {
-      // const userId = (req as any).user.userId;
+      const userId = (req as any).user.userId;
+      const userRole = (req as any).user.role;
       const { request_id, status } = req.query;
 
       let query = supabase
@@ -22,6 +26,15 @@ export class OfferController {
           musician:users!offers_musician_id_fkey(id, name, phone, location)
         `)
         .order('created_at', { ascending: false });
+
+      // Si el usuario es músico, solo mostrar sus propias ofertas
+      if (userRole === 'musician') {
+        query = query.eq('musician_id', userId);
+      }
+      // Si el usuario es líder, solo mostrar ofertas de sus propias solicitudes
+      else if (userRole === 'leader') {
+        query = query.eq('request.leader_id', userId);
+      }
 
       // Apply filters
       if (request_id) {
@@ -57,6 +70,105 @@ export class OfferController {
     }
   };
 
+  // Get leader's offers (offers for their requests)
+  public getLeaderOffers = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = (req as any).user.userId;
+      const { status } = req.query;
+
+      let query = supabase
+        .from('offers')
+        .select(`
+          *,
+          request:requests!offers_request_id_fkey(
+            *,
+            leader:users!requests_leader_id_fkey(id, name, church_name, location)
+          ),
+          musician:users!offers_musician_id_fkey(id, name, phone, location)
+        `)
+        .eq('request.leader_id', userId)
+        .order('created_at', { ascending: false });
+
+      // Apply filters
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data: offers, error } = await query;
+
+      if (error) {
+        throw createError('Failed to fetch leader offers', 500);
+      }
+
+      res.status(200).json({
+        success: true,
+        data: offers || []
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message
+        });
+      } else {
+        console.error('Get leader offers error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error'
+        });
+      }
+    }
+  };
+
+  // Get musician's own offers
+  public getMusicianOffers = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = (req as any).user.userId;
+      const { status } = req.query;
+
+      let query = supabase
+        .from('offers')
+        .select(`
+          *,
+          request:requests!offers_request_id_fkey(
+            *,
+            leader:users!requests_leader_id_fkey(id, name, church_name, location)
+          )
+        `)
+        .eq('musician_id', userId)
+        .order('created_at', { ascending: false });
+
+      // Apply status filter if provided
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data: offers, error } = await query;
+
+      if (error) {
+        throw createError('Failed to fetch musician offers', 500);
+      }
+
+      res.status(200).json({
+        success: true,
+        data: offers || []
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message
+        });
+      } else {
+        console.error('Get musician offers error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error'
+        });
+      }
+    }
+  };
+
   // Create new offer
   public createOffer = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -66,7 +178,7 @@ export class OfferController {
       // Check if user is a musician
       const { data: user } = await supabase
         .from('users')
-        .select('role, status')
+        .select('role, active_role, status')
         .eq('id', userId)
         .single();
 
@@ -81,7 +193,7 @@ export class OfferController {
       // Check if request exists and is active
       const { data: request } = await supabase
         .from('requests')
-        .select('id, status, leader_id')
+        .select('id, status, leader_id, event_date, start_time, end_time')
         .eq('id', offerData.request_id)
         .single();
 
@@ -91,6 +203,18 @@ export class OfferController {
 
       if (request.status !== 'active') {
         throw createError('Request is not active', 400);
+      }
+
+      // Check musician availability
+      const availability = await availabilityService.checkAvailability({
+        musician_id: userId,
+        date: request.event_date,
+        start_time: request.start_time,
+        end_time: request.end_time
+      });
+
+      if (!availability.is_available) {
+        throw createError(availability.message, 400);
       }
 
       // Check if musician already made an offer for this request
@@ -128,6 +252,14 @@ export class OfferController {
 
       if (error) {
         throw createError('Failed to create offer', 500);
+      }
+
+      // Notify the leader about the new offer
+      try {
+        socketService.notifyNewOffer(request.leader_id, offer);
+      } catch (notificationError) {
+        console.error('Error sending notification:', notificationError);
+        // Don't fail the offer creation if notification fails
       }
 
       res.status(201).json({
@@ -204,7 +336,7 @@ export class OfferController {
         .from('offers')
         .select(`
           *,
-          request:requests!offers_request_id_fkey(leader_id, status)
+          request:requests!offers_request_id_fkey(leader_id, status, event_date, start_time, end_time)
         `)
         .eq('id', id)
         .single();
@@ -247,6 +379,23 @@ export class OfferController {
 
       if (rejectError) {
         console.error('Failed to reject other offers:', rejectError);
+      }
+
+      // Block musician availability
+      await availabilityService.blockAvailability(
+        offer.musician_id,
+        offer.request.event_date,
+        offer.request.start_time,
+        offer.request.end_time,
+        offer.request_id
+      );
+
+      // Process earning for the musician
+      try {
+        await balanceService.processEarning(offer.id, offer.request_id);
+      } catch (balanceError) {
+        console.error('Failed to process earning:', balanceError);
+        // Don't fail the offer selection if balance processing fails
       }
 
       // Close the request

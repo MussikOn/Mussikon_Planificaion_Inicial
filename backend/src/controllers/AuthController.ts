@@ -37,6 +37,7 @@ export class AuthController {
         email: userData.email,
         phone: userData.phone,
         role: userData.role,
+        active_role: userData.role === 'musician' ? 'musician' : 'leader',
         status: userData.role === 'leader' ? 'active' : 'pending',
         church_name: userData.church_name || '',
         location: userData.location || '',
@@ -147,7 +148,7 @@ export class AuthController {
       // Get user and password
       const { data: user, error: userError } = await supabase
         .from('users')
-        .select('*')
+        .select('*, active_role')
         .eq('email', email)
         .single();
 

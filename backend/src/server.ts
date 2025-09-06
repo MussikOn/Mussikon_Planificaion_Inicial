@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import swaggerUi from 'swagger-ui-express';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
 
 import { config } from './config/config';
 import { swaggerSpec } from './config/swagger';
@@ -12,7 +13,12 @@ import userRoutes from './routes/users';
 import requestRoutes from './routes/requests';
 import offerRoutes from './routes/offers';
 import adminRoutes from './routes/admin';
+import notificationRoutes from './routes/notifications';
+import pricingRoutes from './routes/pricing';
+import balanceRoutes from './routes/balances';
 import { AppError } from './utils/errorHandler';
+import { initializeSocketService } from './services/socketService';
+import { pricingService } from './services/pricingService';
 
 dotenv.config();
 
@@ -63,6 +69,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/offers', offerRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/pricing', pricingRoutes);
+app.use('/api/balances', balanceRoutes);
 
 // 404 handler
 app.use('*', (req: Request, res: Response) => {
@@ -82,13 +91,33 @@ app.use((err: AppError, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
+// Create HTTP server
+const server = createServer(app);
+
+// Initialize Socket.IO
+const socketService = initializeSocketService(server);
+
 // Start server
 const PORT = config.port;
-app.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`🚀 Mussikon API server running on port ${PORT}`);
   console.log(`📱 Environment: ${config.nodeEnv}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  console.log(`🔌 WebSocket server initialized`);
+  
+  // Initialize default pricing configuration
+  try {
+    const pricingInitialized = await pricingService.initializeDefaultPricing();
+    if (pricingInitialized) {
+      console.log(`💰 Default pricing configuration initialized`);
+    } else {
+      console.log(`💰 Pricing configuration already exists`);
+    }
+  } catch (error) {
+    console.error(`❌ Error initializing pricing configuration:`, error);
+  }
 });
 
 export default app;
+export { socketService };

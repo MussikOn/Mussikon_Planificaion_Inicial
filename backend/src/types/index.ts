@@ -5,6 +5,7 @@ export interface User {
   email: string;
   phone: string;
   role: 'leader' | 'musician' | 'admin';
+  active_role?: 'leader' | 'musician';
   status: 'active' | 'pending' | 'rejected';
   church_name?: string;
   location?: string;
@@ -49,11 +50,17 @@ export interface Request {
   leader_id: string;
   event_type: string;
   event_date: string;
+  start_time: string;
+  end_time: string;
   location: string;
-  budget: number;
+  extra_amount: number; // Monto extra opcional para el músico
   description?: string;
   required_instrument: string;
   status: 'active' | 'closed' | 'cancelled';
+  event_status: 'scheduled' | 'started' | 'completed' | 'cancelled';
+  event_started_at?: string;
+  event_completed_at?: string;
+  started_by_musician_id?: string;
   created_at: string;
   updated_at: string;
   leader?: User;
@@ -62,8 +69,10 @@ export interface Request {
 export interface CreateRequestRequest {
   event_type: string;
   event_date: string;
+  start_time: string;
+  end_time: string;
   location: string;
-  budget: number;
+  extra_amount?: number; // Monto extra opcional para el músico
   description?: string;
   required_instrument: string;
 }
@@ -129,8 +138,8 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 export interface RequestFilters {
   instrument?: string;
   location?: string;
-  min_budget?: number;
-  max_budget?: number;
+  min_extra_amount?: number;
+  max_extra_amount?: number;
   event_type?: string;
   status?: string;
   page?: number;
@@ -163,6 +172,7 @@ export interface DatabaseUser {
   email: string;
   phone: string;
   role: string;
+  active_role?: string;
   status: string;
   church_name?: string;
   location?: string;
@@ -243,4 +253,67 @@ export interface Config {
     version: string;
     description: string;
   };
+}
+
+// Availability Types
+export interface MusicianAvailability {
+  id: string;
+  musician_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: 'available' | 'busy' | 'blocked';
+  request_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AvailabilityCheck {
+  musician_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface AvailabilityResponse {
+  is_available: boolean;
+  conflicting_events?: Request[];
+  message: string;
+}
+
+// Pricing Configuration Types
+export interface PricingConfig {
+  id: string;
+  base_hourly_rate: number;        // Tarifa base por hora (ej: $500 DOP)
+  minimum_hours: number;           // Horas mínimas (ej: 2 horas)
+  maximum_hours: number;           // Horas máximas (ej: 12 horas)
+  platform_commission: number;     // Comisión de la plataforma (ej: 0.15 = 15%)
+  service_fee: number;             // Tarifa de servicio fija (ej: $100 DOP)
+  tax_rate: number;                // Impuesto (ej: 0.18 = 18%)
+  currency: string;                // Moneda (ej: 'DOP')
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdatePricingConfigRequest {
+  base_hourly_rate?: number;
+  minimum_hours?: number;
+  maximum_hours?: number;
+  platform_commission?: number;
+  service_fee?: number;
+  tax_rate?: number;
+  currency?: string;
+  is_active?: boolean;
+}
+
+export interface PriceCalculation {
+  base_hourly_rate: number;
+  hours: number;
+  subtotal: number;
+  platform_commission: number;
+  service_fee: number;
+  tax: number;
+  total: number;
+  musician_earnings: number;
 }

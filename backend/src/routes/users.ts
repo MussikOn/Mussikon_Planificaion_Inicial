@@ -132,4 +132,61 @@ router.get('/:id', authMiddleware, userController.getUserById);
 
 router.get('/user/:id', userController.getUserById);
 
+/**
+ * @swagger
+ * /api/users/change-role:
+ *   post:
+ *     summary: Cambiar rol actual del usuario (solo músicos)
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - new_role
+ *             properties:
+ *               new_role:
+ *                 type: string
+ *                 enum: [leader, musician]
+ *                 description: Nuevo rol a asignar
+ *                 example: leader
+ *     responses:
+ *       200:
+ *         description: Rol cambiado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Role changed to leader successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     current_role:
+ *                       type: string
+ *                       example: leader
+ *       400:
+ *         description: Rol inválido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Solo los músicos pueden cambiar de rol
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/change-role', authMiddleware, userController.changeRole);
+
 export default router;

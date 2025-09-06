@@ -60,6 +60,106 @@ router.get('/', authMiddleware, offerController.getOffers);
 
 /**
  * @swagger
+ * /api/offers/my-offers:
+ *   get:
+ *     summary: Obtener ofertas del músico autenticado
+ *     tags: [Ofertas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, selected, rejected]
+ *         description: Filtrar por estado de la oferta
+ *     responses:
+ *       200:
+ *         description: Lista de ofertas del músico obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Offer'
+ *                       - type: object
+ *                         properties:
+ *                           request:
+ *                             allOf:
+ *                               - $ref: '#/components/schemas/Request'
+ *                               - type: object
+ *                                 properties:
+ *                                   leader:
+ *                                     $ref: '#/components/schemas/User'
+ */
+router.get('/my-offers', authMiddleware, offerController.getMusicianOffers);
+
+/**
+ * @swagger
+ * /api/offers/leader-offers:
+ *   get:
+ *     summary: Obtener ofertas para las solicitudes del líder autenticado
+ *     tags: [Ofertas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, selected, rejected]
+ *         description: Filtrar por estado de la oferta
+ *     responses:
+ *       200:
+ *         description: Lista de ofertas para las solicitudes del líder obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Offer'
+ *                       - type: object
+ *                         properties:
+ *                           request:
+ *                             allOf:
+ *                               - $ref: '#/components/schemas/Request'
+ *                               - type: object
+ *                                 properties:
+ *                                   leader:
+ *                                     $ref: '#/components/schemas/User'
+ *                           musician:
+ *                             $ref: '#/components/schemas/User'
+ *       401:
+ *         description: No autorizado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/leader-offers', authMiddleware, offerController.getLeaderOffers);
+
+/**
+ * @swagger
  * /api/offers:
  *   post:
  *     summary: Crear nueva oferta musical
@@ -259,5 +359,44 @@ router.put('/:id/select', authMiddleware, offerController.selectOffer);
  *               $ref: '#/components/schemas/Error'
  */
 router.put('/:id/reject', authMiddleware, offerController.rejectOffer);
+
+/**
+ * @swagger
+ * /api/offers/{id}/select:
+ *   post:
+ *     summary: Seleccionar oferta
+ *     tags: [Ofertas]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID de la oferta
+ *     responses:
+ *       200:
+ *         description: Oferta seleccionada exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Oferta seleccionada exitosamente
+ *       404:
+ *         description: Oferta no encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/:id/select', authMiddleware, offerController.selectOffer);
 
 export default router;

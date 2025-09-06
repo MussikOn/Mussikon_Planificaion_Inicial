@@ -11,7 +11,7 @@ export class UserController {
 
       const { data: user, error } = await supabase
         .from('users')
-        .select('*')
+        .select('*, active_role')
         .eq('id', userId)
         .single();
 
@@ -135,6 +135,66 @@ export class UserController {
         });
       } else {
         console.error('Get user by ID error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error'
+        });
+      }
+    }
+  };
+
+  // Change user role (only for musicians)
+  public changeRole = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = (req as any).user.userId;
+      const { new_role } = req.body;
+
+      if (!new_role || !['leader', 'musician'].includes(new_role)) {
+        throw createError('Invalid role. Must be "leader" or "musician"', 400);
+      }
+
+      // Get user details
+           const { data: user, error: userError } = await supabase
+             .from('users')
+             .select('role, active_role')
+             .eq('id', userId)
+             .single();
+
+      if (userError || !user) {
+        throw createError('User not found', 404);
+      }
+
+      // Only musicians can change their current role
+      if (user.role !== 'musician') {
+        throw createError('Only musicians can change their role', 403);
+      }
+
+      // Update current role
+           const { error: updateError } = await supabase
+             .from('users')
+             .update({
+               active_role: new_role,
+               updated_at: new Date().toISOString()
+             })
+             .eq('id', userId);
+
+      if (updateError) {
+        throw createError('Failed to update role', 500);
+      }
+
+           res.status(200).json({
+             success: true,
+             message: `Role changed to ${new_role} successfully`,
+             data: { active_role: new_role }
+           });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message
+        });
+      } else {
+        console.error('Change role error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'

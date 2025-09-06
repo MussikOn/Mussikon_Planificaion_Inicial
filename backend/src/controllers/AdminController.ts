@@ -18,6 +18,7 @@ export class AdminController {
         .from('users')
         .select(`
           *,
+          active_role,
           instruments:user_instruments(*)
         `)
         .eq('role', 'musician')
@@ -470,6 +471,7 @@ export class AdminController {
         .from('users')
         .select(`
           *,
+          active_role,
           instruments:user_instruments(*)
         `)
         .order('created_at', { ascending: false });
