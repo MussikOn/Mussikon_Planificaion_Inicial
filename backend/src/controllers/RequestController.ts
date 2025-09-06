@@ -92,8 +92,8 @@ export class RequestController {
         .eq('id', userId)
         .single();
 
-      if (!user || user.role !== 'leader') {
-        throw createError('Only leaders can create requests', 403);
+      if (!user || (user.role !== 'leader' && user.role !== 'admin')) {
+        throw createError('Only leaders and admins can create requests', 403);
       }
 
       const newRequest = {

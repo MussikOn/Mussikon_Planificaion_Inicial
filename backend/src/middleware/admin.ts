@@ -17,6 +17,7 @@ export const adminMiddleware = async (req: Request, res: Response, next: NextFun
       throw createError('User not found', 404);
     }
 
+
     if (user.role !== 'admin') {
       throw createError('Admin access required', 403);
     }

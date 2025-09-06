@@ -237,31 +237,44 @@ export class AdminController {
   // Get admin stats
   public getStats = async (_req: Request, res: Response): Promise<void> => {
     try {
+      console.log('Getting admin stats...');
+
       // Get user counts by role and status
-      const { data: userStats } = await supabase
+      const { data: userStats, error: userError } = await supabase
         .from('users')
         .select('role, status')
         .neq('role', 'admin');
 
-      // Get request counts
-      const { count: totalRequests } = await supabase
-        .from('requests')
-        .select('*', { count: 'exact', head: true });
+      if (userError) {
+        console.error('User stats error:', userError);
+        throw userError;
+      }
 
-      const { count: activeRequests } = await supabase
+      // Get request counts
+      const { data: allRequests, error: requestsError } = await supabase
         .from('requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
+        .select('id, status');
+
+      if (requestsError) {
+        console.error('Requests count error:', requestsError);
+        throw requestsError;
+      }
+
+      const totalRequests = allRequests?.length || 0;
+      const activeRequests = allRequests?.filter(r => r.status === 'active').length || 0;
 
       // Get offer counts
-      const { count: totalOffers } = await supabase
+      const { data: allOffers, error: offersError } = await supabase
         .from('offers')
-        .select('*', { count: 'exact', head: true });
+        .select('id, status');
 
-      const { count: selectedOffers } = await supabase
-        .from('offers')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'selected');
+      if (offersError) {
+        console.error('Offers count error:', offersError);
+        throw offersError;
+      }
+
+      const totalOffers = allOffers?.length || 0;
+      const selectedOffers = allOffers?.filter(o => o.status === 'selected').length || 0;
 
       // Process user stats
       const stats = {
@@ -274,14 +287,16 @@ export class AdminController {
           rejected: userStats?.filter(u => u.status === 'rejected').length || 0
         },
         requests: {
-          total: totalRequests || 0,
-          active: activeRequests || 0
+          total: totalRequests,
+          active: activeRequests
         },
         offers: {
-          total: totalOffers || 0,
-          selected: selectedOffers || 0
+          total: totalOffers,
+          selected: selectedOffers
         }
       };
+
+      console.log('Stats calculated:', stats);
 
       res.status(200).json({
         success: true,
@@ -291,7 +306,8 @@ export class AdminController {
       console.error('Get stats error:', error);
       res.status(500).json({
         success: false,
-        message: 'Internal server error'
+        message: 'Internal server error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   };
@@ -356,6 +372,84 @@ export class AdminController {
         });
       } else {
         console.error('Change password error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error'
+        });
+      }
+    }
+  };
+
+  // Update user data
+  public updateUser = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = req.params;
+      const updateData = req.body;
+
+      // Remove sensitive fields that shouldn't be updated directly
+      delete updateData.id;
+      delete updateData.created_at;
+      delete updateData.updated_at;
+
+      // Validate role if provided
+      if (updateData.role && !['leader', 'musician', 'admin'].includes(updateData.role)) {
+        throw createError('Invalid role. Must be leader, musician, or admin', 400);
+      }
+
+      // Validate status if provided
+      if (updateData.status && !['active', 'pending', 'rejected'].includes(updateData.status)) {
+        throw createError('Invalid status. Must be active, pending, or rejected', 400);
+      }
+
+      // Check if user exists
+      const { data: existingUser, error: userError } = await supabase
+        .from('users')
+        .select('id, name, email, role')
+        .eq('id', userId)
+        .single();
+
+      if (userError || !existingUser) {
+        throw createError('User not found', 404);
+      }
+
+      // Update user data
+      updateData.updated_at = new Date().toISOString();
+
+      const { data: updatedUser, error: updateError } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+
+      if (updateError) {
+        throw createError('Failed to update user', 500);
+      }
+
+      // Log admin action
+      const adminId = (req as any).user.userId;
+      await supabase
+        .from('admin_actions')
+        .insert({
+          admin_id: adminId,
+          user_id: userId,
+          action: 'user_updated',
+          details: `User ${existingUser.name} (${existingUser.email}) updated by admin`
+        });
+
+      res.status(200).json({
+        success: true,
+        message: 'User updated successfully',
+        data: updatedUser
+      });
+    } catch (error) {
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message
+        });
+      } else {
+        console.error('Update user error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'

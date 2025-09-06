@@ -70,8 +70,8 @@ export class OfferController {
         .eq('id', userId)
         .single();
 
-      if (!user || user.role !== 'musician') {
-        throw createError('Only musicians can create offers', 403);
+      if (!user || (user.role !== 'musician' && user.role !== 'admin')) {
+        throw createError('Only musicians and admins can create offers', 403);
       }
 
       if (user.status !== 'active') {

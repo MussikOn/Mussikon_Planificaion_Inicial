@@ -344,4 +344,62 @@ router.get('/users', authMiddleware, adminMiddleware, adminController.getAllUser
  */
 router.put('/users/:userId/password', authMiddleware, adminMiddleware, adminController.changeUserPassword);
 
+/**
+ * @swagger
+ * /api/admin/users/{userId}:
+ *   put:
+ *     summary: Actualizar datos de usuario
+ *     tags: [Administración]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: ID del usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Nombre del usuario
+ *               email:
+ *                 type: string
+ *                 description: Email del usuario
+ *               phone:
+ *                 type: string
+ *                 description: Teléfono del usuario
+ *               role:
+ *                 type: string
+ *                 enum: [leader, musician, admin]
+ *                 description: Rol del usuario
+ *               status:
+ *                 type: string
+ *                 enum: [active, pending, rejected]
+ *                 description: Estado del usuario
+ *               church_name:
+ *                 type: string
+ *                 description: Nombre de la iglesia (solo para líderes)
+ *               location:
+ *                 type: string
+ *                 description: Ubicación del usuario
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado exitosamente
+ *       400:
+ *         description: Datos inválidos
+ *       404:
+ *         description: Usuario no encontrado
+ *       403:
+ *         description: Acceso de administrador requerido
+ */
+router.put('/users/:userId', authMiddleware, adminMiddleware, adminController.updateUser);
+
 export default router;
