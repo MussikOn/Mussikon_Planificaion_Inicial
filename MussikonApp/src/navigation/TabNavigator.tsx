@@ -10,7 +10,7 @@ const TabNavigator: React.FC = () => {
   const { user } = useAuth();
 
   return (
-    <Tab.Navigator
+    <Tab.Navigator id="TabNavigator"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
