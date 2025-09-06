@@ -16,7 +16,7 @@ const AppNavigator: React.FC = () => {
   }
 
   return (
-    <Stack.Navigator id={undefined} screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       {!isAuthenticated ? (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       ) : user?.role === 'admin' ? (
