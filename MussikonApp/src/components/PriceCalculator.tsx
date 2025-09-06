@@ -5,11 +5,10 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TextInput,
   Platform,
   ActivityIndicator
 } from 'react-native';
-import { pricingService, PriceCalculation } from '../services/pricingService';
+import { priceCalculationService, PriceCalculation } from '../services/priceCalculationService';
 import { colors } from '../theme/colors';
 import { ElegantIcon } from './index';
 
@@ -28,7 +27,7 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
   customRate,
   token,
   onPriceCalculated,
-  showDetails = true
+  showDetails = false // Changed default to false for leaders
 }) => {
   const [calculation, setCalculation] = useState<PriceCalculation | null>(null);
   const [loading, setLoading] = useState(false);
@@ -45,13 +44,13 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
       setLoading(true);
       setError(null);
       
-      const result = await pricingService.calculatePrice(startTime, endTime, customRate, token);
+      const result = await priceCalculationService.calculatePrice(startTime, endTime, customRate, token);
       
-      if (result) {
-        setCalculation(result);
-        onPriceCalculated?.(result);
+      if (result.success && result.data) {
+        setCalculation(result.data);
+        onPriceCalculated?.(result.data);
       } else {
-        setError('Error calculando el precio');
+        setError(result.error || 'Error calculando el precio');
       }
     } catch (err) {
       setError('Error calculando el precio');
@@ -61,11 +60,7 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
   };
 
   const formatCurrency = (amount: number) => {
-    return pricingService.formatCurrency(amount);
-  };
-
-  const formatPercentage = (value: number) => {
-    return `${(value * 100).toFixed(1)}%`;
+    return priceCalculationService.formatPrice(amount);
   };
 
   if (loading) {
@@ -83,6 +78,7 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
         <ElegantIcon name="alert-circle" size={20} color={colors.error} />
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity onPress={calculatePrice} style={styles.retryButton}>
+          <ElegantIcon name="refresh" size={16} color={colors.white} />
           <Text style={styles.retryText}>Reintentar</Text>
         </TouchableOpacity>
       </View>
@@ -92,6 +88,9 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
   if (!calculation) {
     return null;
   }
+
+  // Get simplified price for leader
+  const leaderPrice = priceCalculationService.getLeaderPrice(calculation);
 
   return (
     <View style={styles.container}>
@@ -103,54 +102,49 @@ const PriceCalculator: React.FC<PriceCalculatorProps> = ({
       <View style={styles.summary}>
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total a Pagar:</Text>
-          <Text style={styles.totalAmount}>{formatCurrency(calculation.total)}</Text>
+          <Text style={styles.totalAmount}>{formatCurrency(leaderPrice.total)}</Text>
         </View>
         
-        <View style={styles.musicianEarningsRow}>
-          <Text style={styles.musicianLabel}>Ganancias del Músico:</Text>
-          <Text style={styles.musicianAmount}>{formatCurrency(calculation.musician_earnings)}</Text>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Tarifa por Hora:</Text>
+          <Text style={styles.detailValue}>{formatCurrency(leaderPrice.hourlyRate)}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>Horas de Servicio:</Text>
+          <Text style={styles.detailValue}>{leaderPrice.hours.toFixed(1)} hrs</Text>
         </View>
       </View>
 
       {showDetails && (
         <View style={styles.details}>
-          <Text style={styles.detailsTitle}>Desglose Detallado</Text>
+          <Text style={styles.detailsTitle}>Desglose Detallado (Solo para Músicos)</Text>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Tarifa por Hora:</Text>
-            <Text style={styles.detailValue}>{formatCurrency(calculation.base_hourly_rate)}</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Horas de Servicio:</Text>
-            <Text style={styles.detailValue}>{calculation.hours.toFixed(1)} hrs</Text>
-          </View>
-          
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Subtotal:</Text>
+            <Text style={styles.detailLabel}>Ganancias Brutas:</Text>
             <Text style={styles.detailValue}>{formatCurrency(calculation.subtotal)}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Comisión Plataforma ({formatPercentage(calculation.platform_commission / calculation.subtotal)}):</Text>
-            <Text style={styles.detailValue}>{formatCurrency(calculation.platform_commission)}</Text>
+            <Text style={styles.detailLabel}>Comisión Plataforma:</Text>
+            <Text style={styles.detailValue}>-{formatCurrency(calculation.platform_commission)}</Text>
           </View>
           
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Tarifa de Servicio:</Text>
-            <Text style={styles.detailValue}>{formatCurrency(calculation.service_fee)}</Text>
+            <Text style={styles.detailValue}>-{formatCurrency(calculation.service_fee)}</Text>
           </View>
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Impuesto ({formatPercentage(calculation.tax / (calculation.subtotal + calculation.platform_commission + calculation.service_fee))}):</Text>
-            <Text style={styles.detailValue}>{formatCurrency(calculation.tax)}</Text>
+            <Text style={styles.detailLabel}>Impuesto:</Text>
+            <Text style={styles.detailValue}>-{formatCurrency(calculation.tax)}</Text>
           </View>
           
           <View style={styles.separator} />
           
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Total Final:</Text>
-            <Text style={styles.detailValue}>{formatCurrency(calculation.total)}</Text>
+            <Text style={styles.detailLabel}>Ganancias Netas del Músico:</Text>
+            <Text style={styles.detailValue}>{formatCurrency(calculation.musician_earnings)}</Text>
           </View>
         </View>
       )}
@@ -195,16 +189,19 @@ const styles = StyleSheet.create({
     color: colors.error,
   },
   retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginLeft: 8,
     paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingVertical: 6,
     backgroundColor: colors.error,
-    borderRadius: 4,
+    borderRadius: 6,
   },
   retryText: {
     color: colors.white,
     fontSize: 12,
     fontWeight: '600',
+    marginLeft: 4,
   },
   header: {
     flexDirection: 'row',
@@ -227,7 +224,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   totalLabel: {
     fontSize: 16,
@@ -238,29 +235,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: colors.primary,
-  },
-  musicianEarningsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  musicianLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
-  },
-  musicianAmount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.success,
-  },
-  details: {
-    marginTop: 8,
-  },
-  detailsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 12,
   },
   detailRow: {
     flexDirection: 'row',
@@ -277,6 +251,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     fontWeight: '500',
+  },
+  details: {
+    marginTop: 8,
+  },
+  detailsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
   },
   separator: {
     height: 1,

@@ -40,8 +40,10 @@ const AdminDashboardScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    if (token) {
+      fetchStats();
+    }
+  }, [token]);
 
   const fetchStats = async () => {
     try {

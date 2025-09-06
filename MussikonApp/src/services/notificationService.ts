@@ -39,12 +39,23 @@ class NotificationService {
       try {
         await this.fetchNotifications(token);
       } catch (error) {
+        // Silently handle network errors to avoid console spam
+        if (error instanceof Error && error.message.includes('Network request failed')) {
+          // Network error, skip this poll
+          return;
+        }
         console.error('Error fetching notifications:', error);
       }
     }, intervalMs);
 
     // Fetch immediately
-    this.fetchNotifications(token);
+    this.fetchNotifications(token).catch(error => {
+      // Silently handle initial fetch error
+      if (error instanceof Error && error.message.includes('Network request failed')) {
+        return;
+      }
+      console.error('Error fetching initial notifications:', error);
+    });
   }
 
   // Stop polling

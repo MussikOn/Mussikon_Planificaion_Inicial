@@ -6,7 +6,7 @@ interface Request {
   event_type: string;
   event_date: string;
   location: string;
-  budget: number;
+  extra_amount: number;
   description: string;
   required_instrument: string;
   status: string;
@@ -104,11 +104,11 @@ export const RequestsProvider: React.FC<RequestsProviderProps> = ({ children }) 
     }
   };
 
-  const deleteRequest = async (id: string): Promise<boolean> => {
+  const deleteRequest = async (id: string, reason: string = 'Solicitud eliminada'): Promise<boolean> => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiService.cancelRequest(id);
+      const response = await apiService.cancelRequest(id, reason);
       if (response.success) {
         // Remove the request from the list
         setRequests(prev => prev.filter(req => req.id !== id));

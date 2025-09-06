@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { theme } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
 import { ElegantIcon } from '../components';
@@ -40,6 +41,7 @@ interface DashboardStats {
 
 const DashboardScreen: React.FC = () => {
   const { user, token } = useAuth();
+  const { socket, isConnected } = useSocket();
   const permissions = useRolePermissions();
   const { unreadCount, addNotification } = useNotifications();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -47,16 +49,58 @@ const DashboardScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    if (token) {
+      fetchDashboardData();
+    }
+  }, [token]);
+
+  // Listen for real-time updates and refresh dashboard
+  useEffect(() => {
+    if (socket && isConnected) {
+      const handleUpdate = () => {
+        console.log('Real-time update received, refreshing dashboard...');
+        fetchDashboardData();
+      };
+
+      socket.on('new_request', handleUpdate);
+      socket.on('new_offer', handleUpdate);
+      socket.on('offer_selected', handleUpdate);
+      socket.on('request_updated', handleUpdate);
+
+      return () => {
+        socket.off('new_request', handleUpdate);
+        socket.off('new_offer', handleUpdate);
+        socket.off('offer_selected', handleUpdate);
+        socket.off('request_updated', handleUpdate);
+      };
+    }
+  }, [socket, isConnected]);
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      
+      // Verificar que tenemos token antes de hacer las llamadas
+      if (!token) {
+        console.error('No token available for dashboard data');
+        console.log('Current user:', user);
+        console.log('Current token:', token);
+        ErrorHandler.showError('No se pudo cargar los datos del dashboard', 'Error de autenticación');
+        return;
+      }
+
+      console.log('Fetching dashboard data with token:', token ? 'Present' : 'Missing');
+
       const [requestsResponse, offersResponse, adminStatsResponse] = await Promise.all([
-        apiService.getRequests({ limit: 5 }, token || undefined),
-        apiService.getOffers({ limit: 5 }, token || undefined),
-        user?.role === 'admin' ? apiService.getAdminStats(token || undefined) : Promise.resolve(null)
+        // Use different endpoints based on user role
+        user?.role === 'leader' ? apiService.getLeaderRequests({ limit: 5 }, token) : apiService.getRequests({ limit: 5 }, token),
+        // Usar el endpoint correcto según el rol para ofertas
+        user?.role === 'musician' 
+          ? apiService.getMusicianOffers({ limit: 5 }, token) 
+          : user?.role === 'leader' 
+            ? apiService.getLeaderOffers({ limit: 5 }, token)
+            : apiService.getOffers({ limit: 5 }, token),
+        user?.role === 'admin' ? apiService.getAdminStats(token) : Promise.resolve(null)
       ]);
 
       const dashboardStats: DashboardStats = {
@@ -237,7 +281,7 @@ const DashboardScreen: React.FC = () => {
                 </Text>
                 <ElegantIcon name="forward" size={16} color={theme.colors.white} />
               </TouchableOpacity>
-            </View>regla esto 
+            </View> 
           </View>
 
           {/* Recent Activity */}

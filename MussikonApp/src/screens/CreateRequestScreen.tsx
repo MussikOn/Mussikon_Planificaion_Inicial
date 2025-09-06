@@ -19,6 +19,7 @@ import ScreenHeader from '../components/ScreenHeader';
 import { Button, ElegantIcon } from '../components';
 import ErrorHandler from '../utils/errorHandler';
 import PriceCalculator from '../components/PriceCalculator';
+import { priceCalculationService } from '../services/priceCalculationService';
 
 const CreateRequestScreen: React.FC = () => {
   const { user, token } = useAuth();
@@ -35,7 +36,7 @@ const CreateRequestScreen: React.FC = () => {
     start_time: '',
     end_time: '',
     location: '',
-    budget: '',
+    extra_amount: '', // Monto extra opcional para el músico
     required_instrument: '',
     description: '',
   });
@@ -136,8 +137,9 @@ const CreateRequestScreen: React.FC = () => {
       ErrorHandler.showError('Ingresa la ubicación del evento', 'Validación');
       return false;
     }
-    if (!formData.budget || parseFloat(formData.budget) < 600) {
-      ErrorHandler.showError('El presupuesto mínimo es $600 DOP', 'Validación');
+    // Validación de monto extra si se proporciona
+    if (formData.extra_amount && parseFloat(formData.extra_amount) < 0) {
+      ErrorHandler.showError('El monto extra no puede ser negativo', 'Validación');
       return false;
     }
     if (!formData.required_instrument) {
@@ -163,7 +165,7 @@ const CreateRequestScreen: React.FC = () => {
         start_time: formData.start_time,
         end_time: formData.end_time,
         location: formData.location.trim(),
-        budget: parseFloat(formData.budget),
+        extra_amount: formData.extra_amount ? parseFloat(formData.extra_amount) : 0,
         required_instrument: formData.required_instrument,
         description: formData.description.trim(),
       };
@@ -344,17 +346,7 @@ const CreateRequestScreen: React.FC = () => {
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Presupuesto (DOP) *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.budget}
-              onChangeText={(value) => handleInputChange('budget', value)}
-              placeholder="600"
-              keyboardType="numeric"
-            />
-            <Text style={styles.inputHint}>Mínimo: $600 DOP</Text>
-          </View>
+          
 
           {/* Price Calculator */}
           {formData.start_time && formData.end_time && (
@@ -362,9 +354,21 @@ const CreateRequestScreen: React.FC = () => {
               startTime={formData.start_time}
               endTime={formData.end_time}
               token={token}
-              showDetails={true}
+              showDetails={false} // Leaders don't see detailed breakdown
             />
           )}
+
+<View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Monto Extra para el Músico (DOP) - Opcional</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.extra_amount}
+              onChangeText={(value) => handleInputChange('extra_amount', value)}
+              placeholder="0"
+              keyboardType="numeric"
+            />
+            <Text style={styles.inputHint}>Monto adicional que quieres dar al músico (opcional)</Text>
+          </View>
 
           {renderInstrumentSelector()}
 

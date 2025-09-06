@@ -17,7 +17,7 @@ import { useNotifications } from '../context/NotificationsContext';
 import { apiService } from '../services/api';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
-import { Button, ElegantIcon } from '../components';
+import { Button, ElegantIcon, EventStatusCard, MusicianRequestActions } from '../components';
 import ErrorHandler from '../utils/errorHandler';
 
 interface Request {
@@ -26,7 +26,7 @@ interface Request {
   event_date: string;
   event_time: string;
   location: string;
-  budget: number;
+  extra_amount: number;
   description: string;
   required_instrument: string;
   status: string;
@@ -304,6 +304,23 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
           subtitle={request.event_type}
         />
 
+        {/* Event Status Card */}
+        <EventStatusCard
+          requestId={requestId}
+          userRole={user?.role || 'musician'}
+          onStatusUpdate={fetchRequestDetails}
+          token={token}
+        />
+
+        {/* Musician Request Actions */}
+        {user?.role === 'musician' && (
+          <MusicianRequestActions
+            requestId={requestId}
+            onStatusUpdate={fetchRequestDetails}
+            token={token}
+          />
+        )}
+
         <View style={styles.content}>
           {/* Request Info */}
           <View style={styles.section}>
@@ -336,7 +353,9 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
               <View style={styles.infoItem}>
                 <ElegantIcon name="money" size={20} color={theme.colors.primary} />
                 <Text style={styles.infoLabel}>Presupuesto:</Text>
-                <Text style={styles.infoValue}>${request.budget.toLocaleString()} DOP</Text>
+                <Text style={styles.infoValue}>
+                  {request.extra_amount > 0 ? `$${request.extra_amount.toLocaleString()} DOP` : 'Sin monto extra'}
+                </Text>
               </View>
 
               <View style={styles.infoItem}>

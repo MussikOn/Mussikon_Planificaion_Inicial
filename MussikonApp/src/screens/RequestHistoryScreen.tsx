@@ -23,7 +23,7 @@ interface Request {
   event_date: string;
   event_time: string;
   location: string;
-  budget: number;
+  extra_amount: number;
   description: string;
   required_instrument: string;
   status: string;
@@ -140,7 +140,9 @@ const RequestHistoryScreen: React.FC = () => {
         </View>
         <View style={styles.detailRow}>
           <ElegantIcon name="money" size={16} color={theme.colors.text.secondary} />
-          <Text style={styles.detailText}>${item.budget.toLocaleString()} DOP</Text>
+          <Text style={styles.detailText}>
+            {item.extra_amount > 0 ? `$${item.extra_amount.toLocaleString()} DOP` : 'Sin monto extra'}
+          </Text>
         </View>
       </View>
 

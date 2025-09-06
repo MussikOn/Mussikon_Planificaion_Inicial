@@ -170,8 +170,7 @@ const ProfileScreen: React.FC = () => {
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.name}</Text>
             <Text style={styles.profileRole}>
-              {user?.role === 'leader' ? 'Líder Musical' : 
-               user?.role === 'musician' ? 'Músico' : 'Administrador'}
+              {user?.role === 'leader' ? 'Líder Musical' : user?.role === 'musician' ? 'Músico' : 'Administrador'}
             </Text>
             <Text style={styles.profileLocation}>{user?.location}</Text>
             <Text style={styles.profileStatus}>
@@ -245,7 +244,7 @@ const ProfileScreen: React.FC = () => {
             </View>
           )}
                     {/* Role Switcher for Musicians */}
-                    <RoleSwitcher />tar 
+                    <RoleSwitcher /> 
 
           {/* Logout Button */}
           <View style={styles.logoutContainer}>

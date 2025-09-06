@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { theme } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { apiService } from '../services/api';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
@@ -46,6 +47,7 @@ interface Offer {
 
 const OffersListScreen: React.FC = () => {
   const { user, token } = useAuth();
+  const { socket, isConnected } = useSocket();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,11 +57,45 @@ const OffersListScreen: React.FC = () => {
     fetchOffers();
   }, [filter]);
 
+  // Listen for new offers and refresh the list
+  useEffect(() => {
+    if (socket && isConnected) {
+      const handleNewOffer = () => {
+        console.log('New offer received, refreshing list...');
+        fetchOffers();
+      };
+
+      const handleOfferSelected = () => {
+        console.log('Offer selected, refreshing list...');
+        fetchOffers();
+      };
+
+      socket.on('new_offer', handleNewOffer);
+      socket.on('offer_selected', handleOfferSelected);
+
+      return () => {
+        socket.off('new_offer', handleNewOffer);
+        socket.off('offer_selected', handleOfferSelected);
+      };
+    }
+  }, [socket, isConnected]);
+
   const fetchOffers = async () => {
     try {
       setLoading(true);
       const filters = filter !== 'all' ? { status: filter } : {};
-      const response = await apiService.getOffers(filters, token || undefined);
+      
+      // Usar el endpoint correcto según el rol del usuario
+      let response;
+      if (user?.role === 'musician') {
+        response = await apiService.getMusicianOffers(filters, token || undefined);
+      } else if (user?.role === 'leader') {
+        response = await apiService.getLeaderOffers(filters, token || undefined);
+      } else {
+        // Para admins, usar el endpoint general
+        response = await apiService.getOffers(filters, token || undefined);
+      }
+        
       if (response.success) {
         setOffers(response.data || []);
       } else {
@@ -153,7 +189,7 @@ const OffersListScreen: React.FC = () => {
   const renderOffer = ({ item }: { item: Offer }) => (
     <View style={styles.offerCard}>
       <View style={styles.offerHeader}>
-        <Text style={styles.eventType}>{item.request.event_type}</Text>
+        <Text style={styles.eventType}>{item.request?.event_type || 'Evento no disponible'}</Text>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
           <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
         </View>
@@ -161,17 +197,17 @@ const OffersListScreen: React.FC = () => {
       
       <View style={styles.offerInfoRow}>
         <ElegantIcon name="music" size={16} color={theme.colors.text.secondary} />
-        <Text style={styles.instrument}>{item.request.required_instrument}</Text>
+        <Text style={styles.instrument}>{item.request?.required_instrument || 'No especificado'}</Text>
       </View>
       
       <View style={styles.offerInfoRow}>
         <ElegantIcon name="calendar" size={16} color={theme.colors.text.secondary} />
-        <Text style={styles.date}>{formatDate(item.request.event_date)}</Text>
+        <Text style={styles.date}>{item.request?.event_date ? formatDate(item.request.event_date) : 'Fecha no disponible'}</Text>
       </View>
       
       <View style={styles.offerInfoRow}>
         <ElegantIcon name="location" size={16} color={theme.colors.text.secondary} />
-        <Text style={styles.location}>{item.request.location}</Text>
+        <Text style={styles.location}>{item.request?.location || 'Ubicación no disponible'}</Text>
       </View>
       
       <View style={styles.priceContainer}>

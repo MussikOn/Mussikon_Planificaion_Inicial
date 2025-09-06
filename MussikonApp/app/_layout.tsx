@@ -15,6 +15,7 @@ import {
 import { useColorScheme } from 'react-native';
 import { AuthProvider, RequestsProvider, OffersProvider, AdminProvider } from '../src/context';
 import { NotificationsProvider } from '../src/context/NotificationsContext';
+import { SocketProvider } from '../src/context/SocketContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -62,17 +63,19 @@ function RootLayoutNav() {
 
   return (
     <AuthProvider>
-      <RequestsProvider>
-        <OffersProvider>
-          <AdminProvider>
-            <NotificationsProvider>
-              <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <Stack screenOptions={{ headerShown: false }} />
-              </ThemeProvider>
-            </NotificationsProvider>
-          </AdminProvider>
-        </OffersProvider>
-      </RequestsProvider>
+      <SocketProvider>
+        <RequestsProvider>
+          <OffersProvider>
+            <AdminProvider>
+              <NotificationsProvider>
+                <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                  <Stack screenOptions={{ headerShown: false }} />
+                </ThemeProvider>
+              </NotificationsProvider>
+            </AdminProvider>
+          </OffersProvider>
+        </RequestsProvider>
+      </SocketProvider>
     </AuthProvider>
   );
 }

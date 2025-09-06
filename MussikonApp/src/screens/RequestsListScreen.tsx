@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { theme } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
+import { useSocket } from '../context/SocketContext';
 import { apiService } from '../services/api';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
@@ -25,11 +26,20 @@ interface Request {
   id: string;
   event_type: string;
   event_date: string;
+  start_time: string;
+  end_time: string;
   location: string;
-  budget: number;
+  extra_amount: number;
   description: string;
   required_instrument: string;
   status: string;
+  event_status?: 'scheduled' | 'started' | 'completed' | 'cancelled';
+  event_started_at?: string;
+  event_completed_at?: string;
+  started_by_musician_id?: string;
+  musician_status?: 'pending' | 'accepted' | 'rejected';
+  accepted_by_musician_id?: string;
+  musician_response_at?: string;
   leader: {
     name: string;
     church_name: string;
@@ -40,6 +50,7 @@ interface Request {
 
 const RequestsListScreen: React.FC = () => {
   const { user, token } = useAuth();
+  const { socket, isConnected } = useSocket();
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -55,12 +66,45 @@ const RequestsListScreen: React.FC = () => {
     fetchRequests();
   }, []);
 
+  // Listen for new requests and refresh the list
+  useEffect(() => {
+    if (socket && isConnected) {
+      const handleNewRequest = () => {
+        console.log('New request received, refreshing list...');
+        fetchRequests();
+      };
+
+      socket.on('new_request', handleNewRequest);
+      socket.on('request_updated', handleNewRequest);
+
+      return () => {
+        socket.off('new_request', handleNewRequest);
+        socket.off('request_updated', handleNewRequest);
+      };
+    }
+  }, [socket, isConnected]);
+
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      // Admins can see all requests, not just active ones
-      const requestFilters = user?.role === 'admin' ? filters : { ...filters, status: 'active' };
-      const response = await apiService.getRequests(requestFilters, token || undefined);
+      
+      // Use different endpoints based on user role
+      let response;
+      if (user?.role === 'leader') {
+        // Leaders only see their own requests
+        response = await apiService.getLeaderRequests(filters, token || undefined);
+      } else if (user?.role === 'musician') {
+        // Musicians see all active requests
+        const requestFilters = { ...filters, status: 'active' };
+        response = await apiService.getRequests(requestFilters, token || undefined);
+      } else if (user?.role === 'admin') {
+        // Admins see all requests
+        response = await apiService.getRequests(filters, token || undefined);
+      } else {
+        // Default to all requests
+        response = await apiService.getRequests(filters, token || undefined);
+      }
+      
       if (response.success) {
         setRequests(response.data || []);
       } else {
@@ -108,8 +152,47 @@ const RequestsListScreen: React.FC = () => {
     });
   };
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | undefined) => {
+    if (!price || price === 0) return 'Sin monto extra';
     return `$${price.toLocaleString('es-DO')} DOP`;
+  };
+
+  const getEventStatusColor = (eventStatus?: string) => {
+    switch (eventStatus) {
+      case 'scheduled': return theme.colors.warning;
+      case 'started': return theme.colors.success;
+      case 'completed': return theme.colors.primary;
+      case 'cancelled': return theme.colors.error;
+      default: return theme.colors.text.secondary;
+    }
+  };
+
+  const getEventStatusText = (eventStatus?: string) => {
+    switch (eventStatus) {
+      case 'scheduled': return 'Programado';
+      case 'started': return 'En Progreso';
+      case 'completed': return 'Completado';
+      case 'cancelled': return 'Cancelado';
+      default: return 'Pendiente';
+    }
+  };
+
+  const getMusicianStatusColor = (musicianStatus?: string) => {
+    switch (musicianStatus) {
+      case 'accepted': return theme.colors.success;
+      case 'rejected': return theme.colors.error;
+      case 'pending': return theme.colors.warning;
+      default: return theme.colors.text.secondary;
+    }
+  };
+
+  const getMusicianStatusText = (musicianStatus?: string) => {
+    switch (musicianStatus) {
+      case 'accepted': return 'Aceptada';
+      case 'rejected': return 'Rechazada';
+      case 'pending': return 'Pendiente';
+      default: return 'Sin respuesta';
+    }
   };
 
   const renderRequest = ({ item }: { item: Request }) => (
@@ -121,9 +204,29 @@ const RequestsListScreen: React.FC = () => {
         <Text style={styles.eventType}>{item.event_type}</Text>
         <View style={styles.budgetContainer}>
           <ElegantIcon name="money" size={14} color={theme.colors.primary} />
-          <Text style={styles.budget}>{formatPrice(item.budget)}</Text>
+          <Text style={styles.budget}>{formatPrice(item.extra_amount)}</Text>
         </View>
       </View>
+
+      {/* Event Status */}
+      {item.event_status && (
+        <View style={styles.eventStatusContainer}>
+          <View style={[styles.eventStatusBadge, { backgroundColor: getEventStatusColor(item.event_status) }]}>
+            <ElegantIcon name="clock" size={12} color="white" />
+            <Text style={styles.eventStatusText}>{getEventStatusText(item.event_status)}</Text>
+          </View>
+        </View>
+      )}
+
+      {/* Musician Status */}
+      {user?.role === 'musician' && item.musician_status && (
+        <View style={styles.musicianStatusContainer}>
+          <View style={[styles.musicianStatusBadge, { backgroundColor: getMusicianStatusColor(item.musician_status) }]}>
+            <ElegantIcon name="user-check" size={12} color="white" />
+            <Text style={styles.musicianStatusText}>{getMusicianStatusText(item.musician_status)}</Text>
+          </View>
+        </View>
+      )}
       
       <View style={styles.requestInfoRow}>
         <ElegantIcon name="music" size={16} color={theme.colors.text.secondary} />
@@ -520,6 +623,40 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     marginBottom: 12,
     lineHeight: 20,
+  },
+  eventStatusContainer: {
+    marginBottom: 8,
+  },
+  eventStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  eventStatusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  musicianStatusContainer: {
+    marginBottom: 8,
+  },
+  musicianStatusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  musicianStatusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   leaderInfo: {
     borderTopWidth: 1,

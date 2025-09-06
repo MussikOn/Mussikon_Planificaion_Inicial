@@ -37,8 +37,10 @@ const PricingManagementScreen: React.FC = () => {
   });
 
   useEffect(() => {
-    loadPricingConfig();
-  }, []);
+    if (token) {
+      loadPricingConfig();
+    }
+  }, [token]);
 
   const loadPricingConfig = async () => {
     try {

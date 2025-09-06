@@ -190,6 +190,24 @@ class ApiService {
     return this.makeRequest(endpoint);
   }
 
+  async getLeaderRequests(filters?: any, token?: string): Promise<{ success: boolean; data: any[]; pagination?: any }> {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          queryParams.append(key, filters[key]);
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/requests/my-requests?${queryString}` : '/requests/my-requests';
+    
+    if (token) {
+      return this.makeAuthenticatedRequest(endpoint, token);
+    }
+    return this.makeRequest(endpoint);
+  }
+
   async createRequest(requestData: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
     if (token) {
       return this.makeAuthenticatedRequest('/requests', token, {
@@ -215,6 +233,42 @@ class ApiService {
     }
     const queryString = queryParams.toString();
     const endpoint = queryString ? `/offers?${queryString}` : '/offers';
+    
+    if (token) {
+      return this.makeAuthenticatedRequest(endpoint, token);
+    }
+    return this.makeRequest(endpoint);
+  }
+
+  async getMusicianOffers(filters?: any, token?: string): Promise<{ success: boolean; data: any[] }> {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          queryParams.append(key, filters[key]);
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/offers/my-offers?${queryString}` : '/offers/my-offers';
+    
+    if (token) {
+      return this.makeAuthenticatedRequest(endpoint, token);
+    }
+    return this.makeRequest(endpoint);
+  }
+
+  async getLeaderOffers(filters?: any, token?: string): Promise<{ success: boolean; data: any[] }> {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          queryParams.append(key, filters[key]);
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/offers/leader-offers?${queryString}` : '/offers/leader-offers';
     
     if (token) {
       return this.makeAuthenticatedRequest(endpoint, token);
@@ -411,16 +465,6 @@ class ApiService {
     });
   }
 
-  async cancelRequest(requestId: string, token?: string): Promise<{ success: boolean; message: string }> {
-    if (token) {
-      return this.makeAuthenticatedRequest(`/requests/${requestId}/cancel`, token, {
-        method: 'POST',
-      });
-    }
-    return this.makeRequest(`/requests/${requestId}/cancel`, {
-      method: 'POST',
-    });
-  }
 
   async completeRequest(requestId: string, token?: string): Promise<{ success: boolean; message: string }> {
     if (token) {
@@ -514,6 +558,80 @@ class ApiService {
     }
     return this.makeRequest('/pricing/initialize', {
       method: 'POST',
+    });
+  }
+
+  // Event Time Controls
+  async startEvent(requestId: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/start`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}/start`, {
+      method: 'POST',
+    });
+  }
+
+  async completeEvent(requestId: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/complete`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}/complete`, {
+      method: 'POST',
+    });
+  }
+
+  async getEventStatus(requestId: string, token?: string): Promise<{ success: boolean; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/status`, token);
+    }
+    return this.makeRequest(`/requests/${requestId}/status`);
+  }
+
+  // Musician Request Actions
+  async acceptRequest(requestId: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/accept`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}/accept`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectRequest(requestId: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/reject`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}/reject`, {
+      method: 'POST',
+    });
+  }
+
+  async getMusicianRequestStatus(requestId: string, token?: string): Promise<{ success: boolean; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/musician-status`, token);
+    }
+    return this.makeRequest(`/requests/${requestId}/musician-status`);
+  }
+
+  // Cancel request (leaders can cancel with penalties)
+  async cancelRequest(requestId: string, reason: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/requests/${requestId}/cancel`, token, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      });
+    }
+    return this.makeRequest(`/requests/${requestId}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
     });
   }
 }

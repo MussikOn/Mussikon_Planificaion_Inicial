@@ -18,6 +18,7 @@ import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
 import { Button, ElegantIcon } from '../components';
 import ErrorHandler from '../utils/errorHandler';
+import PriceCalculator from '../components/PriceCalculator';
 
 interface Request {
   id: string;
@@ -25,7 +26,7 @@ interface Request {
   event_date: string;
   event_time: string;
   location: string;
-  budget: number;
+  extra_amount: number;
   description: string;
   required_instrument: string;
   leader: {
@@ -88,10 +89,10 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
       return;
     }
 
-    if (request && price > request.budget) {
+    if (request && price > 0 && request.extra_amount > 0 && price > request.extra_amount) {
       Alert.alert(
-        'Precio Superior al Presupuesto',
-        `El precio propuesto ($${price.toLocaleString()}) es superior al presupuesto máximo ($${request.budget.toLocaleString()}). ¿Deseas continuar?`,
+        'Precio Superior al Monto Extra',
+        `El precio propuesto ($${price.toLocaleString()}) es superior al monto extra ofrecido ($${request.extra_amount.toLocaleString()}). ¿Deseas continuar?`,
         [
           { text: 'Cancelar', style: 'cancel' },
           { text: 'Continuar', onPress: () => submitOffer(price) }
@@ -169,7 +170,9 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
             <View style={styles.requestCard}>
               <View style={styles.requestHeader}>
                 <Text style={styles.eventType}>{request.event_type}</Text>
-                <Text style={styles.budget}>${request.budget.toLocaleString()} DOP</Text>
+                <Text style={styles.budget}>
+                  {request.extra_amount > 0 ? `+$${request.extra_amount.toLocaleString()} DOP extra` : 'Sin monto extra'}
+                </Text>
               </View>
 
               <View style={styles.requestDetails}>
@@ -224,9 +227,21 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
                 />
               </View>
               <Text style={styles.inputHint}>
-                Presupuesto máximo: ${request.budget.toLocaleString()} DOP
+                {request.extra_amount > 0 
+                  ? `Monto extra ofrecido: +$${request.extra_amount.toLocaleString()} DOP` 
+                  : 'El líder no ofreció monto extra adicional'
+                }
               </Text>
             </View>
+
+            {/* Price Calculator for Musicians */}
+            {request && (
+              <PriceCalculator
+                startTime={request.event_time}
+                endTime={request.event_time} // You might need to calculate end time based on event type
+                showDetails={true} // Musicians see detailed breakdown
+              />
+            )}
 
             <View style={styles.formGroup}>
               <Text style={styles.inputLabel}>Mensaje Personal (Opcional)</Text>
