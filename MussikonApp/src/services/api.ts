@@ -46,6 +46,33 @@ export interface RegisterRequest {
   }>;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
+export interface PasswordResetResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface SendVerificationEmailRequest {
+  email: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface EmailVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
 export interface ApiError {
   success: false;
   message: string;
@@ -144,10 +171,46 @@ class ApiService {
     });
   }
 
-  async verifyEmail(email: string): Promise<{ success: boolean; message: string }> {
-    return this.makeRequest('/auth/verify-email', {
+
+  // Recuperación de contraseña
+  async forgotPassword(email: string): Promise<PasswordResetResponse> {
+    return this.makeRequest<PasswordResetResponse>('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<PasswordResetResponse> {
+    return this.makeRequest<PasswordResetResponse>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, new_password: newPassword }),
+    });
+  }
+
+  async validateResetToken(token: string): Promise<PasswordResetResponse> {
+    return this.makeRequest<PasswordResetResponse>(`/auth/validate-reset-token/${token}`, {
+      method: 'GET',
+    });
+  }
+
+  // Verificación de email
+  async sendVerificationEmail(email: string): Promise<EmailVerificationResponse> {
+    return this.makeRequest<EmailVerificationResponse>('/auth/send-verification-email', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async verifyEmail(token: string): Promise<EmailVerificationResponse> {
+    return this.makeRequest<EmailVerificationResponse>('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async validateVerificationToken(token: string): Promise<EmailVerificationResponse> {
+    return this.makeRequest<EmailVerificationResponse>(`/auth/validate-verification-token/${token}`, {
+      method: 'GET',
     });
   }
 

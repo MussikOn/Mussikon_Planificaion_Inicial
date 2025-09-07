@@ -90,14 +90,16 @@ const DashboardScreen: React.FC = () => {
       }
 
       console.log('Fetching dashboard data with token:', token ? 'Present' : 'Missing');
+      console.log('User role:', user?.role);
+      console.log('User active_role:', user?.active_role);
 
       const [requestsResponse, offersResponse, adminStatsResponse] = await Promise.all([
-        // Use different endpoints based on user role
-        user?.role === 'leader' ? apiService.getLeaderRequests({ limit: 5 }, token) : apiService.getRequests({ limit: 5 }, token),
+        // Use different endpoints based on user active role
+        user?.active_role === 'leader' ? apiService.getLeaderRequests({ limit: 5 }, token) : apiService.getRequests({ limit: 5 }, token),
         // Usar el endpoint correcto según el rol para ofertas
-        user?.role === 'musician' 
+        user?.active_role === 'musician' 
           ? apiService.getMusicianOffers({ limit: 5 }, token) 
-          : user?.role === 'leader' 
+          : user?.active_role === 'leader' 
             ? apiService.getLeaderOffers({ limit: 5 }, token)
             : apiService.getOffers({ limit: 5 }, token),
         user?.role === 'admin' ? apiService.getAdminStats(token) : Promise.resolve(null)
@@ -170,7 +172,7 @@ const DashboardScreen: React.FC = () => {
         {/* Header */}
         <ScreenHeader 
           title={`¡Bienvenido, ${user?.name}!`}
-          subtitle={user?.role === 'leader' ? 'Líder de Iglesia' : user?.role === 'musician' ? 'Músico' : 'Administrador'}
+          subtitle={user?.active_role === 'leader' ? 'Líder de Iglesia' : user?.active_role === 'musician' ? 'Músico' : 'Administrador'}
           rightElement={
             unreadCount > 0 ? (
               <TouchableOpacity 
@@ -224,29 +226,29 @@ const DashboardScreen: React.FC = () => {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <ElegantIcon 
-                  name={user?.role === 'leader' ? 'requests' : 'offers'} 
+                  name={user?.active_role === 'leader' ? 'requests' : 'offers'} 
                   size={24} 
                   color={theme.colors.primary} 
                 />
                 <Text style={styles.cardTitle}>
-                  {user?.role === 'leader' 
+                  {user?.active_role === 'leader' 
                     ? 'Gestiona tus solicitudes musicales' 
                     : 'Encuentra oportunidades musicales'
                   }
                 </Text>
               </View>
               <Text style={styles.cardDescription}>
-                {user?.role === 'leader' 
+                {user?.active_role === 'leader' 
                   ? 'Crea solicitudes para encontrar músicos para tus eventos' 
                   : 'Explora solicitudes y haz ofertas para mostrar tus talentos'
                 }
               </Text>
               <TouchableOpacity 
                 style={styles.cardButton}
-                onPress={() => router.push(user?.role === 'leader' ? '/requests' : '/offers')}
+                onPress={() => router.push(user?.active_role === 'leader' ? '/requests' : '/offers')}
               >
                 <Text style={styles.cardButtonText}>
-                  {user?.role === 'leader' ? 'Ver Solicitudes' : 'Ver Ofertas'}
+                  {user?.active_role === 'leader' ? 'Ver Solicitudes' : 'Ver Ofertas'}
                 </Text>
                 <ElegantIcon name="forward" size={16} color={theme.colors.white} />
               </TouchableOpacity>
@@ -255,29 +257,29 @@ const DashboardScreen: React.FC = () => {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <ElegantIcon 
-                  name={user?.role === 'leader' ? 'offers' : 'requests'} 
+                  name={user?.active_role === 'leader' ? 'offers' : 'requests'} 
                   size={24} 
                   color={theme.colors.success} 
                 />
                 <Text style={styles.cardTitle}>
-                  {user?.role === 'leader' 
+                  {user?.active_role === 'leader' 
                     ? 'Revisa las ofertas recibidas' 
                     : 'Crea una nueva oferta'
                   }
                 </Text>
               </View>
               <Text style={styles.cardDescription}>
-                {user?.role === 'leader' 
+                {user?.active_role === 'leader' 
                   ? 'Ve las propuestas de músicos y selecciona la mejor' 
                   : 'Responde a solicitudes y muestra tu talento musical'
                 }
               </Text>
               <TouchableOpacity 
                 style={styles.cardButton}
-                onPress={() => router.push(user?.role === 'leader' ? '/offers' : '/requests')}
+                onPress={() => router.push(user?.active_role === 'leader' ? '/offers' : '/requests')}
               >
                 <Text style={styles.cardButtonText}>
-                  {user?.role === 'leader' ? 'Ver Ofertas' : 'Ver Solicitudes'}
+                  {user?.active_role === 'leader' ? 'Ver Ofertas' : 'Ver Solicitudes'}
                 </Text>
                 <ElegantIcon name="forward" size={16} color={theme.colors.white} />
               </TouchableOpacity>

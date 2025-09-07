@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SimpleWelcomeScreen, LoginScreen, RegisterScreen, AboutScreen } from '../screens';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 
 const Stack = createStackNavigator();
 
@@ -24,7 +26,7 @@ const AuthNavigator: React.FC = () => {
   };
 
   const handleRegister = () => {
-    setCurrentScreen('Login');
+    setCurrentScreen('Register');
   };
 
   return (
@@ -67,6 +69,16 @@ const AuthNavigator: React.FC = () => {
               onBack={handleBack}
             />
           )}
+        </Stack.Screen>
+      )}
+      {currentScreen === 'ForgotPassword' && (
+        <Stack.Screen name="ForgotPassword">
+          {() => <ForgotPasswordScreen />}
+        </Stack.Screen>
+      )}
+      {currentScreen === 'ResetPassword' && (
+        <Stack.Screen name="ResetPassword">
+          {() => <ResetPasswordScreen />}
         </Stack.Screen>
       )}
     </Stack.Navigator>

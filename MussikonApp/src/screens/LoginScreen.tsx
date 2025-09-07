@@ -31,10 +31,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBack, onRegister }) => {
   };
 
   const handleRegister = () => {
+    console.log('handleRegister called');
     if (onRegister) {
+      console.log('Using onRegister prop');
       onRegister();
     } else {
-      router.push('/register');
+      console.log('No onRegister prop, using router fallback');
+      try {
+        router.push('/register');
+        console.log('Navigation successful');
+      } catch (error) {
+        console.error('Navigation error:', error);
+        ErrorHandler.showError('Error al navegar a la pantalla de registro', 'Error de Navegación');
+      }
     }
   };
   const [email, setEmail] = useState('');
@@ -83,7 +92,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBack, onRegister }) => {
   };
 
   const handleForgotPassword = () => {
-    ErrorHandler.showWarning('Funcionalidad en desarrollo', 'Recuperar contraseña');
+    router.push('/forgot-password');
   };
 
 
@@ -167,7 +176,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBack, onRegister }) => {
           {/* Register Button */}
           <TouchableOpacity 
             style={styles.registerButton}
-            onPress={handleRegister}
+            onPress={() => {
+              console.log('Register button pressed');
+              handleRegister();
+            }}
+            activeOpacity={0.7}
           >
             <Text style={styles.registerButtonText}>
               ¿Nuevo usuario? Crear cuenta
