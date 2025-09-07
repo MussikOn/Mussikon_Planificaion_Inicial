@@ -12,7 +12,7 @@ export class OfferController {
   public getOffers = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = (req as any).user.userId;
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
       const { request_id, status } = req.query;
 
       let query = supabase
@@ -182,7 +182,8 @@ export class OfferController {
         .eq('id', userId)
         .single();
 
-      if (!user || (user.role !== 'musician' && user.role !== 'admin')) {
+      const userActiveRole = user?.active_role || user?.role;
+      if (!user || (userActiveRole !== 'musician' && user.role !== 'admin')) {
         throw createError('Only musicians and admins can create offers', 403);
       }
 

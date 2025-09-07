@@ -12,7 +12,7 @@ export class RequestController {
   public getRequests = async (req: Request, res: Response): Promise<void> => {
     try {
       const userId = (req as any).user.userId;
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
       const filters: RequestFilters = req.query;
       const page = parseInt(filters.page?.toString() || '1');
       const limit = parseInt(filters.limit?.toString() || '10');
@@ -181,7 +181,8 @@ export class RequestController {
         .eq('id', userId)
         .single();
 
-      if (!user || (user.role !== 'leader' && user.role !== 'admin')) {
+      const userActiveRole = user?.active_role || user?.role;
+      if (!user || (userActiveRole !== 'leader' && user.role !== 'admin')) {
         throw createError('Only leaders and admins can create requests', 403);
       }
 
@@ -249,6 +250,8 @@ export class RequestController {
   public getRequestById = async (req: Request, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
+      const userId = (req as any).user.userId;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
 
       const { data: request, error } = await supabase
         .from('requests')
@@ -266,6 +269,20 @@ export class RequestController {
       if (error || !request) {
         throw createError('Request not found', 404);
       }
+
+      // Check permissions based on user role
+      if (userRole === 'leader') {
+        // Leaders can only see their own requests
+        if (request.leader_id !== userId) {
+          throw createError('Acceso denegado. No tienes permisos para ver esta solicitud.', 403);
+        }
+      } else if (userRole === 'musician') {
+        // Musicians can see active requests
+        if (request.status !== 'active') {
+          throw createError('Acceso denegado. Solo puedes ver solicitudes activas.', 403);
+        }
+      }
+      // Admins can see all requests (no additional check needed)
 
       res.status(200).json({
         success: true,
@@ -515,7 +532,7 @@ export class RequestController {
     try {
       const { requestId } = req.params;
       const userId = (req as any).user.userId;
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
 
       // Only musicians can start events
       if (userRole !== 'musician') {
@@ -620,7 +637,7 @@ export class RequestController {
     try {
       const { requestId } = req.params;
       const userId = (req as any).user.userId;
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
 
       // Only leaders can complete events
       if (userRole !== 'leader') {
@@ -736,7 +753,7 @@ export class RequestController {
       }
 
       // Check permissions
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
       if (userRole !== 'admin' && request.leader_id !== userId) {
         // Check if user is the musician who started the event
         if (request.started_by_musician_id !== userId) {
@@ -853,7 +870,7 @@ export class RequestController {
     try {
       const { requestId } = req.params;
       const userId = (req as any).user.userId;
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
 
       // Only musicians can accept requests
       if (userRole !== 'musician') {
@@ -945,7 +962,7 @@ export class RequestController {
     try {
       const { requestId } = req.params;
       const userId = (req as any).user.userId;
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
 
       // Only musicians can reject requests
       if (userRole !== 'musician') {
@@ -1094,7 +1111,7 @@ export class RequestController {
       const { requestId } = req.params;
       const { reason } = req.body;
       const userId = (req as any).user.userId;
-      const userRole = (req as any).user.role;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
 
       // Only leaders can cancel requests
       if (userRole !== 'leader') {

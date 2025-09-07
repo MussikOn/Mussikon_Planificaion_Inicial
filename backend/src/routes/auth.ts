@@ -129,9 +129,9 @@ router.post('/login', validateRequest(loginSchema), authController.login);
 
 /**
  * @swagger
- * /api/auth/verify-email:
+ * /api/auth/send-verification-email:
  *   post:
- *     summary: Verificar email
+ *     summary: Enviar email de verificación
  *     tags: [Autenticación]
  *     requestBody:
  *       required: true
@@ -148,11 +148,18 @@ router.post('/login', validateRequest(loginSchema), authController.login);
  *                 example: juan@example.com
  *     responses:
  *       200:
- *         description: Email de verificación enviado
+ *         description: Email de verificación enviado (si el usuario existe)
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Success'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Si el email existe en nuestro sistema, recibirás un enlace de verificación.
  *       400:
  *         description: Error de validación
  *         content:
@@ -160,7 +167,82 @@ router.post('/login', validateRequest(loginSchema), authController.login);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+/**
+ * @swagger
+ * /api/auth/verify-email:
+ *   post:
+ *     summary: Verificar email con token
+ *     tags: [Autenticación]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: uuid-token-here
+ *     responses:
+ *       200:
+ *         description: Email verificado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Email verificado exitosamente. Tu cuenta ha sido activada.
+ *       400:
+ *         description: Token inválido o expirado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+/**
+ * @swagger
+ * /api/auth/validate-verification-token/{token}:
+ *   get:
+ *     summary: Validar token de verificación de email
+ *     tags: [Autenticación]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de verificación de email
+ *     responses:
+ *       200:
+ *         description: Token válido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Token de verificación válido
+ *       400:
+ *         description: Token inválido o expirado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/send-verification-email', authController.sendVerificationEmail);
 router.post('/verify-email', authController.verifyEmail);
+router.get('/validate-verification-token/:token', authController.validateVerificationToken);
 
 /**
  * @swagger
@@ -179,5 +261,137 @@ router.post('/verify-email', authController.verifyEmail);
  *               $ref: '#/components/schemas/Success'
  */
 router.post('/logout', authController.logout);
+
+/**
+ * @swagger
+ * /api/auth/forgot-password:
+ *   post:
+ *     summary: Solicitar recuperación de contraseña
+ *     tags: [Autenticación]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: usuario@ejemplo.com
+ *     responses:
+ *       200:
+ *         description: Email de recuperación enviado (si el usuario existe)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Restablecer contraseña con token
+ *     tags: [Autenticación]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - new_password
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: uuid-token-here
+ *               new_password:
+ *                 type: string
+ *                 minLength: 8
+ *                 example: nuevaContraseña123
+ *     responses:
+ *       200:
+ *         description: Contraseña restablecida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.
+ *       400:
+ *         description: Token inválido o contraseña débil
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Token inválido o expirado
+ */
+router.post('/reset-password', authController.resetPassword);
+
+/**
+ * @swagger
+ * /api/auth/validate-reset-token/{token}:
+ *   get:
+ *     summary: Validar token de recuperación de contraseña
+ *     tags: [Autenticación]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de recuperación de contraseña
+ *     responses:
+ *       200:
+ *         description: Token válido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Token válido
+ *       400:
+ *         description: Token inválido o expirado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Token inválido o expirado
+ */
+router.get('/validate-reset-token/:token', authController.validateResetToken);
 
 export default router;

@@ -49,9 +49,26 @@ class BalanceService {
         .single();
 
       if (error) {
+        console.error('Error fetching user balance:', error);
         if (error.code === 'PGRST116') {
           // No balance found, create one
+          console.log('Creating new balance for user:', userId);
           return await this.createUserBalance(userId);
+        }
+        // Si es un error de tabla no encontrada, crear una estructura básica
+        if (error.message?.includes('relation "user_balances" does not exist')) {
+          console.log('Table user_balances does not exist, returning default balance');
+          return {
+            id: 'temp-id',
+            user_id: userId,
+            total_earnings: 0,
+            pending_earnings: 0,
+            available_balance: 0,
+            total_withdrawn: 0,
+            currency: 'DOP',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
         }
         throw createError('Failed to fetch user balance', 500);
       }
@@ -106,6 +123,16 @@ class BalanceService {
         .eq('user_id', userId);
 
       if (countError) {
+        console.error('Error counting transactions:', countError);
+        // Si la tabla no existe, devolver datos vacíos
+        if (countError.message?.includes('relation "user_transactions" does not exist')) {
+          console.log('Table user_transactions does not exist, returning empty transactions');
+          return {
+            transactions: [],
+            total: 0,
+            totalPages: 0
+          };
+        }
         throw createError('Failed to count transactions', 500);
       }
 
@@ -118,6 +145,16 @@ class BalanceService {
         .range(offset, offset + limit - 1);
 
       if (error) {
+        console.error('Error fetching transactions:', error);
+        // Si la tabla no existe, devolver datos vacíos
+        if (error.message?.includes('relation "user_transactions" does not exist')) {
+          console.log('Table user_transactions does not exist, returning empty transactions');
+          return {
+            transactions: [],
+            total: 0,
+            totalPages: 0
+          };
+        }
         throw createError('Failed to fetch transactions', 500);
       }
 

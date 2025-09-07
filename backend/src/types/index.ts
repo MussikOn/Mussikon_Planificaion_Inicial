@@ -44,6 +44,56 @@ export interface AuthResponse {
   token?: string;
 }
 
+// Password Reset Types
+export interface PasswordResetToken {
+  id: string;
+  user_id: string;
+  token: string;
+  expires_at: string;
+  used: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+}
+
+export interface PasswordResetResponse {
+  success: boolean;
+  message: string;
+}
+
+// Email Verification Types
+export interface EmailVerificationToken {
+  id: string;
+  user_id: string;
+  token: string;
+  expires_at: string;
+  used: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SendVerificationEmailRequest {
+  email: string;
+}
+
+export interface VerifyEmailRequest {
+  code: string;
+  email: string;
+}
+
+export interface EmailVerificationResponse {
+  success: boolean;
+  message: string;
+}
+
 // Request Types
 export interface Request {
   id: string;
