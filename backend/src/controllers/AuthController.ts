@@ -432,7 +432,7 @@ export class AuthController {
         // Don't reveal if user exists or not for security
         res.status(200).json({
           success: true,
-          message: 'Si el email existe en nuestro sistema, recibirás un enlace de verificación.'
+          message: 'Si el email existe en nuestro sistema, recibirás un código de verificación.'
         });
         return;
       }
@@ -440,29 +440,18 @@ export class AuthController {
       // Check if user is already verified (you might want to add an email_verified field)
       // For now, we'll just send the email regardless
 
-      // Generate new verification token
-      const verificationToken = uuidv4();
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24); // Token expires in 24 hours
+      // Generate verification code using database function
+      const { data: verificationCode, error: codeError } = await supabase
+        .rpc('create_email_verification_code', { p_user_id: user.id });
 
-      // Save verification token to database
-      const { error: tokenError } = await supabase
-        .from('email_verification_tokens')
-        .insert([{
-          user_id: user.id,
-          token: verificationToken,
-          expires_at: expiresAt.toISOString(),
-          used: false
-        }]);
-
-      if (tokenError) {
-        console.error('Error creating verification token:', tokenError);
-        throw createError('Failed to create verification token', 500);
+      if (codeError) {
+        console.error('Error generating verification code:', codeError);
+        throw createError('Failed to create verification code', 500);
       }
 
       // Send verification email
       try {
-        await sendEmailVerificationEmail(user.email, user.name, verificationToken);
+        await sendEmailVerificationEmail(user.email, user.name, verificationCode);
       } catch (emailError) {
         console.error('Failed to send verification email:', emailError);
         // Don't fail the request if email fails
@@ -470,7 +459,7 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message: 'Si el email existe en nuestro sistema, recibirás un enlace de verificación.'
+        message: 'Si el email existe en nuestro sistema, recibirás un código de verificación.'
       });
     } catch (error) {
       if (error instanceof AppError) {
@@ -488,33 +477,54 @@ export class AuthController {
     }
   };
 
-  // Verify email with token
+  // Verify email with code
   public verifyEmail = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { token }: VerifyEmailRequest = req.body;
+      const { code, email }: VerifyEmailRequest = req.body;
 
-      // Find valid verification token
-      const { data: verificationToken, error: tokenError } = await supabase
-        .from('email_verification_tokens')
-        .select('*, user:users(id, name, email, status)')
-        .eq('token', token)
-        .eq('used', false)
-        .gt('expires_at', new Date().toISOString())
+      // Check if user exists
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('id, name, email, status')
+        .eq('email', email)
         .single();
 
-      if (tokenError || !verificationToken) {
-        throw createError('Token de verificación inválido o expirado', 400);
+      if (userError || !user) {
+        throw createError('Usuario no encontrado', 404);
       }
 
-      // Mark token as used
-      const { error: updateTokenError } = await supabase
-        .from('email_verification_tokens')
-        .update({ used: true })
-        .eq('id', verificationToken.id);
+      // Verify code using database function
+      const { data: isValid, error: verifyError } = await supabase
+        .rpc('verify_email_code', { 
+          p_user_id: user.id, 
+          p_code: code 
+        });
 
-      if (updateTokenError) {
-        console.error('Error updating token:', updateTokenError);
-        // Don't fail the request if token update fails
+      if (verifyError) {
+        console.error('Error verifying code:', verifyError);
+        throw createError('Error al verificar el código', 500);
+      }
+
+      if (!isValid) {
+        // Check if code is locked
+        const { data: tokenData } = await supabase
+          .from('email_verification_tokens')
+          .select('attempts, max_attempts, locked_until')
+          .eq('user_id', user.id)
+          .eq('verification_code', code)
+          .eq('used', false)
+          .single();
+
+        if (tokenData && tokenData.locked_until && new Date(tokenData.locked_until) > new Date()) {
+          const lockTime = new Date(tokenData.locked_until);
+          throw createError(`Código bloqueado. Intenta nuevamente después de ${lockTime.toLocaleString()}`, 429);
+        }
+
+        if (tokenData && tokenData.attempts >= tokenData.max_attempts) {
+          throw createError('Código bloqueado por demasiados intentos fallidos', 429);
+        }
+
+        throw createError('Código de verificación inválido o expirado', 400);
       }
 
       // Update user status to active (if they were pending)
@@ -524,7 +534,7 @@ export class AuthController {
           status: 'active',
           updated_at: new Date().toISOString()
         })
-        .eq('id', verificationToken.user_id);
+        .eq('id', user.id);
 
       if (updateUserError) {
         console.error('Error updating user status:', updateUserError);

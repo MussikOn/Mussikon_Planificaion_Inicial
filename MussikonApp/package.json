@@ -22,8 +22,10 @@
     "@react-navigation/native": "^7.1.6",
     "@react-navigation/stack": "^7.4.8",
     "@supabase/supabase-js": "^2.57.2",
+    "@types/jwt-decode": "^2.2.1",
     "axios": "^1.11.0",
     "expo": "~53.0.22",
+    "expo-audio": "~0.4.9",
     "expo-av": "^15.1.7",
     "expo-constants": "~17.1.7",
     "expo-font": "~13.3.2",
@@ -35,6 +37,7 @@
     "expo-status-bar": "~2.2.3",
     "expo-system-ui": "~5.0.11",
     "expo-web-browser": "~14.2.0",
+    "jwt-decode": "^4.0.0",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
@@ -45,8 +48,7 @@
     "react-native-screens": "~4.11.1",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "~0.20.0",
-    "socket.io-client": "^4.8.1",
-    "expo-audio": "~0.4.9"
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

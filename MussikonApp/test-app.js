@@ -19,3 +19,4 @@ setTimeout(() => {
 }, 4000);
 
 console.log('✅ Aplicación funcionando correctamente');
+

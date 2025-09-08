@@ -25,3 +25,4 @@ console.log('\n5. Ejecuta la consulta');
 console.log('\n✅ Después de ejecutar el esquema, tu base de datos estará lista!');
 console.log('\n🧪 Para probar la configuración, ejecuta:');
 console.log('   npm run test:api');
+

@@ -30,3 +30,4 @@ console.log('   - Copia cada una por separado\n');
 
 console.log('💡 Después de obtener las claves, ejecuta:');
 console.log('   npm run configure-credentials');
+

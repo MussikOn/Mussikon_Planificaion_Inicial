@@ -37,3 +37,4 @@ console.log('2. Run: npm install');
 console.log('3. Run: npm run dev');
 console.log('4. Test: npm run test:api');
 console.log('\n📚 For more information, see README.md');
+

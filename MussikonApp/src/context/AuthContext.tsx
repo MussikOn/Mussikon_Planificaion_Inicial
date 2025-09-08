@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiService, User } from '../services/api';
+import {jwtDecode} from 'jwt-decode';
+
 
 interface AuthContextType {
   user: User | null;
@@ -31,6 +33,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAuthenticated = !!user && !!token;
 
+
   // Cargar datos de autenticación al iniciar la app
   useEffect(() => {
     loadStoredAuth();
@@ -42,6 +45,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         AsyncStorage.getItem(STORAGE_KEYS.USER),
         AsyncStorage.getItem(STORAGE_KEYS.TOKEN),
       ]);
+
+      const expiredToken = await verifyToken(storedToken!);
+      if (expiredToken) {
+        console.log('Stored token is expired or invalid');
+        await clearAuth();
+        setIsLoading(false);
+        return;
+      }
+      console.log(`User: ${storedUser}}` );
+
+      console.log(`Token: ${storedToken}}` );
 
       if (storedUser && storedToken) {
         console.log('Loading stored auth - User:', storedUser ? 'Present' : 'Missing', 'Token:', storedToken ? 'Present' : 'Missing');
@@ -170,6 +184,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     register,
     changeRole,
+  };
+
+  const verifyToken  = async (token: string) => {
+    try {
+        // Debugging logs
+      const decoded: any = jwtDecode(token);
+      if(!decoded.exp) return true;
+      const now = Date.now() / 1000;
+      return decoded.exp < now;
+    } catch (error) {
+      console.error('\n\nError verifying token:', error,'\n\n');
+      return false;
+    }
   };
 
   return (

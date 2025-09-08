@@ -61,7 +61,7 @@ export const sendValidationEmail = async (email: string, name: string, status: s
 };
 
 export const sendPasswordResetEmail = async (email: string, name: string, resetToken: string): Promise<void> => {
-  const resetUrl = `${process.env['FRONTEND_URL'] || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env['FRONTEND_URL'] || 'http://172.20.10.4:3000'}/reset-password?token=${resetToken}`;
   const subject = 'Recuperar Contraseña - Mussikon';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

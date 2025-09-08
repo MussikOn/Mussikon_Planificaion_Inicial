@@ -70,3 +70,4 @@ async function debugRegistration() {
 
 // Ejecutar debug
 debugRegistration();
+

@@ -4,3 +4,5 @@ import SendVerificationEmailScreen from '../src/screens/SendVerificationEmailScr
 export default function SendVerificationEmailPage() {
   return <SendVerificationEmailScreen />;
 }
+
+

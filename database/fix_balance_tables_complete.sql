@@ -1,18 +1,31 @@
--- Script simple para crear las tablas de balance desde cero
+-- Script completo para verificar y corregir las tablas de balance
 -- Ejecutar en Supabase
 
 -- ==============================================
--- ELIMINAR TABLAS EXISTENTES (SI EXISTEN)
+-- VERIFICAR ESTRUCTURA ACTUAL
 -- ==============================================
 
--- Eliminar tablas en orden correcto (primero las que dependen)
-DROP TABLE IF EXISTS user_transactions CASCADE;
+-- Verificar si las tablas existen
+SELECT 
+    CASE WHEN EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_balances') 
+    THEN 'user_balances table exists' 
+    ELSE 'user_balances table does not exist' 
+    END AS user_balances_status;
+
+SELECT 
+    CASE WHEN EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'user_transactions') 
+    THEN 'user_transactions table exists' 
+    ELSE 'user_transactions table does not exist' 
+    END AS user_transactions_status;
+
+-- ==============================================
+-- CORREGIR TABLA user_balances
+-- ==============================================
+
+-- Eliminar tabla si existe y tiene estructura incorrecta
 DROP TABLE IF EXISTS user_balances CASCADE;
 
--- ==============================================
--- CREAR TABLA user_balances
--- ==============================================
-
+-- Crear tabla user_balances con estructura correcta
 CREATE TABLE user_balances (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
@@ -37,18 +50,37 @@ CREATE POLICY "System can insert user balances" ON user_balances
 CREATE POLICY "System can update user balances" ON user_balances
     FOR UPDATE USING (true);
 
+-- Función para actualizar updated_at
+CREATE OR REPLACE FUNCTION update_user_balances_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear trigger
+CREATE TRIGGER update_user_balances_updated_at
+    BEFORE UPDATE ON user_balances
+    FOR EACH ROW
+    EXECUTE FUNCTION update_user_balances_updated_at();
+
 -- ==============================================
--- CREAR TABLA user_transactions
+-- CORREGIR TABLA user_transactions
 -- ==============================================
 
+-- Eliminar tabla si existe
+DROP TABLE IF EXISTS user_transactions CASCADE;
+
+-- Crear tabla user_transactions con estructura correcta
 CREATE TABLE user_transactions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type VARCHAR(20) NOT NULL CHECK (type IN ('credit', 'debit', 'payment', 'refund', 'commission')),
     amount DECIMAL(10,2) NOT NULL,
     description TEXT,
-    reference_id UUID,
-    reference_type VARCHAR(50),
+    reference_id UUID, -- ID de la solicitud, oferta, etc.
+    reference_type VARCHAR(50), -- 'request', 'offer', 'commission', etc.
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -68,26 +100,7 @@ CREATE POLICY "System can insert user transactions" ON user_transactions
     FOR INSERT WITH CHECK (true);
 
 -- ==============================================
--- CREAR TRIGGERS
--- ==============================================
-
--- Función para actualizar updated_at
-CREATE OR REPLACE FUNCTION update_user_balances_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Crear trigger
-CREATE TRIGGER update_user_balances_updated_at
-    BEFORE UPDATE ON user_balances
-    FOR EACH ROW
-    EXECUTE FUNCTION update_user_balances_updated_at();
-
--- ==============================================
--- CREAR FUNCIONES DE UTILIDAD
+-- FUNCIONES DE UTILIDAD
 -- ==============================================
 
 -- Función para crear balance inicial para usuarios existentes
@@ -137,6 +150,24 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ==============================================
+-- COMENTARIOS
+-- ==============================================
+
+COMMENT ON TABLE user_balances IS 'Balances de usuarios en la plataforma';
+COMMENT ON COLUMN user_balances.user_id IS 'ID del usuario';
+COMMENT ON COLUMN user_balances.balance IS 'Balance actual del usuario';
+COMMENT ON COLUMN user_balances.created_at IS 'Fecha de creación del balance';
+COMMENT ON COLUMN user_balances.updated_at IS 'Fecha de última actualización';
+
+COMMENT ON TABLE user_transactions IS 'Historial de transacciones de usuarios';
+COMMENT ON COLUMN user_transactions.user_id IS 'ID del usuario';
+COMMENT ON COLUMN user_transactions.type IS 'Tipo de transacción (credit, debit, payment, refund, commission)';
+COMMENT ON COLUMN user_transactions.amount IS 'Monto de la transacción';
+COMMENT ON COLUMN user_transactions.description IS 'Descripción de la transacción';
+COMMENT ON COLUMN user_transactions.reference_id IS 'ID de referencia (solicitud, oferta, etc.)';
+COMMENT ON COLUMN user_transactions.reference_type IS 'Tipo de referencia (request, offer, commission, etc.)';
+
+-- ==============================================
 -- CREAR BALANCES INICIALES
 -- ==============================================
 
@@ -147,7 +178,7 @@ SELECT create_initial_balances();
 -- VERIFICAR RESULTADOS
 -- ==============================================
 
--- Verificar estructura
+-- Verificar estructura final
 SELECT 'Estructura de user_balances:' AS info;
 SELECT column_name, data_type, is_nullable, column_default
 FROM information_schema.columns 
@@ -168,4 +199,6 @@ SELECT COUNT(*) AS total_users FROM users;
 SELECT COUNT(*) AS total_balances FROM user_balances;
 SELECT COUNT(*) AS total_transactions FROM user_transactions;
 
-SELECT 'Tablas de balance creadas exitosamente' AS final_status;
+SELECT 'Tablas de balance configuradas exitosamente' AS final_status;
+
+

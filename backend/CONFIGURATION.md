@@ -124,3 +124,4 @@ npm run test:api
 ---
 
 **¡La configuración de base de datos está lista! Solo necesitas configurar las claves de API de Supabase.**
+

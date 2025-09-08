@@ -176,3 +176,4 @@ backend/
 - Row Level Security en Supabase
 - CORS configurado para el frontend
 - Headers de seguridad con Helmet
+

@@ -171,7 +171,7 @@ router.post('/login', validateRequest(loginSchema), authController.login);
  * @swagger
  * /api/auth/verify-email:
  *   post:
- *     summary: Verificar email con token
+ *     summary: Verificar email con código numérico
  *     tags: [Autenticación]
  *     requestBody:
  *       required: true
@@ -180,11 +180,18 @@ router.post('/login', validateRequest(loginSchema), authController.login);
  *           schema:
  *             type: object
  *             required:
- *               - token
+ *               - code
+ *               - email
  *             properties:
- *               token:
+ *               code:
  *                 type: string
- *                 example: uuid-token-here
+ *                 example: "123456"
+ *                 description: Código de verificación de 6 dígitos
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: usuario@example.com
+ *                 description: Email del usuario a verificar
  *     responses:
  *       200:
  *         description: Email verificado exitosamente

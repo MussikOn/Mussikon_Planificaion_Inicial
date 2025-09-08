@@ -20,3 +20,4 @@ export const handleAsync = (fn: Function) => {
     fn(req, res, next).catch(next);
   };
 };
+
