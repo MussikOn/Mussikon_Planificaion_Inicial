@@ -10,7 +10,8 @@ import {
   TextStyle,
 } from 'react-native';
 import { theme } from '../theme/theme';
-import { apiService } from '../services/api';
+import { apiService, SessionExpiredError } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import GradientBackground from '../components/GradientBackground';
 import { Button } from '../components';
 
@@ -29,6 +30,7 @@ interface Musician {
 }
 
 const MusicianDetailsScreen: React.FC = () => {
+  const { logout } = useAuth();
   const [musician, setMusician] = useState<Musician | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -37,7 +39,9 @@ const MusicianDetailsScreen: React.FC = () => {
   useEffect(() => {
     // TODO: Get musician ID from navigation params
     // For now, we'll use a placeholder
-    fetchMusician('musician-id');
+    const placeholderMusicianId = 'musician-id'; // Replace with actual ID from navigation
+    console.log('Fetching musician with ID:', placeholderMusicianId);
+    fetchMusician(placeholderMusicianId);
   }, []);
 
   const fetchMusician = async (musicianId: string) => {
@@ -49,7 +53,13 @@ const MusicianDetailsScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error fetching musician:', error);
-      Alert.alert('Error', 'No se pudo cargar la información del músico');
+      if (error instanceof SessionExpiredError) {
+        console.log('SessionExpiredError caught in fetchMusician. Logging out...');
+        Alert.alert('Sesión Expirada', error.message, [{ text: 'OK', onPress: logout }]);
+      } else {
+        console.log('Generic error caught in fetchMusician:', error.message);
+        Alert.alert('Error', 'No se pudo cargar la información del músico');
+      }
     } finally {
       setLoading(false);
     }
@@ -73,7 +83,13 @@ const MusicianDetailsScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error approving musician:', error);
-      Alert.alert('Error', 'No se pudo aprobar el músico');
+      if (error instanceof SessionExpiredError) {
+        console.log('SessionExpiredError caught in handleApprove. Logging out...');
+        Alert.alert('Sesión Expirada', error.message, [{ text: 'OK', onPress: logout }]);
+      } else {
+        console.log('Generic error caught in handleApprove:', error.message);
+        Alert.alert('Error', 'No se pudo aprobar el músico');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -102,7 +118,13 @@ const MusicianDetailsScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error rejecting musician:', error);
-      Alert.alert('Error', 'No se pudo rechazar el músico');
+      if (error instanceof SessionExpiredError) {
+        console.log('SessionExpiredError caught in handleReject. Logging out...');
+        Alert.alert('Sesión Expirada', error.message, [{ text: 'OK', onPress: logout }]);
+      } else {
+        console.log('Generic error caught in handleReject:', error.message);
+        Alert.alert('Error', 'No se pudo rechazar el músico');
+      }
     } finally {
       setActionLoading(false);
     }

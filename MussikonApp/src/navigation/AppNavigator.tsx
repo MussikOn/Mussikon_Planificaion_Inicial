@@ -32,9 +32,12 @@ const AppNavigator: React.FC = () => {
       <Stack.Navigator id={undefined} screenOptions={{ headerShown: false }}>
         {user?.role === 'admin' ? (
           <Stack.Screen name="Admin" component={AdminNavigator} />
-        ) : (
+        )
+         : 
+         (
           <Stack.Screen name="Main" component={TabNavigator} />
-        )}
+        )
+        }
       </Stack.Navigator>
     </SocketProvider>
   );

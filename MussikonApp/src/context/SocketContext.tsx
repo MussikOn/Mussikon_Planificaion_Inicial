@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import { Platform, Alert } from 'react-native';
 import { audioService } from '../services/audioService';
+import { URL_SERVER } from '../config/api';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -58,9 +59,10 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, []);
 
   // Initialize socket connection
+  const UelServer = URL_SERVER;
   useEffect(() => {
     if (user && token) {
-      const newSocket = io(process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000', {
+      const newSocket = io(URL_SERVER, {
         auth: {
           token: token
         }

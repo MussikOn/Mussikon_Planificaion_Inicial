@@ -41,6 +41,11 @@
 - **In-app:** Alertas básicas en la app
 - **Estados:** Cambios de estado de solicitudes
 
+#### 8. **Gestión de Balances** ⭐ IMPORTANTE
+- **Ver saldo:** Consulta de saldo actual
+- **Historial de transacciones:** Registro de ingresos y egresos
+- **Retiros:** Solicitud de retiro de fondos
+
 ### Funcionalidades OPCIONALES (Pueden agregarse después)
 
 #### 8. **Historial de Actividad**

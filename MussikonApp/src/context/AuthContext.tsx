@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiService, User } from '../services/api';
+import { apiService, User, SessionExpiredError } from '../services/api';
 import {jwtDecode} from 'jwt-decode';
 import { router } from 'expo-router';
 
@@ -54,6 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (expiredToken) {
         await clearAuth();
         setIsLoading(false);
+        router.replace('/login'); // Redirigir al login
         return;
       }
 
@@ -105,8 +106,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return false;
     } catch (error) {
       console.error('Login error:', error);
-      // Re-lanzar el error para que el LoginScreen pueda manejarlo
-      throw error;
+      if (error instanceof SessionExpiredError) {
+        await clearAuth();
+        router.replace('/login');
+        throw error;
+      } else if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('An unknown error occurred during login.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -143,8 +151,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return false;
     } catch (error) {
       console.error('Register error in AuthContext:', error);
-      // Re-lanzar el error para que el RegisterScreen pueda manejarlo
-      throw error;
+      if (error instanceof SessionExpiredError) {
+        await clearAuth();
+        router.replace('/login');
+        throw error;
+      } else if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('An unknown error occurred during registration.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -187,12 +202,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Debugging logs
       if (!token) return true; // Consider null/undefined token as expired/invalid
       const decoded: any = jwtDecode(token);
-      if(!decoded.exp) return true;
+      if(!decoded.exp) {
+        console.log('Token has no expiration (exp) claim.');
+        return true;
+      }
       const now = Date.now() / 1000;
+      console.log(`Token expiration (exp): ${new Date(decoded.exp * 1000).toISOString()}`);
+      console.log(`Current time (now): ${new Date(now * 1000).toISOString()}`);
+      console.log(`Is token expired? ${decoded.exp < now}`);
       return decoded.exp < now;
     } catch (error) {
       console.error('\n\nError verifying token:', error,'\n\n');
-      return false;
+      return true; // Considerar el token como expirado/inválido si hay un error al decodificarlo
     }
   };
 

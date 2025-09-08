@@ -8,6 +8,8 @@ import bcrypt from 'bcryptjs';
 export class AdminController {
   // Get musicians for validation
   public getMusicians = async (req: Request, res: Response): Promise<void> => {
+    console.log('Backend: Entering getMusicians function.');
+    console.log('Backend: Request query:', req.query);
     try {
       const filters: UserFilters = req.query;
       const page = parseInt(filters.page?.toString() || '1');
@@ -44,8 +46,10 @@ export class AdminController {
       const { data: musicians, error } = await query;
 
       if (error) {
+        console.log('Backend: Error fetching musicians:', error);
         throw createError('Failed to fetch musicians', 500);
       }
+      console.log('Backend: Musicians fetched successfully. Count:', count);
 
       const totalPages = Math.ceil((count || 0) / limit);
 
@@ -66,7 +70,7 @@ export class AdminController {
           message: error.message
         });
       } else {
-        console.error('Get musicians error:', error);
+        console.error('Backend: Get musicians error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -77,6 +81,9 @@ export class AdminController {
 
   // Approve musician
   public approveMusician = async (req: Request, res: Response): Promise<void> => {
+    console.log('Backend: Entering approveMusician function.');
+    console.log('Backend: Request params:', req.params);
+    console.log('Backend: Request body:', req.body);
     try {
       const { id } = req.params;
       const adminId = (req as any).user.userId;
@@ -91,12 +98,16 @@ export class AdminController {
         .single();
 
       if (musicianError || !musician) {
+        console.log('Backend: Musician not found or error fetching musician:', musicianError);
         throw createError('Musician not found', 404);
       }
+      console.log('Backend: Musician found:', musician.id, musician.status);
 
       if (musician.status === 'active') {
+        console.log('Backend: Musician is already active.');
         throw createError('Musician is already approved', 400);
       }
+      console.log('Backend: Attempting to update musician status to active.');
 
       // Update musician status
       const { error: updateError } = await supabase
@@ -108,10 +119,13 @@ export class AdminController {
         .eq('id', id);
 
       if (updateError) {
+        console.log('Backend: Error updating musician status:', updateError);
         throw createError('Failed to approve musician', 500);
       }
+      console.log('Backend: Musician status updated to active.');
 
       // Record admin action
+      console.log('Backend: Attempting to record admin action.');
       const { error: actionError } = await supabase
         .from('admin_actions')
         .insert([{
@@ -123,14 +137,17 @@ export class AdminController {
         }]);
 
       if (actionError) {
-        console.error('Failed to record admin action:', actionError);
+        console.error('Backend: Failed to record admin action:', actionError);
       }
+      console.log('Backend: Admin action recorded.');
 
       // Send notification email
       try {
+        console.log('Backend: Attempting to send approval email.');
         await sendValidationEmail(musician.email, musician.name, 'approved');
+        console.log('Backend: Approval email sent successfully.');
       } catch (emailError) {
-        console.error('Failed to send approval email:', emailError);
+        console.error('Backend: Failed to send approval email:', emailError);
       }
 
       res.status(200).json({
@@ -144,7 +161,7 @@ export class AdminController {
           message: error.message
         });
       } else {
-        console.error('Approve musician error:', error);
+        console.error('Backend: Approve musician error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -155,14 +172,19 @@ export class AdminController {
 
   // Reject musician
   public rejectMusician = async (req: Request, res: Response): Promise<void> => {
+    console.log('Backend: Entering rejectMusician function.');
+    console.log('Backend: Request params:', req.params);
+    console.log('Backend: Request body:', req.body);
     try {
       const { id } = req.params;
       const adminId = (req as any).user.userId;
       const { reason } = req.body;
 
       if (!reason) {
+        console.log('Backend: Rejection reason is missing.');
         throw createError('Reason is required for rejection', 400);
       }
+      console.log('Backend: Rejection reason provided.');
 
       // Check if musician exists
       const { data: musician, error: musicianError } = await supabase
@@ -173,12 +195,16 @@ export class AdminController {
         .single();
 
       if (musicianError || !musician) {
+        console.log('Backend: Musician not found or error fetching musician:', musicianError);
         throw createError('Musician not found', 404);
       }
+      console.log('Backend: Musician found:', musician.id, musician.status);
 
       if (musician.status === 'rejected') {
+        console.log('Backend: Musician is already rejected.');
         throw createError('Musician is already rejected', 400);
       }
+      console.log('Backend: Attempting to update musician status to rejected.');
 
       // Update musician status
       const { error: updateError } = await supabase
@@ -190,8 +216,10 @@ export class AdminController {
         .eq('id', id);
 
       if (updateError) {
+        console.log('Backend: Error updating musician status:', updateError);
         throw createError('Failed to reject musician', 500);
       }
+      console.log('Backend: Musician status updated to rejected.');
 
       // Record admin action
       const { error: actionError } = await supabase
@@ -205,14 +233,17 @@ export class AdminController {
         }]);
 
       if (actionError) {
-        console.error('Failed to record admin action:', actionError);
+        console.error('Backend: Failed to record admin action:', actionError);
       }
+      console.log('Backend: Admin action recorded.');
 
       // Send notification email
       try {
+        console.log('Backend: Attempting to send rejection email.');
         await sendValidationEmail(musician.email, musician.name, 'rejected');
+        console.log('Backend: Rejection email sent successfully.');
       } catch (emailError) {
-        console.error('Failed to send rejection email:', emailError);
+        console.error('Backend: Failed to send rejection email:', emailError);
       }
 
       res.status(200).json({
@@ -226,7 +257,7 @@ export class AdminController {
           message: error.message
         });
       } else {
-        console.error('Reject musician error:', error);
+        console.error('Backend: Reject musician error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'

@@ -14,8 +14,23 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
+    console.log('Backend: Token received:', token);
+
     try {
       const decoded = jwt.verify(token, config.jwt.secret) as JWTPayload;
+      console.log('Backend: Token decoded successfully:', decoded);
+    const currentTime = Math.floor(Date.now() / 1000);
+    console.log('Backend: Current time (Unix timestamp):', currentTime);
+    if (decoded.exp) {
+      console.log('Backend: Token expiration (Unix timestamp):', decoded.exp);
+      if (decoded.exp < currentTime) {
+        console.log('Backend: Token is EXPIRED on backend.');
+      } else {
+        console.log('Backend: Token is NOT EXPIRED on backend.');
+      }
+    } else {
+      console.log('Backend: Token does NOT have an expiration claim (exp).');
+    }
       (req as any).user = decoded;
       next();
     } catch (jwtError) {

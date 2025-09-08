@@ -161,8 +161,7 @@ const AdminDashboardScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.actionCard}
                 onPress={() => {
-                  // TODO: Navigate to musicians list
-
+                  router.push('/admin/musicianlistscreen');
                 }}
               >
                 <Text style={styles.actionIcon}>👥</Text>

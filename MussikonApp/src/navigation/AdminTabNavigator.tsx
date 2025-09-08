@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform, Text } from 'react-native';
-import { AdminDashboardScreen, MusiciansListScreen, PricingManagementScreen } from '../screens';
+import { AdminDashboardScreen, PricingManagementScreen } from '../screens';
+import MusiciansListScreen from '../../app/(authenticated)/admin/musicianlistscreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -35,7 +36,7 @@ const AdminTabNavigator: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="MusiciansList"
+        name="admin/musicianlistscreen"
         component={MusiciansListScreen}
         options={{
           tabBarLabel: 'Músicos',

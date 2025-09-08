@@ -1,9 +1,12 @@
 // API Service para conectar con el backend de Mussikon
+
+import { URL_SERVER } from "../config/api";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 // Detectar si estamos en web o móvil de forma más robusta
 const isWeb = typeof window !== 'undefined' && typeof document !== 'undefined';
-const API_BASE_URL = isWeb 
-  ? 'http://localhost:3000/api' 
-  : 'http://172.20.10.4:3000/api';
+const UrlServer = URL_SERVER;
+const API_BASE_URL = `${UrlServer}/api`;
 
 export interface User {
   id: string;
@@ -78,6 +81,13 @@ export interface ApiError {
   message: string;
 }
 
+export class SessionExpiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SessionExpiredError';
+  }
+}
+
 class ApiService {
   private baseURL: string;
 
@@ -91,9 +101,14 @@ class ApiService {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
-    const defaultHeaders = {
+    const defaultHeaders: HeadersInit = {
       'Content-Type': 'application/json',
     };
+
+    const token = await AsyncStorage.getItem('@mussikon_token');
+    if (token && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register') && !endpoint.includes('/auth/forgot-password') && !endpoint.includes('/auth/reset-password') && !endpoint.includes('/auth/validate-reset-code') && !endpoint.includes('/auth/send-verification-email') && !endpoint.includes('/auth/verify-email')) {
+      (defaultHeaders as Record<string, string>).Authorization = `Bearer ${token}`;
+    }
 
     const config: RequestInit = {
       ...options,
@@ -125,8 +140,17 @@ class ApiService {
           if (endpoint.includes('/auth/login')) {
             errorMessage = 'Email o contraseña incorrectos. Verifica tus credenciales.';
           } else {
-            errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.';
+            console.log('Received 401 status. Response status:', response.status);
+            try {
+              const errorData = await response.json();
+              console.log('401 Error Data:', errorData);
+            } catch (jsonError) {
+              console.log('Could not parse 401 error response as JSON:', jsonError);
+            }
+            throw new SessionExpiredError('Sesión expirada. Por favor, inicia sesión nuevamente.');
           }
+        } else if (response.status === 429) {
+          errorMessage = 'Demasiadas solicitudes desde esta IP. Por favor, inténtalo de nuevo más tarde.';
         }
         
         throw new Error(errorMessage);
@@ -358,7 +382,10 @@ class ApiService {
       });
     }
     const queryString = queryParams.toString();
+    
+    console.log("7. Backend: Entering getMusicians function.");
     const endpoint = queryString ? `/admin/musicians?${queryString}` : '/admin/musicians';
+    console.log("8. Backend: Entering getMusicians function.");
     
     if (token) {
       return this.makeAuthenticatedRequest(endpoint, token);

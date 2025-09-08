@@ -11,10 +11,11 @@ import {
   TextInput,
   TextStyle,
 } from 'react-native';
-import { theme } from '../theme/theme';
-import { apiService } from '../services/api';
-import GradientBackground from '../components/GradientBackground';
-import { Button } from '../components';
+import { theme } from '../../../src/theme/theme';
+import { apiService, SessionExpiredError } from '../../../src/services/api';
+import { useAuth } from '../../../src/context/AuthContext';
+import GradientBackground from '../../../src/components/GradientBackground';
+import { Button } from '../../../src/components';
 
 interface Musician {
   id: string;
@@ -31,6 +32,7 @@ interface Musician {
 }
 
 const MusiciansListScreen: React.FC = () => {
+  const { logout } = useAuth();
   const [musicians, setMusicians] = useState<Musician[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -42,18 +44,29 @@ const MusiciansListScreen: React.FC = () => {
   }, [filter]);
 
   const fetchMusicians = async () => {
+    console.log('MusiciansListScreen: fetchMusicians started');
     try {
       setLoading(true);
       const filters = filter !== 'all' ? { status: filter } : {};
+      console.log('MusiciansListScreen: Calling apiService.getMusicians with filters:', filters);
       const response = await apiService.getMusicians(filters);
+      console.log('MusiciansListScreen: apiService.getMusicians response:', response);
       if (response.success) {
         setMusicians(response.data || []);
+        console.log('MusiciansListScreen: Musicians data set:', response.data?.length);
       }
     } catch (error) {
-      console.error('Error fetching musicians:', error);
-      Alert.alert('Error', 'No se pudieron cargar los músicos');
+      console.error('MusiciansListScreen: Error fetching musicians:', error);
+      if (error instanceof SessionExpiredError) {
+        console.log('MusiciansListScreen: SessionExpiredError caught. Logging out...');
+        Alert.alert('Sesión Expirada', error.message, [{ text: 'OK', onPress: logout }]);
+      } else {
+        console.log('MusiciansListScreen: Generic error caught:', error.message);
+        Alert.alert('Error', 'No se pudieron cargar los músicos');
+      }
     } finally {
       setLoading(false);
+      console.log('MusiciansListScreen: fetchMusicians finished. Loading set to false.');
     }
   };
 
@@ -64,21 +77,31 @@ const MusiciansListScreen: React.FC = () => {
   };
 
   const handleApprove = async (musicianId: string) => {
+    console.log('MusiciansListScreen: handleApprove started for musicianId:', musicianId);
     try {
       const response = await apiService.approveMusician(musicianId, 'Aprobado por administrador');
       if (response.success) {
         Alert.alert('Éxito', 'Músico aprobado correctamente');
         fetchMusicians();
+        console.log('MusiciansListScreen: Musician approved, refetching list.');
       } else {
         Alert.alert('Error', 'No se pudo aprobar el músico');
+        console.log('MusiciansListScreen: Failed to approve musician.');
       }
     } catch (error) {
-      console.error('Error approving musician:', error);
-      Alert.alert('Error', 'No se pudo aprobar el músico');
+      console.error('MusiciansListScreen: Error approving musician:', error);
+      if (error instanceof SessionExpiredError) {
+        console.log('MusiciansListScreen: SessionExpiredError caught in handleApprove. Logging out...');
+        Alert.alert('Sesión Expirada', error.message, [{ text: 'OK', onPress: logout }]);
+      } else {
+        console.log('MusiciansListScreen: Generic error caught in handleApprove:', error.message);
+        Alert.alert('Error', 'No se pudo aprobar el músico');
+      }
     }
   };
 
   const handleReject = async (musicianId: string) => {
+    console.log('MusiciansListScreen: handleReject started for musicianId:', musicianId);
     Alert.alert(
       'Rechazar Músico',
       '¿Estás seguro de que quieres rechazar este músico?',
@@ -93,12 +116,20 @@ const MusiciansListScreen: React.FC = () => {
               if (response.success) {
                 Alert.alert('Éxito', 'Músico rechazado correctamente');
                 fetchMusicians();
+                console.log('MusiciansListScreen: Musician rejected, refetching list.');
               } else {
                 Alert.alert('Error', 'No se pudo rechazar el músico');
+                console.log('MusiciansListScreen: Failed to reject musician.');
               }
             } catch (error) {
-              console.error('Error rejecting musician:', error);
-              Alert.alert('Error', 'No se pudo rechazar el músico');
+              console.error('MusiciansListScreen: Error rejecting musician:', error);
+              if (error instanceof SessionExpiredError) {
+                console.log('MusiciansListScreen: SessionExpiredError caught in handleReject. Logging out...');
+                Alert.alert('Sesión Expirada', error.message, [{ text: 'OK', onPress: logout }]);
+              } else {
+                console.log('MusiciansListScreen: Generic error caught in handleReject:', error.message);
+                Alert.alert('Error', 'No se pudo rechazar el músico');
+              }
             }
           },
         },

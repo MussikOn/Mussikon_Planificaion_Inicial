@@ -1,7 +1,7 @@
 // Configuración de la API
 import axios from 'axios';
-
-const API_BASE_URL = 'http://192.168.56.130:3000/api';
+export const URL_SERVER = 'http://192.168.56.130:3000';
+const API_BASE_URL = `${URL_SERVER}/api`;
 
 // Crear instancia de axios
 const api = axios.create({
