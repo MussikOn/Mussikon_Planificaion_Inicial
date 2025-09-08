@@ -31,15 +31,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBack, onRegister }) => {
   };
 
   const handleRegister = () => {
-    console.log('handleRegister called');
     if (onRegister) {
-      console.log('Using onRegister prop');
       onRegister();
     } else {
-      console.log('No onRegister prop, using router fallback');
       try {
         router.push('/register');
-        console.log('Navigation successful');
       } catch (error) {
         console.error('Navigation error:', error);
         ErrorHandler.showError('Error al navegar a la pantalla de registro', 'Error de Navegación');
@@ -177,7 +173,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBack, onRegister }) => {
           <TouchableOpacity 
             style={styles.registerButton}
             onPress={() => {
-              console.log('Register button pressed');
               handleRegister();
             }}
             activeOpacity={0.7}

@@ -53,33 +53,6 @@ const OffersListScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'selected' | 'rejected'>('all');
 
-  useEffect(() => {
-    fetchOffers();
-  }, [filter]);
-
-  // Listen for new offers and refresh the list
-  useEffect(() => {
-    if (socket && isConnected) {
-      const handleNewOffer = () => {
-        console.log('New offer received, refreshing list...');
-        fetchOffers();
-      };
-
-      const handleOfferSelected = () => {
-        console.log('Offer selected, refreshing list...');
-        fetchOffers();
-      };
-
-      socket.on('new_offer', handleNewOffer);
-      socket.on('offer_selected', handleOfferSelected);
-
-      return () => {
-        socket.off('new_offer', handleNewOffer);
-        socket.off('offer_selected', handleOfferSelected);
-      };
-    }
-  }, [socket, isConnected]);
-
   const fetchOffers = async () => {
     try {
       setLoading(true);
@@ -108,6 +81,29 @@ const OffersListScreen: React.FC = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchOffers();
+  }, [filter]);
+
+  useEffect(() => {
+    if (socket && isConnected) {
+      const handleNewOffer = () => {
+        fetchOffers();
+      };
+      const handleOfferSelected = () => {
+        fetchOffers();
+      };
+
+      socket.on('newOffer', handleNewOffer);
+      socket.on('offerSelected', handleOfferSelected);
+
+      return () => {
+        socket.off('newOffer', handleNewOffer);
+        socket.off('offerSelected', handleOfferSelected);
+      };
+    }
+  }, [socket, isConnected, fetchOffers]);
 
   const onRefresh = async () => {
     setRefreshing(true);

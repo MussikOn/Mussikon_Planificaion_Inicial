@@ -70,7 +70,6 @@ const RequestsListScreen: React.FC = () => {
   useEffect(() => {
     if (socket && isConnected) {
       const handleNewRequest = () => {
-        console.log('New request received, refreshing list...');
         fetchRequests();
       };
 

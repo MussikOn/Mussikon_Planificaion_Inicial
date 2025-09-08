@@ -45,7 +45,6 @@ const PricingManagementScreen: React.FC = () => {
   const loadPricingConfig = async () => {
     try {
       setLoading(true);
-      console.log('Loading pricing config with token:', token ? 'Token present' : 'No token');
       const config = await pricingService.getPricingConfig(token);
       if (config) {
         setPricingConfig(config);

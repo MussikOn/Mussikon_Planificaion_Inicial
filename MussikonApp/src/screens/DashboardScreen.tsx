@@ -58,7 +58,7 @@ const DashboardScreen: React.FC = () => {
   useEffect(() => {
     if (socket && isConnected) {
       const handleUpdate = () => {
-        console.log('Real-time update received, refreshing dashboard...');
+    
         fetchDashboardData();
       };
 
@@ -89,9 +89,7 @@ const DashboardScreen: React.FC = () => {
         return;
       }
 
-      console.log('Fetching dashboard data with token:', token ? 'Present' : 'Missing');
-      console.log('User role:', user?.role);
-      console.log('User active_role:', user?.active_role);
+      
 
       const [requestsResponse, offersResponse, adminStatsResponse] = await Promise.all([
         // Use different endpoints based on user active role

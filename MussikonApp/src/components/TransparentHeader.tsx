@@ -39,10 +39,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(10, 42, 95, 0.08)',
-    shadowColor: theme.colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.shadow,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.12,
+        shadowRadius: 8,
+      },
+      web: {
+        boxShadow: `0px 2px 8px rgba(0, 0, 0, 0.12)`,
+      },
+    }),
     elevation: 3,
     zIndex: 100,
   },
@@ -55,10 +62,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
     marginTop: 8,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.25,
+        shadowRadius: 6,
+      },
+      web: {
+        boxShadow: `0px 3px 6px rgba(0, 0, 0, 0.25)`,
+      },
+    }),
     elevation: 5,
   },
   menuIcon: {

@@ -121,9 +121,9 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
           <View style={styles.actionsContainer}>
             <Button
               title="Comenzar mi viaje"
-              onPress={() => console.log('Comenzar viaje')}
               size="large"
               style={styles.primaryButton}
+              onPress={() => {}}
             />
             
             <Button

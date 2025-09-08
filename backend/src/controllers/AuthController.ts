@@ -178,6 +178,7 @@ export class AuthController {
       }
 
       // Check password
+      console.log(`AuthController: Comparing password for user ${email}. Input password (first 5 chars): ${password.substring(0, 5)}, Stored hashed password (first 10 chars): ${passwordData.password.substring(0, 10)}`);
       const isPasswordValid = await bcrypt.compare(password, passwordData.password);
       if (!isPasswordValid) {
         throw createError('Invalid email or password', 401);

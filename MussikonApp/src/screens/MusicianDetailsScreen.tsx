@@ -65,7 +65,7 @@ const MusicianDetailsScreen: React.FC = () => {
         Alert.alert('Éxito', 'Músico aprobado correctamente', [
           { text: 'OK', onPress: () => {
             // TODO: Navigate back to musicians list
-            console.log('Navigate back');
+
           }}
         ]);
       } else {
@@ -94,7 +94,7 @@ const MusicianDetailsScreen: React.FC = () => {
         Alert.alert('Éxito', 'Músico rechazado correctamente', [
           { text: 'OK', onPress: () => {
             // TODO: Navigate back to musicians list
-            console.log('Navigate back');
+
           }}
         ]);
       } else {

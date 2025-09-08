@@ -337,6 +337,7 @@ export class AdminController {
       // Hash the new password
       const saltRounds = 12;
       const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+      console.log(`AdminController: Hashing new password for user ${userId}. New password (first 5 chars): ${newPassword.substring(0, 5)}, Hashed password (first 10 chars): ${hashedPassword.substring(0, 10)}`);
 
       // Update password in user_passwords table
       const { error: passwordError } = await supabase

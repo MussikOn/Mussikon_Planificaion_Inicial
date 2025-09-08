@@ -48,9 +48,7 @@ const AdminDashboardScreen: React.FC = () => {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      console.log('Fetching admin stats with token:', token ? 'Token present' : 'No token');
       const response = await apiService.getAdminStats(token || undefined);
-      console.log('Admin stats response:', response);
       if (response.success) {
         setStats(response.data);
       } else {
@@ -164,7 +162,7 @@ const AdminDashboardScreen: React.FC = () => {
                 style={styles.actionCard}
                 onPress={() => {
                   // TODO: Navigate to musicians list
-                  console.log('Navigate to musicians list');
+
                 }}
               >
                 <Text style={styles.actionIcon}>👥</Text>
@@ -178,7 +176,7 @@ const AdminDashboardScreen: React.FC = () => {
                 style={styles.actionCard}
                 onPress={() => {
                   // TODO: Navigate to requests list
-                  console.log('Navigate to requests list');
+
                 }}
               >
                 <Text style={styles.actionIcon}>📝</Text>
@@ -192,7 +190,7 @@ const AdminDashboardScreen: React.FC = () => {
                 style={styles.actionCard}
                 onPress={() => {
                   // TODO: Navigate to offers list
-                  console.log('Navigate to offers list');
+
                 }}
               >
                 <Text style={styles.actionIcon}>💰</Text>
@@ -232,7 +230,7 @@ const AdminDashboardScreen: React.FC = () => {
                 style={styles.actionCard}
                 onPress={() => {
                   // TODO: Navigate to reports
-                  console.log('Navigate to reports');
+
                 }}
               >
                 <Text style={styles.actionIcon}>📊</Text>

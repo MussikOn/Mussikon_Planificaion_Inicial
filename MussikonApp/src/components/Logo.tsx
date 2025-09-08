@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Image, StyleSheet, ViewStyle } from 'react-native';
+import { View, Image, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { theme } from '../theme/theme';
 
 interface LogoProps {
@@ -57,10 +57,17 @@ const styles = StyleSheet.create({
   },
   logoWithBackground: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      web: {
+        boxShadow: `0px 4px 8px rgba(0, 0, 0, 0.3)`,
+      },
+    }),
     elevation: 8,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.3)',

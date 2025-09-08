@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiService, User } from '../services/api';
 import {jwtDecode} from 'jwt-decode';
+import { router } from 'expo-router';
 
 
 interface AuthContextType {
@@ -51,21 +52,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         expiredToken = await verifyToken(storedToken);
       }
       if (expiredToken) {
-        console.log('Stored token is expired or invalid');
         await clearAuth();
         setIsLoading(false);
         return;
       }
-      console.log(`User: ${storedUser}}` );
-
-      console.log(`Token: ${storedToken}}` );
 
       if (storedUser && storedToken) {
-        console.log('Loading stored auth - User:', storedUser ? 'Present' : 'Missing', 'Token:', storedToken ? 'Present' : 'Missing');
         setUser(JSON.parse(storedUser));
         setToken(storedToken);
-      } else {
-        console.log('No stored auth found - User:', storedUser ? 'Present' : 'Missing', 'Token:', storedToken ? 'Present' : 'Missing');
       }
     } catch (error) {
       console.error('Error loading stored auth:', error);
@@ -76,12 +70,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const storeAuth = async (userData: User, authToken: string) => {
     try {
-      console.log('Storing auth data - User:', userData.email, 'Token:', authToken ? 'Present' : 'Missing');
       await Promise.all([
         AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData)),
         AsyncStorage.setItem(STORAGE_KEYS.TOKEN, authToken),
       ]);
-      console.log('Auth data stored successfully');
     } catch (error) {
       console.error('Error storing auth:', error);
     }
@@ -104,10 +96,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await apiService.login({ email, password });
       
       if (response.success) {
-        console.log('Login successful - Storing token:', response.token ? 'Present' : 'Missing');
         setUser(response.user);
         setToken(response.token);
         await storeAuth(response.user, response.token);
+        router.replace('/');
         return true;
       }
       return false;
