@@ -46,7 +46,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         AsyncStorage.getItem(STORAGE_KEYS.TOKEN),
       ]);
 
-      const expiredToken = await verifyToken(storedToken!);
+      let expiredToken = false;
+      if (storedToken) {
+        expiredToken = await verifyToken(storedToken);
+      }
       if (expiredToken) {
         console.log('Stored token is expired or invalid');
         await clearAuth();
@@ -123,6 +126,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (token) {
         await apiService.logout();
       }
+      await loadStoredAuth();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -186,9 +190,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     changeRole,
   };
 
-  const verifyToken  = async (token: string) => {
+  const verifyToken  = async (token: string | null) => {
     try {
         // Debugging logs
+      if (!token) return true; // Consider null/undefined token as expired/invalid
       const decoded: any = jwtDecode(token);
       if(!decoded.exp) return true;
       const now = Date.now() / 1000;

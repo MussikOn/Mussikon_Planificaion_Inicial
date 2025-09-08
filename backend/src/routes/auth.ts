@@ -309,7 +309,7 @@ router.post('/forgot-password', authController.forgotPassword);
  * @swagger
  * /api/auth/reset-password:
  *   post:
- *     summary: Restablecer contraseña con token
+ *     summary: Restablecer contraseña con código de verificación
  *     tags: [Autenticación]
  *     requestBody:
  *       required: true
@@ -318,12 +318,18 @@ router.post('/forgot-password', authController.forgotPassword);
  *           schema:
  *             type: object
  *             required:
- *               - token
+ *               - code
+ *               - email
  *               - new_password
  *             properties:
- *               token:
+ *               code:
  *                 type: string
- *                 example: uuid-token-here
+ *                 example: "123456"
+ *                 description: Código de verificación de 6 dígitos
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: usuario@ejemplo.com
  *               new_password:
  *                 type: string
  *                 minLength: 8
@@ -343,7 +349,7 @@ router.post('/forgot-password', authController.forgotPassword);
  *                   type: string
  *                   example: Contraseña restablecida exitosamente. Ya puedes iniciar sesión con tu nueva contraseña.
  *       400:
- *         description: Token inválido o contraseña débil
+ *         description: Código inválido o contraseña débil
  *         content:
  *           application/json:
  *             schema:
@@ -354,26 +360,37 @@ router.post('/forgot-password', authController.forgotPassword);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Token inválido o expirado
+ *                   example: Código inválido o expirado
  */
 router.post('/reset-password', authController.resetPassword);
 
 /**
  * @swagger
- * /api/auth/validate-reset-token/{token}:
- *   get:
- *     summary: Validar token de recuperación de contraseña
+ * /api/auth/validate-reset-code:
+ *   post:
+ *     summary: Validar código de recuperación de contraseña
  *     tags: [Autenticación]
- *     parameters:
- *       - in: path
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *         description: Token de recuperación de contraseña
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - code
+ *               - email
+ *             properties:
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *                 description: Código de verificación de 6 dígitos
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: usuario@ejemplo.com
  *     responses:
  *       200:
- *         description: Token válido
+ *         description: Código válido
  *         content:
  *           application/json:
  *             schema:
@@ -384,9 +401,9 @@ router.post('/reset-password', authController.resetPassword);
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Token válido
+ *                   example: Código de verificación válido
  *       400:
- *         description: Token inválido o expirado
+ *         description: Código inválido o expirado
  *         content:
  *           application/json:
  *             schema:
@@ -397,8 +414,8 @@ router.post('/reset-password', authController.resetPassword);
  *                   example: false
  *                 message:
  *                   type: string
- *                   example: Token inválido o expirado
+ *                   example: Código inválido o expirado
  */
-router.get('/validate-reset-token/:token', authController.validateResetToken);
+router.post('/validate-reset-code', authController.validateResetCode);
 
 export default router;

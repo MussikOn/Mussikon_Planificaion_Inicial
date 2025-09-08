@@ -309,14 +309,21 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+        elevation: 5,
+      }
+    }),
   },
   header: {
     flexDirection: 'row',

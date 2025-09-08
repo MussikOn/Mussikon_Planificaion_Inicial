@@ -53,7 +53,7 @@ CREATE OR REPLACE FUNCTION cleanup_expired_email_verification_tokens()
 RETURNS void AS $$
 BEGIN
     DELETE FROM email_verification_tokens 
-    WHERE expires_at < NOW() OR used = true;
+    WHERE email_verification_tokens.expires_at < NOW() OR used = true;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -119,7 +119,7 @@ CREATE OR REPLACE FUNCTION cleanup_expired_password_reset_tokens()
 RETURNS void AS $$
 BEGIN
     DELETE FROM password_reset_tokens 
-    WHERE expires_at < NOW() OR used = true;
+    WHERE password_reset_tokens.expires_at < NOW() OR used = true;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -150,7 +150,7 @@ COMMENT ON COLUMN password_reset_tokens.used IS 'Indica si el token ya fue utili
 -- ==============================================
 -- MENSAJES DE CONFIRMACIÓN
 -- ==============================================
-
+select * from users;
 SELECT 'Políticas limpiadas y tablas configuradas exitosamente' AS status;
 SELECT 'Sistema de verificación por email y recuperación de contraseña configurado completamente' AS final_status;
 

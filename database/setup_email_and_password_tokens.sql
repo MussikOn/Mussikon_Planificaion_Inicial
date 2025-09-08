@@ -10,8 +10,11 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token VARCHAR(255) NOT NULL UNIQUE,
+    verification_code VARCHAR(6) UNIQUE, -- Nuevo campo para el código numérico
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     used BOOLEAN DEFAULT FALSE,
+    attempts INTEGER DEFAULT 0, -- Nuevo campo para el número de intentos
+    max_attempts INTEGER DEFAULT 3, -- Nuevo campo para el número máximo de intentos
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -25,21 +28,48 @@ CREATE INDEX IF NOT EXISTS idx_email_verification_tokens_expires_at ON email_ver
 ALTER TABLE email_verification_tokens ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS
-CREATE POLICY "Users can view their own email verification tokens" ON email_verification_tokens
-    FOR SELECT USING (auth.uid() = user_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'email_verification_tokens' 
+        AND policyname = 'Users can view their own email verification tokens'
+    ) THEN
+        CREATE POLICY "Users can view their own email verification tokens" ON email_verification_tokens
+            FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+END $$;
 
-CREATE POLICY "System can insert email verification tokens" ON email_verification_tokens
-    FOR INSERT WITH CHECK (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'email_verification_tokens' 
+        AND policyname = 'System can insert email verification tokens'
+    ) THEN
+        CREATE POLICY "System can insert email verification tokens" ON email_verification_tokens
+            FOR INSERT WITH CHECK (true);
+    END IF;
+END $$;
 
-CREATE POLICY "System can update email verification tokens" ON email_verification_tokens
-    FOR UPDATE USING (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'email_verification_tokens' 
+        AND policyname = 'System can update email verification tokens'
+    ) THEN
+        CREATE POLICY "System can update email verification tokens" ON email_verification_tokens
+            FOR UPDATE USING (true);
+    END IF;
+END $$;
 
 -- Función para limpiar tokens expirados
 CREATE OR REPLACE FUNCTION cleanup_expired_email_verification_tokens()
 RETURNS void AS $$
 BEGIN
     DELETE FROM email_verification_tokens 
-    WHERE expires_at < NOW() OR used = true;
+    WHERE email_verification_tokens.expires_at < NOW() OR used = true;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -87,21 +117,48 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires_at ON password_rese
 ALTER TABLE password_reset_tokens ENABLE ROW LEVEL SECURITY;
 
 -- Políticas RLS
-CREATE POLICY "Users can view their own password reset tokens" ON password_reset_tokens
-    FOR SELECT USING (auth.uid() = user_id);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'password_reset_tokens' 
+        AND policyname = 'Users can view their own password reset tokens'
+    ) THEN
+        CREATE POLICY "Users can view their own password reset tokens" ON password_reset_tokens
+            FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+END $$;
 
-CREATE POLICY "System can insert password reset tokens" ON password_reset_tokens
-    FOR INSERT WITH CHECK (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'password_reset_tokens' 
+        AND policyname = 'System can insert password reset tokens'
+    ) THEN
+        CREATE POLICY "System can insert password reset tokens" ON password_reset_tokens
+            FOR INSERT WITH CHECK (true);
+    END IF;
+END $$;
 
-CREATE POLICY "System can update password reset tokens" ON password_reset_tokens
-    FOR UPDATE USING (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'password_reset_tokens' 
+        AND policyname = 'System can update password reset tokens'
+    ) THEN
+        CREATE POLICY "System can update password reset tokens" ON password_reset_tokens
+            FOR UPDATE USING (true);
+    END IF;
+END $$;
 
 -- Función para limpiar tokens expirados
 CREATE OR REPLACE FUNCTION cleanup_expired_password_reset_tokens()
 RETURNS void AS $$
 BEGIN
     DELETE FROM password_reset_tokens 
-    WHERE expires_at < NOW() OR used = true;
+    WHERE password_reset_tokens.expires_at < NOW() OR used = true;
 END;
 $$ LANGUAGE plpgsql;
 

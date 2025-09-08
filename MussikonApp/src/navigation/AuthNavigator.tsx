@@ -3,84 +3,22 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { SimpleWelcomeScreen, LoginScreen, RegisterScreen, AboutScreen } from '../screens';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
+import SendVerificationEmailScreen from '../screens/SendVerificationEmailScreen';
+import VerifyEmailScreen from '../screens/VerifyEmailScreen';
 
 const Stack = createStackNavigator();
 
 const AuthNavigator: React.FC = () => {
-  const [currentScreen, setCurrentScreen] = useState('Welcome');
-
-  const handleGetStarted = () => {
-    setCurrentScreen('Register');
-  };
-
-  const handleLogin = () => {
-    setCurrentScreen('Login');
-  };
-
-  const handleAbout = () => {
-    setCurrentScreen('About');
-  };
-
-  const handleBack = () => {
-    setCurrentScreen('Welcome');
-  };
-
-  const handleRegister = () => {
-    setCurrentScreen('Register');
-  };
-
   return (
     <Stack.Navigator {...({ id: "AuthNavigator" } as any)} screenOptions={{ headerShown: false }}>
-      {currentScreen === 'Welcome' && (
-        <Stack.Screen name="Welcome">
-          {() => (
-            <SimpleWelcomeScreen
-              onGetStarted={handleGetStarted}
-              onLogin={handleLogin}
-              onAbout={handleAbout}
-            />
-          )}
-        </Stack.Screen>
-      )}
-      {currentScreen === 'Login' && (
-        <Stack.Screen name="Login">
-          {() => (
-            <LoginScreen
-              onBack={handleBack}
-              onRegister={handleRegister}
-            />
-          )}
-        </Stack.Screen>
-      )}
-      {currentScreen === 'Register' && (
-        <Stack.Screen name="Register">
-          {() => (
-            <RegisterScreen
-              onBack={handleBack}
-              onLogin={handleLogin}
-            />
-          )}
-        </Stack.Screen>
-      )}
-      {currentScreen === 'About' && (
-        <Stack.Screen name="About">
-          {() => (
-            <AboutScreen
-              onBack={handleBack}
-            />
-          )}
-        </Stack.Screen>
-      )}
-      {currentScreen === 'ForgotPassword' && (
-        <Stack.Screen name="ForgotPassword">
-          {() => <ForgotPasswordScreen />}
-        </Stack.Screen>
-      )}
-      {currentScreen === 'ResetPassword' && (
-        <Stack.Screen name="ResetPassword">
-          {() => <ResetPasswordScreen />}
-        </Stack.Screen>
-      )}
+      <Stack.Screen name="Welcome" component={SimpleWelcomeScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="About" component={AboutScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+      <Stack.Screen name="SendVerificationEmail" component={SendVerificationEmailScreen} />
+      <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
     </Stack.Navigator>
   );
 };

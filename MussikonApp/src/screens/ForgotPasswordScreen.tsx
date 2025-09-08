@@ -36,8 +36,11 @@ const ForgotPasswordScreen: React.FC = () => {
     try {
       const response = await apiService.forgotPassword(email);
       if (response.success) {
-        setEmailSent(true);
-        ErrorHandler.showSuccess('Revisa tu correo electrónico para continuar', 'Email enviado');
+        // Navegar a la pantalla de restablecimiento de contraseña con el email como parámetro
+        router.push({
+          pathname: '/reset-password',
+          params: { email: email }
+        });
       } else {
         ErrorHandler.showError(response.message || 'Error al enviar el email');
       }
@@ -62,11 +65,11 @@ const ForgotPasswordScreen: React.FC = () => {
             <Text style={styles.successIcon}>📧</Text>
             <Text style={styles.successTitle}>¡Email enviado!</Text>
             <Text style={styles.successMessage}>
-              Hemos enviado un enlace de recuperación a:
+              Hemos enviado un código de verificación a:
             </Text>
             <Text style={styles.emailText}>{email}</Text>
             <Text style={styles.instructions}>
-              Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
+              Revisa tu bandeja de entrada e ingresa el código de verificación para restablecer tu contraseña.
             </Text>
             <Text style={styles.note}>
               💡 Si no ves el email, revisa tu carpeta de spam.
@@ -94,7 +97,7 @@ const ForgotPasswordScreen: React.FC = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.formContainer}>
           <Text style={styles.subtitle}>
-            Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña
+            Ingresa tu email y te enviaremos un código de verificación para restablecer tu contraseña
           </Text>
 
           {/* Email Input */}
@@ -122,7 +125,7 @@ const ForgotPasswordScreen: React.FC = () => {
             {isLoading ? (
               <ActivityIndicator color="white" size="small" />
             ) : (
-              <Text style={styles.submitButtonText}>Enviar Enlace de Recuperación</Text>
+              <Text style={styles.submitButtonText}>Enviar Código de Verificación</Text>
             )}
           </TouchableOpacity>
 
@@ -190,11 +193,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 15,
     paddingVertical: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+      }
+    }),
   },
   inputIcon: {
     fontSize: 20,
@@ -211,11 +221,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+      },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3,
+      }
+    }),
   },
   submitButtonDisabled: {
     backgroundColor: '#a0aec0',

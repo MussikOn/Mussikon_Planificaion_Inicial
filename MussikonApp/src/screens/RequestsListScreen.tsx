@@ -509,11 +509,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: Platform.OS === 'web' ? 500 : '90%',
     maxHeight: '80%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0px 4px 16px rgba(0, 0, 0, 0.25)',
+      },
+    }),
   },
   modalHeader: {
     flexDirection: 'row',
@@ -564,11 +573,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+      },
+    }),
     ...(Platform.OS === 'web' && {
       cursor: 'pointer',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease',

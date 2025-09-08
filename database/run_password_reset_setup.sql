@@ -35,7 +35,7 @@ CREATE OR REPLACE FUNCTION cleanup_expired_password_reset_tokens()
 RETURNS void AS $$
 BEGIN
     DELETE FROM password_reset_tokens 
-    WHERE expires_at < NOW() OR used = true;
+    WHERE password_reset_tokens.expires_at < NOW() OR used = true;
 END;
 $$ LANGUAGE plpgsql;
 

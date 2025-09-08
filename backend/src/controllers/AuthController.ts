@@ -116,7 +116,9 @@ export class AuthController {
         // Don't fail registration if token creation fails
       }
 
-      // Send verification email
+
+
+  // Send verification email
       try {
         await sendEmailVerificationEmail(user.email, user.name, verificationToken);
       } catch (emailError) {
@@ -251,7 +253,7 @@ export class AuthController {
         // Don't reveal if user exists or not for security
         res.status(200).json({
           success: true,
-          message: 'Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.'
+          message: 'Si el email existe en nuestro sistema, recibirás un código para restablecer tu contraseña.'
         });
         return;
       }
@@ -260,34 +262,23 @@ export class AuthController {
       if (user.status !== 'active') {
         res.status(200).json({
           success: true,
-          message: 'Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.'
+          message: 'Si el email existe en nuestro sistema, recibirás un código para restablecer tu contraseña.'
         });
         return;
       }
 
-      // Generate reset token
-      const resetToken = uuidv4();
-      const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 1); // Token expires in 1 hour
+      // Generate verification code using database function
+      const { data: resetCode, error: codeError } = await supabase
+        .rpc('create_email_verification_code', { p_user_id: user.id });
 
-      // Save reset token to database
-      const { error: tokenError } = await supabase
-        .from('password_reset_tokens')
-        .insert([{
-          user_id: user.id,
-          token: resetToken,
-          expires_at: expiresAt.toISOString(),
-          used: false
-        }]);
-
-      if (tokenError) {
-        console.error('Error creating reset token:', tokenError);
-        throw createError('Failed to create reset token', 500);
+      if (codeError) {
+        console.error('Error generating reset code:', codeError);
+        throw createError('Failed to create reset code', 500);
       }
 
-      // Send reset email
+      // Send reset email with code
       try {
-        await sendPasswordResetEmail(user.email, user.name, resetToken);
+        await sendPasswordResetEmail(user.email, user.name, resetCode);
       } catch (emailError) {
         console.error('Failed to send reset email:', emailError);
         // Don't fail the request if email fails
@@ -295,7 +286,7 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message: 'Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña.'
+        message: 'Si el email existe en nuestro sistema, recibirás un código para restablecer tu contraseña.'
       });
     } catch (error) {
       if (error instanceof AppError) {
@@ -313,10 +304,14 @@ export class AuthController {
     }
   };
 
-  // Reset password - Validate token and set new password
+  // Reset password - Validate code and set new password
   public resetPassword = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { token, new_password }: ResetPasswordRequest = req.body;
+      const { code, email, new_password }: ResetPasswordRequest = req.body;
+
+      if (!code || !email || !new_password) {
+        throw createError('Verification code, email and new password are required', 400);
+      }
 
       // Validate password strength
       if (new_password.length < 8) {
@@ -326,14 +321,15 @@ export class AuthController {
       // Find valid reset token
       const { data: resetToken, error: tokenError } = await supabase
         .from('password_reset_tokens')
-        .select('*, user:users(id, name, email)')
-        .eq('token', token)
+        .select('id, expires_at, used, user_id')
+        .eq('code', code)
+        .eq('email', email)
         .eq('used', false)
         .gt('expires_at', new Date().toISOString())
         .single();
 
       if (tokenError || !resetToken) {
-        throw createError('Token inválido o expirado', 400);
+        throw createError('Código inválido o expirado', 400);
       }
 
       // Hash new password
@@ -350,16 +346,19 @@ export class AuthController {
         throw createError('Failed to update password', 500);
       }
 
-      // Mark token as used
+      // Mark the reset token as used
       const { error: updateTokenError } = await supabase
         .from('password_reset_tokens')
         .update({ used: true })
         .eq('id', resetToken.id);
 
       if (updateTokenError) {
-        console.error('Error updating token:', updateTokenError);
-        // Don't fail the request if token update fails
+        console.error('Error marking token as used:', updateTokenError);
+        // Decide if this should be a critical error or just log it
+        // For now, we'll log it and proceed, as password was already updated
       }
+
+
 
       res.status(200).json({
         success: true,
@@ -381,40 +380,61 @@ export class AuthController {
     }
   };
 
-  // Validate reset token
-  public validateResetToken = async (req: Request, res: Response): Promise<void> => {
+  // Validate reset code
+  public validateResetCode = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { token } = req.params;
+      const { code, email } = req.body;
+
+      if (!code || !email) {
+        throw createError('Verification code and email are required', 400);
+      }
 
       // Find valid reset token
       const { data: resetToken, error: tokenError } = await supabase
         .from('password_reset_tokens')
-        .select('id, expires_at, used')
-        .eq('token', token)
+        .select('id, expires_at, used, user_id')
+        .eq('code', code)
+        .eq('email', email)
         .eq('used', false)
         .gt('expires_at', new Date().toISOString())
         .single();
 
       if (tokenError || !resetToken) {
-        res.status(400).json({
-          success: false,
-          message: 'Token inválido o expirado'
-        });
-        return;
+        throw createError('Código inválido o expirado', 400);
+      }
+
+      // Mark the token as used
+      const { error: updateTokenError } = await supabase
+        .from('password_reset_tokens')
+        .update({ used: true, updated_at: new Date().toISOString() })
+        .eq('id', resetToken.id);
+
+      if (updateTokenError) {
+        console.error('Error marking token as used:', updateTokenError);
+        throw createError('Failed to update token status', 500);
       }
 
       res.status(200).json({
         success: true,
-        message: 'Token válido'
+        message: 'Código de verificación válido'
       });
     } catch (error) {
-      console.error('Validate reset token error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal server error'
-      });
+      if (error instanceof AppError) {
+        res.status(error.statusCode).json({
+          success: false,
+          message: error.message
+        });
+      } else {
+        console.error('Validate reset code error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error'
+        });
+      }
     }
   };
+
+
 
   // Send verification email
   public sendVerificationEmail = async (req: Request, res: Response): Promise<void> => {

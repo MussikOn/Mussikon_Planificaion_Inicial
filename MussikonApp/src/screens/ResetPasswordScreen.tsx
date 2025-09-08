@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,44 +14,52 @@ import { apiService } from '../services/api';
 import ErrorHandler from '../utils/errorHandler';
 
 const ResetPasswordScreen: React.FC = () => {
-  const { token } = useLocalSearchParams<{ token: string }>();
+  const { email } = useLocalSearchParams<{ email: string }>();
+  const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isValidating, setIsValidating] = useState(true);
-  const [isValidToken, setIsValidToken] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [isValidCode, setIsValidCode] = useState(false);
+  const [isCodeVerified, setIsCodeVerified] = useState(false);
 
-  useEffect(() => {
-    validateToken();
-  }, [token]);
-
-  const validateToken = async () => {
-    if (!token) {
-      ErrorHandler.showError('Token de recuperación no válido', 'Error');
-      router.replace('/login');
+  const validateCode = async () => {
+    if (!verificationCode) {
+      ErrorHandler.showError('Por favor ingresa el código de verificación', 'Validación');
+      return;
+    }
+    
+    if (!email) {
+      ErrorHandler.showError('Email no proporcionado. Por favor, regresa a la pantalla anterior e intenta nuevamente', 'Error');
       return;
     }
 
+    setIsValidating(true);
     try {
-      const response = await apiService.validateResetToken(token);
+      const response = await apiService.validateResetCode(verificationCode, email);
       if (response.success) {
-        setIsValidToken(true);
+        setIsValidCode(true);
+        setIsCodeVerified(true);
       } else {
-        ErrorHandler.showError('Token inválido o expirado', 'Error');
-        router.replace('/login');
+        ErrorHandler.showError('Código inválido o expirado', 'Error');
       }
     } catch (error) {
-      console.error('Token validation error:', error);
-      ErrorHandler.showError('Error al validar el token', 'Error');
-      router.replace('/login');
+      console.error('Code validation error:', error);
+      const errorMessage = ErrorHandler.getErrorMessage(error);
+      ErrorHandler.showError(errorMessage, 'Error');
     } finally {
       setIsValidating(false);
     }
   };
 
   const handleResetPassword = async () => {
+    if (!isCodeVerified) {
+      ErrorHandler.showError('Primero debes verificar el código', 'Validación');
+      return;
+    }
+
     if (!newPassword || !confirmPassword) {
       ErrorHandler.showError('Por favor completa todos los campos', 'Validación');
       return;
@@ -69,12 +77,18 @@ const ResetPasswordScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const response = await apiService.resetPassword(token!, newPassword);
+      // Verificar que email no sea undefined
+      if (!email) {
+        ErrorHandler.showError('Email no proporcionado', 'Error');
+        return;
+      }
+      
+      const response = await apiService.resetPassword(verificationCode, email, newPassword);
       if (response.success) {
         ErrorHandler.showSuccess('Contraseña restablecida exitosamente', 'Éxito');
         router.replace('/login');
       } else {
-        ErrorHandler.showError(response.message || 'Error al restablecer la contraseña');
+        ErrorHandler.showError(response.message || 'Error al restablecer la contraseña', 'Error');
       }
     } catch (error) {
       console.error('Reset password error:', error);
@@ -86,7 +100,14 @@ const ResetPasswordScreen: React.FC = () => {
   };
 
   const handleBackToLogin = () => {
-    router.replace('/login');
+    if (isCodeVerified) {
+      setIsCodeVerified(false);
+      setVerificationCode('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } else {
+      router.replace('/login');
+    }
   };
 
   if (isValidating) {
@@ -94,24 +115,7 @@ const ResetPasswordScreen: React.FC = () => {
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#0A2A5F" />
-          <Text style={styles.loadingText}>Validando token...</Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (!isValidToken) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorIcon}>❌</Text>
-          <Text style={styles.errorTitle}>Token Inválido</Text>
-          <Text style={styles.errorMessage}>
-            El enlace de recuperación no es válido o ha expirado.
-          </Text>
-          <TouchableOpacity style={styles.backButton} onPress={handleBackToLogin}>
-            <Text style={styles.backButtonText}>Volver al Login</Text>
-          </TouchableOpacity>
+          <Text style={styles.loadingText}>Verificando código...</Text>
         </View>
       </View>
     );
@@ -131,74 +135,114 @@ const ResetPasswordScreen: React.FC = () => {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.formContainer}>
           <Text style={styles.subtitle}>
-            Ingresa tu nueva contraseña para completar la recuperación
+            {isCodeVerified 
+              ? 'Ingresa tu nueva contraseña para completar la recuperación'
+              : `Ingresa el código de verificación enviado a ${email || 'tu email'}`}
           </Text>
+          
+          {!isCodeVerified && email && (
+            <Text style={styles.emailInfo}>Email: {email}</Text>
+          )}
 
-          {/* New Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputIcon}>🔒</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nueva contraseña"
-              placeholderTextColor="rgba(0, 0, 0, 0.5)"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
+          {!isCodeVerified && (
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputIcon}>🔑</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Código de verificación"
+                placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                value={verificationCode}
+                onChangeText={setVerificationCode}
+                keyboardType="number-pad"
+                maxLength={6}
+                editable={!isValidating}
+              />
+            </View>
+          )}
+
+          {!isCodeVerified && (
             <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
+              style={[styles.submitButton, isValidating && styles.submitButtonDisabled]}
+              onPress={validateCode}
+              disabled={isValidating || !verificationCode}
             >
-              <Text style={styles.eyeIconText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+              {isValidating ? (
+                <ActivityIndicator color="white" size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>Verificar Código</Text>
+              )}
             </TouchableOpacity>
-          </View>
+          )}
 
-          {/* Confirm Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputIcon}>🔒</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirmar contraseña"
-              placeholderTextColor="rgba(0, 0, 0, 0.5)"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              autoCapitalize="none"
-              editable={!isLoading}
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              <Text style={styles.eyeIconText}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
-            </TouchableOpacity>
-          </View>
+          {isCodeVerified && (
+            <>
+              {/* New Password Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputIcon}>🔒</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nueva contraseña"
+                  placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Text style={styles.eyeIconText}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                </TouchableOpacity>
+              </View>
 
-          {/* Password Requirements */}
-          <View style={styles.requirementsContainer}>
-            <Text style={styles.requirementsTitle}>Requisitos de la contraseña:</Text>
-            <Text style={[styles.requirement, newPassword.length >= 8 && styles.requirementMet]}>
-              ✓ Al menos 8 caracteres
-            </Text>
-            <Text style={[styles.requirement, newPassword === confirmPassword && confirmPassword.length > 0 && styles.requirementMet]}>
-              ✓ Las contraseñas coinciden
-            </Text>
-          </View>
+              {/* Confirm Password Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputIcon}>🔒</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirmar contraseña"
+                  placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+                  editable={!isLoading}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <Text style={styles.eyeIconText}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
+                </TouchableOpacity>
+              </View>
 
-          {/* Submit Button */}
-          <TouchableOpacity
-            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
-            onPress={handleResetPassword}
-            disabled={isLoading || newPassword.length < 8 || newPassword !== confirmPassword}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="white" size="small" />
-            ) : (
-              <Text style={styles.submitButtonText}>Restablecer Contraseña</Text>
-            )}
-          </TouchableOpacity>
+              {/* Password Requirements */}
+              <View style={styles.requirementsContainer}>
+                <Text style={styles.requirementsTitle}>Requisitos de la contraseña:</Text>
+                <Text style={[styles.requirement, newPassword.length >= 8 && styles.requirementMet]}>
+                  ✓ Al menos 8 caracteres
+                </Text>
+                <Text style={[styles.requirement, newPassword === confirmPassword && confirmPassword.length > 0 && styles.requirementMet]}>
+                  ✓ Las contraseñas coinciden
+                </Text>
+              </View>
+
+              {/* Submit Button */}
+              <TouchableOpacity
+                style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+                onPress={handleResetPassword}
+                disabled={isLoading || newPassword.length < 8 || newPassword !== confirmPassword}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="white" size="small" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Restablecer Contraseña</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
 
           {/* Back to Login */}
           <TouchableOpacity style={styles.loginLink} onPress={handleBackToLogin}>
@@ -216,6 +260,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
+  },
+  emailInfo: {
+    fontSize: 14,
+    color: '#0A2A5F',
+    textAlign: 'center',
+    marginBottom: 15,
+    fontStyle: 'italic',
   },
   header: {
     backgroundColor: '#0A2A5F',

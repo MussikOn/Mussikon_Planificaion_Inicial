@@ -486,11 +486,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: Platform.OS === 'web' ? 40 : 24,
     paddingVertical: Platform.OS === 'web' ? 40 : 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.15,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 8,
+      },
+      web: {
+        boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.15)',
+      },
+    }),
   },
   section: {
     marginBottom: Platform.OS === 'web' ? 32 : 24,
@@ -631,11 +640,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: Platform.OS === 'web' ? 16 : 14,
     marginBottom: 16,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.19,
-    shadowRadius: 8,
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: theme.colors.primary,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.19,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+      web: {
+        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.19)',
+      },
+    }),
   },
   registerButtonText: {
     color: theme.colors.white,

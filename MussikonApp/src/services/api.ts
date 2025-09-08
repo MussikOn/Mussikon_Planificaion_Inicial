@@ -180,16 +180,17 @@ class ApiService {
     });
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<PasswordResetResponse> {
+  async resetPassword(code: string, email: string, newPassword: string): Promise<PasswordResetResponse> {
     return this.makeRequest<PasswordResetResponse>('/auth/reset-password', {
       method: 'POST',
-      body: JSON.stringify({ token, new_password: newPassword }),
+      body: JSON.stringify({ code, email, new_password: newPassword }),
     });
   }
 
-  async validateResetToken(token: string): Promise<PasswordResetResponse> {
-    return this.makeRequest<PasswordResetResponse>(`/auth/validate-reset-token/${token}`, {
-      method: 'GET',
+  async validateResetCode(code: string, email: string): Promise<PasswordResetResponse> {
+    return this.makeRequest<PasswordResetResponse>('/auth/validate-reset-code', {
+      method: 'POST',
+      body: JSON.stringify({ code, email }),
     });
   }
 

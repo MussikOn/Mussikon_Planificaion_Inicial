@@ -60,9 +60,8 @@ export const sendValidationEmail = async (email: string, name: string, status: s
   await sendEmail({ to: email, subject, html });
 };
 
-export const sendPasswordResetEmail = async (email: string, name: string, resetToken: string): Promise<void> => {
-  const resetUrl = `${process.env['FRONTEND_URL'] || 'http://172.20.10.4:3000'}/reset-password?token=${resetToken}`;
-  const subject = 'Recuperar Contraseña - Mussikon';
+export const sendPasswordResetEmail = async (email: string, name: string, code: string): Promise<void> => {
+  const subject = 'Código de Verificación para Restablecer Contraseña - Mussikon';
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: linear-gradient(135deg, #0A2A5F, #1E40AF); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
@@ -79,32 +78,36 @@ export const sendPasswordResetEmail = async (email: string, name: string, resetT
         </p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" 
-             style="background: linear-gradient(135deg, #0A2A5F, #1E40AF); 
-                    color: white; 
-                    padding: 15px 30px; 
-                    text-decoration: none; 
-                    border-radius: 8px; 
-                    font-weight: bold; 
-                    display: inline-block;
-                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            🔑 Restablecer Contraseña
-          </a>
+          <div style="background: linear-gradient(135deg, #0A2A5F, #1E40AF); 
+                      color: white; 
+                      padding: 20px; 
+                      border-radius: 12px; 
+                      display: inline-block;
+                      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                      border: 3px solid #1E40AF;">
+            <p style="margin: 0; font-size: 14px; opacity: 0.9;">Tu código de verificación es:</p>
+            <h1 style="margin: 10px 0 0 0; font-size: 36px; font-weight: bold; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+              ${code}
+            </h1>
+          </div>
         </div>
         
         <div style="background: #e6f3ff; border-left: 4px solid #0A2A5F; padding: 15px; margin: 20px 0; border-radius: 4px;">
           <p style="margin: 0; color: #0A2A5F; font-weight: bold;">⚠️ Importante:</p>
           <ul style="margin: 10px 0 0 0; color: #4a5568; padding-left: 20px;">
-            <li>Este enlace expirará en 1 hora por seguridad</li>
-            <li>Solo puedes usar este enlace una vez</li>
-            <li>Si no funciona, solicita un nuevo enlace</li>
+            <li>Este código expirará en 15 minutos por seguridad</li>
+            <li>Solo puedes usar este código 3 veces</li>
+            <li>Si no funciona, solicita un nuevo código</li>
+            <li>Después de 3 intentos fallidos, el código se bloqueará por 30 minutos</li>
           </ul>
         </div>
         
-        <p style="color: #718096; font-size: 14px; margin-top: 30px;">
-          Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
-          <a href="${resetUrl}" style="color: #0A2A5F; word-break: break-all;">${resetUrl}</a>
-        </p>
+        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+          <p style="margin: 0; color: #856404; font-weight: bold;">🔒 Seguridad:</p>
+          <p style="margin: 10px 0 0 0; color: #856404;">
+            Nunca compartas este código con nadie. El equipo de Mussikon nunca te pedirá tu código de verificación.
+          </p>
+        </div>
         
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
         

@@ -10,8 +10,11 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token VARCHAR(255) NOT NULL UNIQUE,
+    verification_code VARCHAR(6) UNIQUE, -- Nuevo campo para el código numérico
     expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
     used BOOLEAN DEFAULT FALSE,
+    attempts INTEGER DEFAULT 0, -- Nuevo campo para el número de intentos
+    max_attempts INTEGER DEFAULT 3, -- Nuevo campo para el número máximo de intentos
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -63,7 +66,7 @@ CREATE OR REPLACE FUNCTION cleanup_expired_email_verification_tokens()
 RETURNS void AS $$
 BEGIN
     DELETE FROM email_verification_tokens 
-    WHERE expires_at < NOW() OR used = true;
+    WHERE email_verification_tokens.expires_at < NOW() OR used = true;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -158,7 +161,7 @@ CREATE OR REPLACE FUNCTION cleanup_expired_password_reset_tokens()
 RETURNS void AS $$
 BEGIN
     DELETE FROM password_reset_tokens 
-    WHERE expires_at < NOW() OR used = true;
+    WHERE password_reset_tokens.expires_at < NOW() OR used = true;
 END;
 $$ LANGUAGE plpgsql;
 
