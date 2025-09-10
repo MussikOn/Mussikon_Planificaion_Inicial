@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import supabase from '../config/database';
 import { createError } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 
 class NotificationController {
   // Get user notifications
@@ -24,11 +25,13 @@ class NotificationController {
       });
     } catch (error) {
       if (error instanceof Error) {
+        logger.error('Error getting notifications:', error);
         res.status(500).json({
           success: false,
           message: error.message
         });
       } else {
+        logger.error('Error getting notifications:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -59,11 +62,13 @@ class NotificationController {
       });
     } catch (error) {
       if (error instanceof Error) {
+        logger.error('Error marking notification as read:', error);
         res.status(500).json({
           success: false,
           message: error.message
         });
       } else {
+        logger.error('Error marking notification as read:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -93,11 +98,13 @@ class NotificationController {
       });
     } catch (error) {
       if (error instanceof Error) {
+        logger.error('Error marking all notifications as read:', error);
         res.status(500).json({
           success: false,
           message: error.message
         });
       } else {
+        logger.error('Error marking all notifications as read:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'

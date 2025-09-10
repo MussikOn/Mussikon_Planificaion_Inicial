@@ -6,6 +6,7 @@ import { CreateOfferRequest } from '../types';
 import { balanceService } from '../services/balanceService';
 import { availabilityService } from '../services/availabilityService';
 import { socketService } from '../server';
+import { logger } from '../utils/logger';
 
 export class OfferController {
   // Get offers with filters
@@ -61,7 +62,7 @@ export class OfferController {
           message: error.message
         });
       } else {
-        console.error('Get offers error:', error);
+        logger.error('Get offers error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -111,7 +112,7 @@ export class OfferController {
           message: error.message
         });
       } else {
-        console.error('Get leader offers error:', error);
+        logger.error('Get leader offers error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -160,7 +161,7 @@ export class OfferController {
           message: error.message
         });
       } else {
-        console.error('Get musician offers error:', error);
+        logger.error('Get musician offers error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -259,7 +260,7 @@ export class OfferController {
       try {
         socketService.notifyNewOffer(request.leader_id, offer);
       } catch (notificationError) {
-        console.error('Error sending notification:', notificationError);
+        logger.error('Error sending notification:', notificationError);
         // Don't fail the offer creation if notification fails
       }
 
@@ -275,7 +276,7 @@ export class OfferController {
           message: error.message
         });
       } else {
-        console.error('Create offer error:', error);
+        logger.error('Create offer error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -317,7 +318,7 @@ export class OfferController {
           message: error.message
         });
       } else {
-        console.error('Get offer by ID error:', error);
+        logger.error('Get offer by ID error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -379,7 +380,7 @@ export class OfferController {
         .neq('id', id);
 
       if (rejectError) {
-        console.error('Failed to reject other offers:', rejectError);
+        logger.error('Failed to reject other offers:', rejectError);
       }
 
       // Block musician availability
@@ -395,7 +396,7 @@ export class OfferController {
       try {
         await balanceService.processEarning(offer.id, offer.request_id);
       } catch (balanceError) {
-        console.error('Failed to process earning:', balanceError);
+        logger.error('Failed to process earning:', balanceError);
         // Don't fail the offer selection if balance processing fails
       }
 
@@ -409,7 +410,7 @@ export class OfferController {
         .eq('id', offer.request_id);
 
       if (closeRequestError) {
-        console.error('Failed to close request:', closeRequestError);
+        logger.error('Failed to close request:', closeRequestError);
       }
 
       res.status(200).json({
@@ -423,7 +424,7 @@ export class OfferController {
           message: error.message
         });
       } else {
-        console.error('Select offer error:', error);
+        logger.error('Select offer error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -481,7 +482,7 @@ export class OfferController {
           message: error.message
         });
       } else {
-        console.error('Reject offer error:', error);
+        logger.error('Reject offer error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'

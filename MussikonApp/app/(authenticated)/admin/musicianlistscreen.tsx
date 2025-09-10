@@ -10,6 +10,7 @@ import {
   Platform,
   TextInput,
   TextStyle,
+  ViewStyle,
 } from 'react-native';
 import { theme } from '../../../src/theme/theme';
 import { apiService, SessionExpiredError } from '../../../src/services/api';
@@ -260,8 +261,16 @@ const MusiciansListScreen: React.FC = () => {
     </View>
   );
 
+  const responsiveContainer: ViewStyle = Platform.OS === 'web' ? {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  } : {};
+
   if (loading) {
-    return (
+
+  return (
       <GradientBackground>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Cargando músicos...</Text>
@@ -272,7 +281,7 @@ const MusiciansListScreen: React.FC = () => {
 
   return (
     <GradientBackground>
-      <View style={styles.container}>
+      <View style={[styles.container, responsiveContainer]}>
         <View style={styles.header}>
           <Text style={styles.title}>Validar Músicos</Text>
         </View>
@@ -299,7 +308,7 @@ const MusiciansListScreen: React.FC = () => {
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
-            <View style={styles.emptyContainer}>
+            <View style={[styles.emptyContainer, Platform.OS === 'web' && styles.emptyContainerWeb]}>
               <Text style={styles.emptyText}>
                 No hay músicos {filter === 'all' ? '' : getStatusText(filter).toLowerCase()}
               </Text>
@@ -315,6 +324,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: Platform.OS === 'web' ? 20 : 16,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 1200, // Limit content width on large screens
+      alignSelf: 'center', // Center the content
+    }),
   },
   loadingContainer: {
     flex: 1,
@@ -328,11 +341,17 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingVertical: Platform.OS === 'web' ? 20 : 16,
+    ...(Platform.OS === 'web' && {
+      alignItems: 'center',
+    }),
   },
   title: {
     fontSize: Platform.OS === 'web' ? 24 : 20,
     fontWeight: 'bold',
     color: theme.colors.white,
+    ...(Platform.OS === 'web' && {
+      fontSize: 32, // Larger font size for web
+    }),
   } as TextStyle,
   filterTabs: {
     flexDirection: 'row',
@@ -340,6 +359,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 4,
     marginBottom: 16,
+    ...(Platform.OS === 'web' && {
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      width: '100%',
+      maxWidth: 800, // Limit filter tabs width on large screens
+      alignSelf: 'center',
+    }),
   },
   filterTab: {
     flex: 1,
@@ -362,6 +388,11 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     marginBottom: 16,
+    ...(Platform.OS === 'web' && {
+      width: '100%',
+      maxWidth: 600, // Limit search input width on large screens
+      alignSelf: 'center',
+    }),
   },
   searchInput: {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -370,9 +401,17 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     color: theme.colors.text.primary,
+    ...(Platform.OS === 'web' && {
+      width: '100%',
+    }),
   },
   listContainer: {
     paddingBottom: Platform.OS === 'web' ? 20 : 16,
+    ...(Platform.OS === 'web' && {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-around', // Distribute items evenly
+    }),
   },
   musicianCard: {
     backgroundColor: theme.colors.white,
@@ -384,6 +423,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 4,
+    ...(Platform.OS === 'web' && {
+      width: '100%', // Take full width on web initially
+      // Add responsive adjustments for larger screens
+      '@media (min-width: 768px)': {
+        width: '48%', // Two columns on medium screens
+      },
+      '@media (min-width: 1024px)': {
+        width: '31%', // Three columns on large screens
+      },
+    }),
   },
   musicianHeader: {
     flexDirection: 'row',
@@ -435,6 +484,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    justifyContent: 'flex-start', // Align items to the start
   },
   instrumentItem: {
     backgroundColor: theme.colors.lightGray,
@@ -444,7 +494,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flexShrink: 1, // Allow items to shrink
   },
+
   instrumentName: {
     fontSize: 12,
     color: theme.colors.text.primary,
@@ -466,6 +518,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+  },
+  emptyContainerWeb: {
+    width: '100%',
+    maxWidth: 600, // Adjust as needed
+    alignSelf: 'center',
   },
   emptyText: {
     fontSize: 16,

@@ -20,6 +20,7 @@ const ForgotPasswordScreen: React.FC = () => {
   const [emailSent, setEmailSent] = useState(false);
 
   const handleForgotPassword = async () => {
+    console.log('ForgotPasswordScreen: handleForgotPassword called with email:', email);
     if (!email) {
       ErrorHandler.showError('Por favor ingresa tu email', 'Validación');
       return;
@@ -108,7 +109,7 @@ const ForgotPasswordScreen: React.FC = () => {
               placeholder="ejemplo@correo.com"
               placeholderTextColor="rgba(0, 0, 0, 0.5)"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={text => setEmail(text.toLowerCase())}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"

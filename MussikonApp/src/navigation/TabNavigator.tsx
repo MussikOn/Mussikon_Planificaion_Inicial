@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform, Text } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { DashboardScreen, RequestsListScreen, OffersListScreen, ProfileScreen, BalanceScreen } from '../screens';
+import AdminTabNavigator from './AdminTabNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -84,6 +85,19 @@ const TabNavigator: React.FC = () => {
           ),
         }}
       />
+
+      {user?.role === 'admin' && (
+        <Tab.Screen
+          name="Admin"
+          component={AdminTabNavigator}
+          options={{
+            tabBarLabel: 'Admin',
+            tabBarIcon: ({ color }) => (
+              <Text style={{ fontSize: 20, color }}>⚙️</Text>
+            ),
+          }}
+        />
+      )}
     </Tab.Navigator>
   );
 };

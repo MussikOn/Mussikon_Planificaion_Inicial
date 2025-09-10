@@ -1,6 +1,7 @@
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import supabase from '../config/database';
+import { logger } from '../utils/logger';
 
 export class SocketService {
   private io: SocketIOServer;
@@ -29,18 +30,18 @@ export class SocketService {
 
   private setupEventHandlers() {
     this.io.on('connection', (socket) => {
-      console.log('User connected:', socket.id);
+      logger.info('User connected:', socket.id);
 
       // Handle user authentication
       socket.on('authenticate', (userId: string) => {
         this.connectedUsers.set(userId, socket.id);
         socket.join(`user_${userId}`);
-        console.log(`User ${userId} authenticated with socket ${socket.id}`);
+        logger.info(`User ${userId} authenticated with socket ${socket.id}`);
       });
 
       // Handle disconnection
       socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
+        logger.info('User disconnected:', socket.id);
         // Remove user from connected users
         for (const [userId, socketId] of this.connectedUsers.entries()) {
           if (socketId === socket.id) {
@@ -63,7 +64,7 @@ export class SocketService {
         .eq('status', 'active');
 
       if (error) {
-        console.error('Error fetching musicians:', error);
+        logger.error('Error fetching musicians:', error);
         return;
       }
 
@@ -77,9 +78,9 @@ export class SocketService {
         });
       });
 
-      console.log(`Notified ${musicians?.length || 0} musicians about new request`);
+      logger.info(`Notified ${musicians?.length || 0} musicians about new request`);
     } catch (error) {
-      console.error('Error notifying musicians:', error);
+      logger.error('Error notifying musicians:', error);
     }
   }
 

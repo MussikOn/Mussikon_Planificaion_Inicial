@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import { config } from '../config/config';
 import { EmailOptions } from '../types';
+import { logger } from '../utils/logger';
 
 const transporter = nodemailer.createTransport({
   host: config.email.host,
@@ -22,10 +23,11 @@ export const sendEmail = async (options: EmailOptions): Promise<void> => {
       html: options.html
     };
 
+    logger.info('EmailService: Attempting to send email with options:', mailOptions);
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.messageId);
+    logger.info('EmailService: Email sent:', info.messageId);
   } catch (error) {
-    console.error('Email sending failed:', error);
+    logger.error('EmailService: Email sending failed with error:', error); // Log the full error object
     throw error;
   }
 };

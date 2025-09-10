@@ -14,7 +14,8 @@ import { apiService } from '../services/api';
 import ErrorHandler from '../utils/errorHandler';
 
 const ResetPasswordScreen: React.FC = () => {
-  const { email } = useLocalSearchParams<{ email: string }>();
+  const { email: paramEmail } = useLocalSearchParams<{ email: string }>();
+  const email = paramEmail ? paramEmail.toLowerCase() : undefined;
   const [verificationCode, setVerificationCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -38,7 +39,7 @@ const ResetPasswordScreen: React.FC = () => {
 
     setIsValidating(true);
     try {
-      const response = await apiService.validateResetCode(verificationCode, email);
+      const response = await apiService.validateResetCode(verificationCode.toLowerCase(), email);
       if (response.success) {
         setIsValidCode(true);
         setIsCodeVerified(true);
@@ -82,8 +83,9 @@ const ResetPasswordScreen: React.FC = () => {
         ErrorHandler.showError('Email no proporcionado', 'Error');
         return;
       }
+      console.log('Resetting password with:', { verificationCode, email: email.toLowerCase(), newPassword });
       
-      const response = await apiService.resetPassword(verificationCode, email, newPassword);
+      const response = await apiService.resetPassword(verificationCode.toLowerCase(), email, newPassword);
       if (response.success) {
         ErrorHandler.showSuccess('Contraseña restablecida exitosamente', 'Éxito');
         router.replace('/login');

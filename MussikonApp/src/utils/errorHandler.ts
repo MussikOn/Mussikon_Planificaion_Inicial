@@ -65,7 +65,7 @@ export class ErrorHandler {
           };
         case 403:
           return {
-            message: 'No tienes permisos para realizar esta acción',
+            message: `No tienes permisos para realizar esta acción`,
             code: 'FORBIDDEN',
             statusCode: 403
           };

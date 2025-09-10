@@ -3,6 +3,7 @@ import supabase from '../config/database';
 import { AppError, createError } from '../utils/errorHandler';
 import { UpdatePricingConfigRequest } from '../types';
 import { pricingService } from '../services/pricingService';
+import { logger } from '../utils/logger';
 
 export class PricingController {
   // Get current pricing configuration
@@ -27,7 +28,7 @@ export class PricingController {
         data: config
       });
     } catch (error) {
-      console.error('Get pricing config error:', error);
+      logger.error('Get pricing config error:', error);
       res.status(500).json({
         success: false,
         message: 'Error getting pricing configuration'
@@ -100,7 +101,7 @@ export class PricingController {
           message: error.message
         });
       } else {
-        console.error('Update pricing config error:', error);
+        logger.error('Update pricing config error:', error);
         res.status(500).json({
           success: false,
           message: 'Error updating pricing configuration'
@@ -140,7 +141,7 @@ export class PricingController {
           message: error.message
         });
       } else {
-        console.error('Calculate price error:', error);
+        logger.error('Calculate price error:', error);
         res.status(500).json({
           success: false,
           message: 'Error calculating price'
@@ -178,7 +179,7 @@ export class PricingController {
           message: error.message
         });
       } else {
-        console.error('Get pricing history error:', error);
+        logger.error('Get pricing history error:', error);
         res.status(500).json({
           success: false,
           message: 'Error getting pricing history'
@@ -223,7 +224,7 @@ export class PricingController {
           message: error.message
         });
       } else {
-        console.error('Initialize pricing error:', error);
+        logger.error('Initialize pricing error:', error);
         res.status(500).json({
           success: false,
           message: 'Error initializing default pricing'

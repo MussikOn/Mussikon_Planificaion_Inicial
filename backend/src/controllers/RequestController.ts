@@ -2,8 +2,9 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import supabase from '../config/database';
 import { AppError, createError } from '../utils/errorHandler';
-import { CreateRequestRequest, RequestFilters } from '../types';
+import { CreateRequestRequest, RequestFilters } from '../types'; 
 import { socketService } from '../server';
+import { logger } from '../utils/logger';
 
 export class RequestController {
   private socketService = socketService;
@@ -83,7 +84,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Get requests error:', error);
+        logger.error('Get requests error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -159,7 +160,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Get leader requests error:', error);
+        logger.error('Get leader requests error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -221,7 +222,7 @@ export class RequestController {
       try {
         await socketService.notifyNewRequest(request);
       } catch (notificationError) {
-        console.error('Error sending notification:', notificationError);
+        logger.error('Error sending notification:', notificationError);
         // Don't fail the request creation if notification fails
       }
 
@@ -237,7 +238,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Create request error:', error);
+        logger.error('Create request error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -295,7 +296,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Get request by ID error:', error);
+        logger.error('Get request by ID error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -350,7 +351,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Update request error:', error);
+        logger.error('Update request error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -396,7 +397,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Delete request error:', error);
+        logger.error('Delete request error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -455,7 +456,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Complete request error:', error);
+        logger.error('Complete request error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -518,7 +519,7 @@ export class RequestController {
           message: error.message
         });
       } else {
-        console.error('Get user requests error:', error);
+        logger.error('Get user requests error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -597,7 +598,7 @@ export class RequestController {
         .eq('id', requestId);
 
       if (updateError) {
-        console.error('Error starting event:', updateError);
+        logger.error('Error starting event:', updateError);
         res.status(500).json({
           success: false,
           message: 'Error al iniciar el evento'
@@ -624,7 +625,7 @@ export class RequestController {
         }
       });
     } catch (error) {
-      console.error('Start event error:', error);
+      logger.error('Start event error:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
@@ -697,7 +698,7 @@ export class RequestController {
         .eq('id', requestId);
 
       if (updateError) {
-        console.error('Error completing event:', updateError);
+        logger.error('Error completing event:', updateError);
         res.status(500).json({
           success: false,
           message: 'Error al completar el evento'
@@ -723,7 +724,7 @@ export class RequestController {
         }
       });
     } catch (error) {
-      console.error('Complete event error:', error);
+      logger.error('Complete event error:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
@@ -788,7 +789,7 @@ export class RequestController {
         }
       });
     } catch (error) {
-      console.error('Get event status error:', error);
+      logger.error('Get event status error:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
@@ -922,7 +923,7 @@ export class RequestController {
         .eq('id', requestId);
 
       if (updateError) {
-        console.error('Error accepting request:', updateError);
+        logger.error('Error accepting request:', updateError);
         res.status(500).json({
           success: false,
           message: 'Error al aceptar la solicitud'
@@ -949,7 +950,7 @@ export class RequestController {
         }
       });
     } catch (error) {
-      console.error('Accept request error:', error);
+      logger.error('Accept request error:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
@@ -1014,7 +1015,7 @@ export class RequestController {
         .eq('id', requestId);
 
       if (updateError) {
-        console.error('Error rejecting request:', updateError);
+        logger.error('Error rejecting request:', updateError);
         res.status(500).json({
           success: false,
           message: 'Error al rechazar la solicitud'
@@ -1041,7 +1042,7 @@ export class RequestController {
         }
       });
     } catch (error) {
-      console.error('Reject request error:', error);
+      logger.error('Reject request error:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
@@ -1097,7 +1098,7 @@ export class RequestController {
         }
       });
     } catch (error) {
-      console.error('Get musician request status error:', error);
+      logger.error('Get musician request status error:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor'
@@ -1186,7 +1187,7 @@ export class RequestController {
         .eq('id', requestId);
 
       if (updateError) {
-        console.error('Error cancelling request:', updateError);
+        logger.error('Error cancelling request:', updateError);
         res.status(500).json({
           success: false,
           message: 'Error al cancelar la solicitud'
@@ -1217,7 +1218,7 @@ export class RequestController {
         }
       });
     } catch (error) {
-      console.error('Cancel request error:', error);
+      logger.error('Cancel request error:', error);
       res.status(500).json({
         success: false,
         message: 'Error interno del servidor'

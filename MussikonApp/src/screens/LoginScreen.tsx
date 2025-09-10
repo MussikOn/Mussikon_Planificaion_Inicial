@@ -83,7 +83,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onBack, onRegister }) => {
     } catch (error) {
       console.error('Login error:', error);
       const errorMessage = ErrorHandler.getErrorMessage(error);
-      ErrorHandler.showError(errorMessage, 'Error de Login');
+      ErrorHandler.showError(errorMessage, 'Error de Login. ');
     }
   };
 

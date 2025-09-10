@@ -47,6 +47,7 @@ export interface RegisterRequest {
     instrument: string;
     years_experience: number;
   }>;
+  verificationCode?: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -54,7 +55,8 @@ export interface ForgotPasswordRequest {
 }
 
 export interface ResetPasswordRequest {
-  token: string;
+  code: string;
+  email: string;
   new_password: string;
 }
 
@@ -189,9 +191,32 @@ class ApiService {
     });
   }
 
+  async requestRegistrationVerificationCode(data: SendVerificationEmailRequest): Promise<{ success: boolean; message: string }> {
+    return this.makeRequest('/auth/send-verification-email', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   async logout(): Promise<{ success: boolean; message: string }> {
     return this.makeRequest('/auth/logout', {
       method: 'POST',
+    });
+  }
+
+  // User Management
+
+  async validateResetCode(code: string, email: string): Promise<{ success: boolean; message: string }> {
+    return this.makeRequest('/auth/validate-reset-code', {
+      method: 'POST',
+      body: JSON.stringify({ code, email }),
+    });
+  }
+
+  async resetPassword(code: string, email: string, new_password: string): Promise<PasswordResetResponse> {
+    return this.makeRequest<PasswordResetResponse>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ code, email, new_password }),
     });
   }
 
@@ -201,20 +226,6 @@ class ApiService {
     return this.makeRequest<PasswordResetResponse>('/auth/forgot-password', {
       method: 'POST',
       body: JSON.stringify({ email }),
-    });
-  }
-
-  async resetPassword(code: string, email: string, newPassword: string): Promise<PasswordResetResponse> {
-    return this.makeRequest<PasswordResetResponse>('/auth/reset-password', {
-      method: 'POST',
-      body: JSON.stringify({ code, email, new_password: newPassword }),
-    });
-  }
-
-  async validateResetCode(code: string, email: string): Promise<PasswordResetResponse> {
-    return this.makeRequest<PasswordResetResponse>('/auth/validate-reset-code', {
-      method: 'POST',
-      body: JSON.stringify({ code, email }),
     });
   }
 

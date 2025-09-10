@@ -1,6 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform, Text } from 'react-native';
-import { AdminDashboardScreen, PricingManagementScreen } from '../screens';
+import { AdminDashboardScreen, PricingManagementScreen, ProfileScreen } from '../screens';
 import MusiciansListScreen from '../../app/(authenticated)/admin/musicianlistscreen';
 
 const Tab = createBottomTabNavigator();
@@ -52,6 +52,16 @@ const AdminTabNavigator: React.FC = () => {
           tabBarLabel: 'Tarifas',
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>💲</Text>
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          tabBarLabel: 'Perfil',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>👤</Text>
           ),
         }}
       />

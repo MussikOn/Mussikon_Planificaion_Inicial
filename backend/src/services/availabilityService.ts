@@ -1,5 +1,6 @@
 import supabase from '../config/database';
 import { MusicianAvailability, AvailabilityCheck, AvailabilityResponse, Request } from '../types';
+import { logger } from '../utils/logger';
 
 class AvailabilityService {
   // Check if a musician is available for a specific time slot
@@ -53,7 +54,7 @@ class AvailabilityService {
       };
 
     } catch (error) {
-      console.error('Error checking availability:', error);
+      logger.error('Error checking availability:', error);
       return {
         is_available: false,
         message: 'Error al verificar disponibilidad'
@@ -108,13 +109,13 @@ class AvailabilityService {
         });
 
       if (error) {
-        console.error('Error blocking availability:', error);
+        logger.error('Error blocking availability:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error blocking availability:', error);
+      logger.error('Error blocking availability:', error);
       return false;
     }
   }
@@ -128,13 +129,13 @@ class AvailabilityService {
         .eq('request_id', requestId);
 
       if (error) {
-        console.error('Error unblocking availability:', error);
+        logger.error('Error unblocking availability:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error unblocking availability:', error);
+      logger.error('Error unblocking availability:', error);
       return false;
     }
   }
@@ -153,13 +154,13 @@ class AvailabilityService {
         .order('start_time');
 
       if (error) {
-        console.error('Error getting availability:', error);
+        logger.error('Error getting availability:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error getting availability:', error);
+      logger.error('Error getting availability:', error);
       return [];
     }
   }
@@ -179,7 +180,7 @@ class AvailabilityService {
         .eq('instrument', instrument);
 
       if (musiciansError) {
-        console.error('Error getting musicians:', musiciansError);
+        logger.error('Error getting musicians:', musiciansError);
         return [];
       }
 
@@ -201,7 +202,7 @@ class AvailabilityService {
 
       return availableMusicians;
     } catch (error) {
-      console.error('Error getting available musicians:', error);
+      logger.error('Error getting available musicians:', error);
       return [];
     }
   }

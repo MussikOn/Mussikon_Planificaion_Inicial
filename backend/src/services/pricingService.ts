@@ -1,5 +1,6 @@
 import supabase from '../config/database';
 import { PricingConfig, PriceCalculation } from '../types';
+import { logger } from '../utils/logger';
 
 class PricingService {
   // Get current pricing configuration
@@ -14,13 +15,13 @@ class PricingService {
         .single();
 
       if (error) {
-        console.error('Error getting pricing config:', error);
+        logger.error('Error getting pricing config:', error);
         return null;
       }
 
       return data;
     } catch (error) {
-      console.error('Error getting pricing config:', error);
+      logger.error('Error getting pricing config:', error);
       return null;
     }
   }
@@ -45,13 +46,13 @@ class PricingService {
         }]);
 
       if (error) {
-        console.error('Error updating pricing config:', error);
+        logger.error('Error updating pricing config:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error updating pricing config:', error);
+      logger.error('Error updating pricing config:', error);
       return false;
     }
   }
@@ -65,7 +66,7 @@ class PricingService {
     try {
       const config = await this.getPricingConfig();
       if (!config) {
-        console.error('No pricing configuration found');
+        logger.error('No pricing configuration found');
         return null;
       }
 
@@ -101,7 +102,7 @@ class PricingService {
         musician_earnings: musicianEarnings
       };
     } catch (error) {
-      console.error('Error calculating price:', error);
+      logger.error('Error calculating price:', error);
       return null;
     }
   }
@@ -133,13 +134,13 @@ class PricingService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error getting pricing history:', error);
+        logger.error('Error getting pricing history:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error getting pricing history:', error);
+      logger.error('Error getting pricing history:', error);
       return [];
     }
   }
@@ -172,13 +173,13 @@ class PricingService {
         }]);
 
       if (error) {
-        console.error('Error initializing default pricing:', error);
+        logger.error('Error initializing default pricing:', error);
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error initializing default pricing:', error);
+      logger.error('Error initializing default pricing:', error);
       return false;
     }
   }

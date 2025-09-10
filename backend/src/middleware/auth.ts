@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { config } from '../config/config';
 import { AppError, createError } from '../utils/errorHandler';
 import { JWTPayload } from '../types';
+import { logger } from '../utils/logger';
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   try {
@@ -14,22 +15,22 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
-    console.log('Backend: Token received:', token);
+    logger.debug('Backend: Token received:', token);
 
     try {
       const decoded = jwt.verify(token, config.jwt.secret) as JWTPayload;
-      console.log('Backend: Token decoded successfully:', decoded);
+      logger.debug('Backend: Token decoded successfully:', decoded);
     const currentTime = Math.floor(Date.now() / 1000);
-    console.log('Backend: Current time (Unix timestamp):', currentTime);
+    logger.debug('Backend: Current time (Unix timestamp):', currentTime);
     if (decoded.exp) {
-      console.log('Backend: Token expiration (Unix timestamp):', decoded.exp);
+      logger.debug('Backend: Token expiration (Unix timestamp):', decoded.exp);
       if (decoded.exp < currentTime) {
-        console.log('Backend: Token is EXPIRED on backend.');
+        logger.debug('Backend: Token is EXPIRED on backend.');
       } else {
-        console.log('Backend: Token is NOT EXPIRED on backend.');
+        logger.debug('Backend: Token is NOT EXPIRED on backend.');
       }
     } else {
-      console.log('Backend: Token does NOT have an expiration claim (exp).');
+      logger.debug('Backend: Token does NOT have an expiration claim (exp).');
     }
       (req as any).user = decoded;
       next();

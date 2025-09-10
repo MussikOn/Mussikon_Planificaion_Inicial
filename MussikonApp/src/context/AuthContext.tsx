@@ -146,6 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(response.user);
         setToken(response.token);
         await storeAuth(response.user, response.token);
+        router.replace('/');
         return true;
       }
       return false;

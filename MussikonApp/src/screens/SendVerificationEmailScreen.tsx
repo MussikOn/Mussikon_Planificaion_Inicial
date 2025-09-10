@@ -104,7 +104,7 @@ const SendVerificationEmailScreen: React.FC = () => {
               placeholder="ejemplo@correo.com"
               placeholderTextColor="rgba(0, 0, 0, 0.5)"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={text => setEmail(text.toLowerCase())}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"

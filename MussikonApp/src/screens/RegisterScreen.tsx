@@ -9,11 +9,13 @@ import {
   Platform,
   TextInput,
   TextStyle,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
 import { theme } from '../theme/theme';
 import { Button, GradientBackground } from '../components';
 import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/api';
 import ErrorHandler from '../utils/errorHandler';
 
 interface RegisterScreenProps {
@@ -47,6 +49,9 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBack, onLogin }) => {
     church_name: '',
     location: '',
   });
+  const [showVerificationInput, setShowVerificationInput] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [isSendingCode, setIsSendingCode] = useState(false);
   
   const [selectedInstruments, setSelectedInstruments] = useState<Array<{
     instrument: string;
@@ -83,7 +88,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBack, onLogin }) => {
   ];
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [field]: field === 'email' ? value.toLowerCase() : value,
+    }));
   };
 
   const handleInstrumentToggle = (instrument: string) => {
@@ -110,6 +118,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBack, onLogin }) => {
   const validateForm = () => {
     if (!formData.name || !formData.email || !formData.phone || !formData.password) {
       ErrorHandler.showError('Por favor completa todos los campos obligatorios', 'Validación');
+      return false;
+    }
+
+    if (showVerificationInput && !verificationCode) {
+      ErrorHandler.showError('Por favor ingresa el código de verificación', 'Validación');
       return false;
     }
 
@@ -168,12 +181,24 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBack, onLogin }) => {
         instruments: formData.role === 'musician' ? selectedInstruments : undefined,
       };
 
-      const success = await register(userData);
-      if (success) {
-        ErrorHandler.showSuccess('¡Registro exitoso! Bienvenido a Mussikon', 'Éxito');
-        // La navegación se manejará automáticamente por el AuthContext
+      if (!showVerificationInput) {
+        // Request verification code first
+        const response = await apiService.requestRegistrationVerificationCode({ email: formData.email });
+        if (response.success) {
+          setShowVerificationInput(true);
+          ErrorHandler.showSuccess('Código de verificación enviado a tu email', 'Verificación');
+        } else {
+          ErrorHandler.showError(response.message || 'Error al solicitar código de verificación', 'Error');
+        }
       } else {
-        ErrorHandler.showError('Error al registrar. Verifica tus datos e intenta nuevamente.');
+        // Proceed with registration using the verification code
+        const success = await register({ ...userData, verificationCode });
+        if (success) {
+          ErrorHandler.showSuccess('¡Registro exitoso! Bienvenido a Mussikon', 'Éxito');
+          // La navegación se manejará automáticamente por el AuthContext
+        } else {
+          ErrorHandler.showError('Error al registrar. Verifica tus datos e intenta nuevamente.');
+        }
       }
     } catch (error) {
       console.error('Register error:', error);
@@ -412,18 +437,63 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ onBack, onLogin }) => {
 
             {/* Botones */}
             <View style={styles.buttonsContainer}>
+          {!showVerificationInput ? (
+            <Button
+              title="Solicitar Código de Verificación"
+              onPress={handleRegister}
+              disabled={isSubmitting}
+              style={styles.registerButton}
+            />
+          ) : (
+            <>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputIcon}>🔑</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Código de verificación"
+                  placeholderTextColor="rgba(0, 0, 0, 0.5)"
+                  value={verificationCode}
+                  onChangeText={setVerificationCode}
+                  keyboardType="numeric"
+                  maxLength={6}
+                  editable={!isSubmitting}
+                />
+              </View>
               <Button
-                title={isLoading || isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
+                title="Registrarse"
                 onPress={handleRegister}
-                loading={isLoading || isSubmitting}
-                disabled={isLoading || isSubmitting}
-                style={[
-                  styles.registerButton,
-                  (isLoading || isSubmitting) && styles.registerButtonDisabled
-                ] as any}
-                textStyle={styles.registerButtonText}
+                disabled={isSubmitting || !verificationCode}
+                style={styles.registerButton}
               />
-              
+              <TouchableOpacity
+                style={styles.resendCodeButton}
+                onPress={async () => {
+                  setIsSendingCode(true);
+                  try {
+                    const response = await apiService.requestRegistrationVerificationCode({ email: formData.email });
+                    if (response.success) {
+                      ErrorHandler.showSuccess('Nuevo código enviado a tu email', 'Verificación');
+                    } else {
+                      ErrorHandler.showError(response.message || 'Error al reenviar código', 'Error');
+                    }
+                  } catch (error) {
+                    console.error('Resend code error:', error);
+                    const errorMessage = ErrorHandler.getErrorMessage(error);
+                    ErrorHandler.showError(errorMessage, 'Error');
+                  } finally {
+                    setIsSendingCode(false);
+                  }
+                }}
+                disabled={isSendingCode || isSubmitting}
+              >
+                {isSendingCode ? (
+                  <ActivityIndicator color="#0A2A5F" size="small" />
+                ) : (
+                  <Text style={styles.resendCodeButtonText}>Reenviar Código</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
               <TouchableOpacity 
                 style={styles.loginButton}
                 onPress={handleLogin}
@@ -686,6 +756,17 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: theme.colors.text.secondary,
     fontSize: Platform.OS === 'web' ? 14 : 12,
+  },
+  resendCodeButton: {
+    marginTop: 10,
+    alignSelf: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  resendCodeButtonText: {
+    color: '#0A2A5F',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

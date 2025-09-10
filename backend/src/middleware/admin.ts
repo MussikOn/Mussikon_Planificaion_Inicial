@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import supabase from '../config/database';
 import { AppError, createError } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 
 export const adminMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -34,7 +35,7 @@ export const adminMiddleware = async (req: Request, res: Response, next: NextFun
         message: error.message
       });
     } else {
-      console.error('Admin middleware error:', error);
+      logger.error('Admin middleware error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal server error'

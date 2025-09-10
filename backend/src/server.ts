@@ -17,6 +17,7 @@ import notificationRoutes from './routes/notifications';
 import pricingRoutes from './routes/pricing';
 import balanceRoutes from './routes/balances';
 import { AppError } from './utils/errorHandler';
+import { logger } from './utils/logger';
 import { initializeSocketService } from './services/socketService';
 import { pricingService } from './services/pricingService';
 
@@ -83,7 +84,7 @@ app.use('*', (req: Request, res: Response) => {
 
 // Global error handler
 app.use((err: AppError, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Error:', err);
+  logger.error('Error:', err);
   
   res.status(err.statusCode || 500).json({
     error: err.message || 'Internal server error',
@@ -100,22 +101,22 @@ const socketService = initializeSocketService(server);
 // Start server
 const PORT = config.port;
 server.listen(PORT, async () => {
-  console.log(`🚀 Mussikon API server running on port ${PORT}`);
-  console.log(`📱 Environment: ${config.nodeEnv}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-  console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-  console.log(`🔌 WebSocket server initialized`);
+  logger.info(`🚀 Mussikon API server running on port ${PORT}`);
+  logger.info(`📱 Environment: ${config.nodeEnv}`);
+  logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
+  logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  logger.info(`🔌 WebSocket server initialized`);
   
   // Initialize default pricing configuration
   try {
     const pricingInitialized = await pricingService.initializeDefaultPricing();
     if (pricingInitialized) {
-      console.log(`💰 Default pricing configuration initialized`);
+      logger.info(`💰 Default pricing configuration initialized`);
     } else {
-      console.log(`💰 Pricing configuration already exists`);
+      logger.info(`💰 Pricing configuration already exists`);
     }
   } catch (error) {
-    console.error(`❌ Error initializing pricing configuration:`, error);
+    logger.error(`❌ Error initializing pricing configuration:`, error);
   }
 });
 

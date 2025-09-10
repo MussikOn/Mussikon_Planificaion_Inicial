@@ -1,5 +1,6 @@
 import supabase from '../config/database';
 import { createError } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 
 export interface UserBalance {
   id: string;
@@ -49,15 +50,15 @@ class BalanceService {
         .single();
 
       if (error) {
-        console.error('Error fetching user balance:', error);
+        logger.error('Error fetching user balance:', error);
         if (error.code === 'PGRST116') {
           // No balance found, create one
-          console.log('Creating new balance for user:', userId);
+          logger.info('Creating new balance for user:', userId);
           return await this.createUserBalance(userId);
         }
         // Si es un error de tabla no encontrada, crear una estructura básica
         if (error.message?.includes('relation "user_balances" does not exist')) {
-          console.log('Table user_balances does not exist, returning default balance');
+          logger.info('Table user_balances does not exist, returning default balance');
           return {
             id: 'temp-id',
             user_id: userId,
@@ -75,7 +76,7 @@ class BalanceService {
 
       return data;
     } catch (error) {
-      console.error('Error getting user balance:', error);
+      logger.error('Error getting user balance:', error);
       throw error;
     }
   }
@@ -102,7 +103,7 @@ class BalanceService {
 
       return data;
     } catch (error) {
-      console.error('Error creating user balance:', error);
+      logger.error('Error creating user balance:', error);
       throw error;
     }
   }
@@ -123,10 +124,10 @@ class BalanceService {
         .eq('user_id', userId);
 
       if (countError) {
-        console.error('Error counting transactions:', countError);
+        logger.error('Error counting transactions:', countError);
         // Si la tabla no existe, devolver datos vacíos
         if (countError.message?.includes('relation "user_transactions" does not exist')) {
-          console.log('Table user_transactions does not exist, returning empty transactions');
+          logger.info('Table user_transactions does not exist, returning empty transactions');
           return {
             transactions: [],
             total: 0,
@@ -145,10 +146,10 @@ class BalanceService {
         .range(offset, offset + limit - 1);
 
       if (error) {
-        console.error('Error fetching transactions:', error);
+        logger.error('Error fetching transactions:', error);
         // Si la tabla no existe, devolver datos vacíos
         if (error.message?.includes('relation "user_transactions" does not exist')) {
-          console.log('Table user_transactions does not exist, returning empty transactions');
+          logger.info('Table user_transactions does not exist, returning empty transactions');
           return {
             transactions: [],
             total: 0,
@@ -166,7 +167,7 @@ class BalanceService {
         totalPages
       };
     } catch (error) {
-      console.error('Error getting user transactions:', error);
+      logger.error('Error getting user transactions:', error);
       throw error;
     }
   }
@@ -190,7 +191,7 @@ class BalanceService {
 
       return data;
     } catch (error) {
-      console.error('Error creating transaction:', error);
+      logger.error('Error creating transaction:', error);
       throw error;
     }
   }
@@ -212,7 +213,7 @@ class BalanceService {
 
       return true;
     } catch (error) {
-      console.error('Error updating transaction status:', error);
+      logger.error('Error updating transaction status:', error);
       throw error;
     }
   }
@@ -256,7 +257,7 @@ class BalanceService {
         totalPages
       };
     } catch (error) {
-      console.error('Error getting all user balances:', error);
+      logger.error('Error getting all user balances:', error);
       throw error;
     }
   }
@@ -288,7 +289,7 @@ class BalanceService {
 
       return true;
     } catch (error) {
-      console.error('Error processing earning:', error);
+      logger.error('Error processing earning:', error);
       throw error;
     }
   }

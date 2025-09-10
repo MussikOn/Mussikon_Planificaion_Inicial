@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import supabase from '../config/database';
 import { AppError, createError } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 // import { User, UserFilters } from '../types';
 
 export class UserController {
@@ -41,7 +42,7 @@ export class UserController {
           message: error.message
         });
       } else {
-        console.error('Get profile error:', error);
+        logger.error('Get profile error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -88,7 +89,7 @@ export class UserController {
           message: error.message
         });
       } else {
-        console.error('Update profile error:', error);
+        logger.error('Update profile error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -134,7 +135,7 @@ export class UserController {
           message: error.message
         });
       } else {
-        console.error('Get user by ID error:', error);
+        logger.error('Get user by ID error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'
@@ -194,7 +195,7 @@ export class UserController {
           message: error.message
         });
       } else {
-        console.error('Change role error:', error);
+        logger.error('Change role error:', error);
         res.status(500).json({
           success: false,
           message: 'Internal server error'

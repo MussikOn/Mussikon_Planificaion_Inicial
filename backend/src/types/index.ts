@@ -30,6 +30,7 @@ export interface CreateUserRequest {
   church_name?: string;
   location?: string;
   instruments?: UserInstrument[];
+  verificationCode?: string;
 }
 
 export interface LoginRequest {

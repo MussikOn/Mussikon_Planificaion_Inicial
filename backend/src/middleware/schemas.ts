@@ -21,7 +21,8 @@ export const registerSchema = Joi.object({
     is: 'musician',
     then: Joi.optional(),
     otherwise: Joi.forbidden()
-  })
+  }),
+  verificationCode: Joi.string().length(6).pattern(/^[0-9]+$/).optional()
 });
 
 export const loginSchema = Joi.object({
@@ -51,4 +52,8 @@ export const validationSchema = Joi.object({
   user_id: Joi.string().uuid().required(),
   action: Joi.string().valid('approve', 'reject', 'pending').required(),
   reason: Joi.string().max(500).optional()
+});
+
+export const sendVerificationEmailSchema = Joi.object({
+  email: Joi.string().email().required()
 });

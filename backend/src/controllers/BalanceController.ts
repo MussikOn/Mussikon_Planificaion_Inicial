@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { balanceService } from '../services/balanceService';
 import { AppError, createError } from '../utils/errorHandler';
+import { logger } from '../utils/logger';
 
 // Extend Request interface to include user
 interface AuthenticatedRequest extends Request {
@@ -27,7 +28,7 @@ export class BalanceController {
         data: balance
       });
     } catch (error) {
-      console.error('Error getting user balance:', error);
+      logger.error('Error getting user balance:', error);
       res.status(500).json({
         success: false,
         message: error instanceof AppError ? error.message : 'Internal server error'
@@ -59,7 +60,7 @@ export class BalanceController {
         }
       });
     } catch (error) {
-      console.error('Error getting user transactions:', error);
+      logger.error('Error getting user transactions:', error);
       res.status(500).json({
         success: false,
         message: error instanceof AppError ? error.message : 'Internal server error'
@@ -93,7 +94,7 @@ export class BalanceController {
         message: 'Transaction created successfully'
       });
     } catch (error) {
-      console.error('Error creating transaction:', error);
+      logger.error('Error creating transaction:', error);
       res.status(500).json({
         success: false,
         message: error instanceof AppError ? error.message : 'Internal server error'
@@ -122,7 +123,7 @@ export class BalanceController {
         throw createError('Failed to update transaction status', 500);
       }
     } catch (error) {
-      console.error('Error updating transaction status:', error);
+      logger.error('Error updating transaction status:', error);
       res.status(500).json({
         success: false,
         message: error instanceof AppError ? error.message : 'Internal server error'
@@ -149,7 +150,7 @@ export class BalanceController {
         }
       });
     } catch (error) {
-      console.error('Error getting all user balances:', error);
+      logger.error('Error getting all user balances:', error);
       res.status(500).json({
         success: false,
         message: error instanceof AppError ? error.message : 'Internal server error'
@@ -177,7 +178,7 @@ export class BalanceController {
         throw createError('Failed to process earning', 500);
       }
     } catch (error) {
-      console.error('Error processing earning:', error);
+      logger.error('Error processing earning:', error);
       res.status(500).json({
         success: false,
         message: error instanceof AppError ? error.message : 'Internal server error'
