@@ -1125,6 +1125,7 @@ export class RequestController {
         return;
       }
 
+      logger.info(`cancelRequest: requestId before Supabase query = ${requestId}`);
       // Check if request exists and belongs to the leader
       const { data: request, error: requestError } = await supabase
         .from('requests')

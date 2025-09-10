@@ -230,7 +230,7 @@ export class AuthController {
 
       const { data: user, error: userError } = await supabase
         .from('users')
-        .select('id, email, status, active_role, role')
+        .select('id, name, email, phone, status, active_role, role')
         .eq('email', email)
         .single();
 

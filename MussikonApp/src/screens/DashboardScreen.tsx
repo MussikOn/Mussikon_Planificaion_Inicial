@@ -169,7 +169,7 @@ const DashboardScreen: React.FC = () => {
       >
         {/* Header */}
         <ScreenHeader 
-          title={`¡Bienvenido, ${user?.name}!`}
+          title={`¡Hola, ${user?.name}!`}
           subtitle={user?.active_role === 'leader' ? 'Líder de Iglesia' : user?.active_role === 'musician' ? 'Músico' : 'Administrador'}
           rightElement={
             unreadCount > 0 ? (

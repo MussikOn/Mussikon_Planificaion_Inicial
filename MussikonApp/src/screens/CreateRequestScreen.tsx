@@ -49,6 +49,7 @@ const CreateRequestScreen: React.FC = () => {
     { name: 'Conferencia', icon: 'conference' },
     { name: 'Retiro', icon: 'retreat' },
     { name: 'Concierto', icon: 'concert' },
+    { name: 'Culto', icon: 'conference' },
     { name: 'Otro', icon: 'service' }
   ];
 
@@ -112,7 +113,8 @@ const CreateRequestScreen: React.FC = () => {
 
       // If new end time is before current start time, show error and don't update
       if (currentStartTime && newEndTime <= currentStartTime) {
-        ErrorHandler.showError('La hora de finalización debe ser posterior a la hora de inicio', 'Validación');
+        console.log(`New end time (${newEndTime}) is before current start time (${currentStartTime})`);
+        ErrorHandler.showError('La hora de finalización debe ser posterior a la hora de inicio', 'Verifique bien.');
         return;
       }
 
@@ -138,17 +140,17 @@ const CreateRequestScreen: React.FC = () => {
     return date.toLocaleTimeString('es-ES', {
       hour: '2-digit',
       minute: '2-digit',
-      hour12: false,
+      hour12: true,
     });
   };
 
   const validateForm = () => {
     if (!formData.event_type) {
-      ErrorHandler.showError('Selecciona el tipo de evento', 'Validación');
+      ErrorHandler.showError('Selecciona el tipo de evento', 'No se olvide.');
       return false;
     }
     if (!formData.event_date) {
-      ErrorHandler.showError('Selecciona la fecha del evento', 'Validación');
+      ErrorHandler.showError('Selecciona la fecha del evento', '¡Hey!');
       return false;
     }
     if (!formData.start_time) {
