@@ -170,7 +170,7 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
           style: 'destructive',
           onPress: async () => {
             try {
-              const response = await apiService.cancelRequest(requestId, token || undefined);
+              const response = await apiService.cancelRequest(requestId, '', token || undefined);
               if (response.success) {
                 ErrorHandler.showSuccess('Solicitud cancelada exitosamente');
                 router.back();

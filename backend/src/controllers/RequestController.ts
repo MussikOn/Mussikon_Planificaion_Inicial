@@ -1109,10 +1109,12 @@ export class RequestController {
   // Cancel request (leaders can cancel with penalties)
   public cancelRequest = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { requestId } = req.params;
+      const { id: requestId } = req.params;
       const { reason } = req.body;
       const userId = (req as any).user.userId;
       const userRole = (req as any).user.active_role || (req as any).user.role;
+
+      logger.info(`cancelRequest: requestId=${req.params['id']}, userId=${userId}, userRole=${userRole}`);
 
       // Only leaders can cancel requests
       if (userRole !== 'leader') {
@@ -1130,6 +1132,8 @@ export class RequestController {
         .eq('id', requestId)
         .eq('leader_id', userId)
         .single();
+
+      logger.info(`cancelRequest: requestError=${requestError?.message}, request=${request ? 'found' : 'not found'}`);
 
       if (requestError || !request) {
         res.status(404).json({
