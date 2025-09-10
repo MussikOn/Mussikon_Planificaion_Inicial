@@ -19,6 +19,8 @@ interface PriceCalculatorProps {
   token?: string;
   onPriceCalculated?: (calculation: PriceCalculation) => void;
   showDetails?: boolean;
+  eventType?: string; // Add this line
+  extraAmount?: number; // Add this line
 }
 
 const PriceCalculator: React.FC<PriceCalculatorProps> = ({

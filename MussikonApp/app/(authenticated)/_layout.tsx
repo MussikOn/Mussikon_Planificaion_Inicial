@@ -26,7 +26,6 @@ const AuthenticatedLayout: React.FC = () => {
       {/* Main Content */}
       <View style={styles.mainContent}>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="admin/validate-musicians" options={{ headerShown: false }} />
           <Stack.Screen name="admin/musicianlistscreen" options={{ headerShown: false }} />
         </Stack>
       </View>

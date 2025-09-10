@@ -226,32 +226,42 @@ export class AuthController {
       const { email, password }: LoginRequest = req.body;
   logger.info(`1. email: ${email}, password: ${password}`);
 
-      // Get user and password
+      logger.info(`AuthController: Attempting login for email: ${email}`);
+
       const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('*, active_role')
+        .from('users')
+        .select('id, email, status, active_role, role')
         .eq('email', email)
         .single();
-        logger.info(`2. user: ${JSON.stringify(user)}, userError: ${JSON.stringify(userError)}`);
 
       if (userError || !user) {
+        logger.warn(`AuthController: User not found or error fetching user for email: ${email}, Error: ${userError?.message}`);
         throw createError('Invalid email or password', 401);
       }
 
-      // Get hashed password
+      logger.debug(`AuthController: User found: ${JSON.stringify(user)}`);
+
       const { data: passwordData, error: passwordError } = await supabase
         .from('user_passwords')
         .select('password')
-        .eq('email', email)
+        .eq('user_id', user.id)
         .single();
 
       if (passwordError || !passwordData) {
+        logger.warn(`AuthController: Password not found for user ID: ${user.id}, Error: ${passwordError?.message}`);
         throw createError('Invalid email or password', 401);
       }
-      // Check password
-      logger.info(`AuthController: Comparing password for user ${email}. Input password (first 5 chars): ${password.substring(0, 5)}, Stored hashed password (first 10 chars): ${passwordData.password.substring(0, 10)}`);
+
+      logger.debug(`AuthController: Password data retrieved: ${JSON.stringify(passwordData)}`);
+      logger.debug(`AuthController: Hashed password from DB: ${passwordData.password}`);
+      logger.debug(`AuthController: Password provided by user (first 5 chars): ${password.substring(0, 5)}`);
+
       const isPasswordValid = await bcrypt.compare(password, passwordData.password);
+
+      logger.debug(`AuthController: Password comparison result: ${isPasswordValid}`);
+
       if (!isPasswordValid) {
+        logger.warn(`AuthController: Invalid password for user ID: ${user.id}`);
         throw createError('Invalid email or password', 401);
       }
 
@@ -373,6 +383,8 @@ export class AuthController {
         throw createError('Failed to generate new password reset code', 500);
       }
 
+      logger.info(`AuthController: Saved password reset token for user ${user.id}: code=${resetCode}, expires_at=${expiresAt.toISOString()}, used=false`);
+
       // Send reset email with code
       logger.info('AuthController: Attempting to send password reset email to', user.email);
       try {
@@ -408,7 +420,7 @@ export class AuthController {
   // Reset password - Validate code and set new password
   public resetPassword = async (req: Request, res: Response): Promise<void> => {
     try {
-      logger.info("Reset password request received");
+      logger.info("Reset password request received 123");
       logger.info('AuthController: resetPassword - Request body:', req.body);
       const { code, email, new_password }: ResetPasswordRequest = req.body;
       logger.info(`AuthController: resetPassword - Received code: ${code}, email: ${email}, new_password: ${new_password ? '***' : 'undefined'}`);
@@ -441,6 +453,16 @@ export class AuthController {
         .eq('user_id', user.id) // Changed from email to user_id
         .eq('used', false)
         .single();
+
+      // Add this for debugging
+      const { data: allTokensForUserCode, error: allTokensError } = await supabase
+        .from('password_reset_tokens')
+        .select('id, token, expires_at, used, user_id')
+        .eq('token', code)
+        .eq('user_id', user.id);
+
+      logger.info('AuthController: resetPassword - All tokens for user and code (ignoring used status):', allTokensForUserCode);
+      logger.info('AuthController: resetPassword - All tokens error:', allTokensError);
 
       if (resetToken && new Date().toISOString() > resetToken.expires_at) {
         logger.error('AuthController: resetPassword - Token has expired based on manual check.');
@@ -548,19 +570,12 @@ export class AuthController {
         .single();
 
       if (tokenError || !resetToken) {
+        console.log('123.Reset token:', resetToken);
+        console.log('123.Token error:', tokenError);
         throw createError('Código inválido o expirado', 400);
       }
 
-      // Mark the token as used
-      const { error: updateTokenError } = await supabase
-        .from('password_reset_tokens')
-        .update({ used: true, updated_at: new Date().toISOString() })
-        .eq('id', resetToken.id);
 
-      if (updateTokenError) {
-        logger.error('Error marking token as used:', updateTokenError);
-        throw createError('Failed to update token status', 500);
-      }
 
       res.status(200).json({
         success: true,
@@ -679,7 +694,7 @@ export class AuthController {
           .from('email_verification_tokens')
           .select('attempts, max_attempts, locked_until')
           .eq('email', email)
-           .eq('verification_code', code)
+          .eq('token', code)
           .single();
 
         if (tokenData && tokenData.locked_until && new Date(tokenData.locked_until) > new Date()) {

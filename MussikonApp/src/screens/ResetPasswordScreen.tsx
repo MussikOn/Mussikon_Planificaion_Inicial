@@ -84,8 +84,10 @@ const ResetPasswordScreen: React.FC = () => {
         return;
       }
       console.log('Resetting password with:', { verificationCode, email: email.toLowerCase(), newPassword });
-      
+      console.log('Email type:', typeof email);
       const response = await apiService.resetPassword(verificationCode.toLowerCase(), email, newPassword);
+      console.log('Reset password response:', response);
+      
       if (response.success) {
         ErrorHandler.showSuccess('Contraseña restablecida exitosamente', 'Éxito');
         router.replace('/login');

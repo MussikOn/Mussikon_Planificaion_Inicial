@@ -81,6 +81,23 @@ const CreateRequestScreen: React.FC = () => {
   const handleStartTimeChange = (event: any, selectedTime?: Date) => {
     setShowStartTimePicker(false);
     if (selectedTime) {
+      const newStartTime = formatTime(selectedTime);
+      const currentEndTime = formData.end_time;
+
+      // If new start time is after current end time, adjust end time to new start time
+      if (currentEndTime && newStartTime >= currentEndTime) {
+        setFormData({
+          ...formData,
+          start_time: newStartTime,
+          end_time: newStartTime, // Adjust end time to be equal to new start time
+        });
+        setSelectedEndTime(selectedTime); // Update selectedEndTime state as well
+      } else {
+        setFormData({
+          ...formData,
+          start_time: newStartTime,
+        });
+      }
       setSelectedStartTime(selectedTime);
       const timeString = selectedTime.toTimeString().split(' ')[0].substring(0, 5);
       setFormData(prev => ({ ...prev, start_time: timeString }));
@@ -90,6 +107,19 @@ const CreateRequestScreen: React.FC = () => {
   const handleEndTimeChange = (event: any, selectedTime?: Date) => {
     setShowEndTimePicker(false);
     if (selectedTime) {
+      const newEndTime = formatTime(selectedTime);
+      const currentStartTime = formData.start_time;
+
+      // If new end time is before current start time, show error and don't update
+      if (currentStartTime && newEndTime <= currentStartTime) {
+        ErrorHandler.showError('La hora de finalización debe ser posterior a la hora de inicio', 'Validación');
+        return;
+      }
+
+      setFormData({
+        ...formData,
+        end_time: newEndTime,
+      });
       setSelectedEndTime(selectedTime);
       const timeString = selectedTime.toTimeString().split(' ')[0].substring(0, 5);
       setFormData(prev => ({ ...prev, end_time: timeString }));

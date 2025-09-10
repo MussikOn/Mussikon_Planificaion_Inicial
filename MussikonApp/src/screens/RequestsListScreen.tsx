@@ -238,6 +238,11 @@ const RequestsListScreen: React.FC = () => {
       </View>
       
       <View style={styles.requestInfoRow}>
+        <ElegantIcon name="clock" size={16} color={theme.colors.text.secondary} />
+        <Text style={styles.time}>{`${item.start_time} - ${item.end_time}`}</Text>
+      </View>
+      
+      <View style={styles.requestInfoRow}>
         <ElegantIcon name="location" size={16} color={theme.colors.text.secondary} />
         <Text style={styles.location}>{item.location}</Text>
       </View>
@@ -632,6 +637,10 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   location: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+  },
+  time: {
     fontSize: 14,
     color: theme.colors.text.secondary,
   },

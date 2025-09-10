@@ -22,11 +22,12 @@ import PriceCalculator from '../components/PriceCalculator';
 
 interface Request {
   id: string;
-  event_type: string;
+  event_type: string; // Add event_type property
   event_date: string;
   event_time: string;
+  end_time: string; // Add end_time property
   location: string;
-  extra_amount: number;
+  extra_amount: number; // Add extra_amount property
   description: string;
   required_instrument: string;
   leader: {
@@ -227,10 +228,7 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
                 />
               </View>
               <Text style={styles.inputHint}>
-                {request.extra_amount > 0 
-                  ? `Monto extra ofrecido: +$${request.extra_amount.toLocaleString()} DOP` 
-                  : 'El líder no ofreció monto extra adicional'
-                }
+                {request.extra_amount > 0 ? `Monto extra ofrecido: +$${request.extra_amount.toLocaleString()} DOP` : 'El líder no ofreció monto extra adicional'}
               </Text>
             </View>
 
@@ -238,8 +236,9 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
             {request && (
               <PriceCalculator
                 startTime={request.event_time}
-                endTime={request.event_time} // You might need to calculate end time based on event type
-                showDetails={true} // Musicians see detailed breakdown
+                endTime={request.end_time}
+                eventType={request.event_type}
+                extraAmount={request.extra_amount}
               />
             )}
 
