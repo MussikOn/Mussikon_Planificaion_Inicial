@@ -199,12 +199,12 @@ const DashboardScreen: React.FC = () => {
                 <Text style={styles.statSubLabel}>{stats.requests.active} activas</Text>
               </View>
               
-              <View style={styles.statCard}>
+              {/* <View style={styles.statCard}>
                 <ElegantIcon name="offers" size={24} color={theme.colors.success} />
                 <Text style={styles.statNumber}>{stats.offers.total}</Text>
                 <Text style={styles.statLabel}>Ofertas</Text>
                 <Text style={styles.statSubLabel}>{stats.offers.selected} seleccionadas</Text>
-              </View>
+              </View> */}
               
               {stats.users && (
                 <View style={styles.statCard}>
