@@ -255,16 +255,13 @@ export class AuthController {
   public login = async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password }: LoginRequest = req.body;
-      logger.info(`1. email: ${email}, password: ${password}`);
-
       logger.info(`AuthController: Attempting login for email: ${email}`);
-
       const { data: user, error: userError } = await supabase
         .from("users")
         .select("id, name, email, phone, status, active_role, role")
         .eq("email", email)
         .single();
-
+      logger.debug(`AuthController: Raw user data from DB: ${JSON.stringify(user)}`);
       if (userError || !user) {
         logger.warn(
           `AuthController: User not found or error fetching user for email: ${email}, Error: ${userError?.message}`
@@ -279,11 +276,14 @@ export class AuthController {
         .select("password")
         .eq("user_id", user.id)
         .single();
+        logger.debug(`1. AuthController: Raw password data from DB: ${JSON.stringify(passwordData)}`);
+        logger.debug(`2. AuthController: Raw password error from DB: ${JSON.stringify(passwordError)}`);
 
       if (passwordError || !passwordData) {
         logger.warn(
           `AuthController: Password not found for user ID: ${user.id}, Error: ${passwordError?.message}`
         );
+        logger.debug(`AuthController: Full password error object: ${JSON.stringify(passwordError)}`);
         throw createError("Invalid email or password", 401);
       }
 

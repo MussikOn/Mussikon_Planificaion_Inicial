@@ -9,6 +9,8 @@ class NotificationController {
     try {
       const userId = (req as any).user.userId;
 
+          logger.debug(`NotificationController: Fetching notifications for userId: ${userId}`);
+
       const { data: notifications, error } = await supabase
         .from('notifications')
         .select('*')
@@ -16,6 +18,7 @@ class NotificationController {
         .order('created_at', { ascending: false });
 
       if (error) {
+        logger.debug(`NotificationController: Supabase error fetching notifications: ${JSON.stringify(error)}`);
         throw createError('Failed to fetch notifications', 500);
       }
 

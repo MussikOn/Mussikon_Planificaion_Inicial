@@ -131,6 +131,8 @@ VALUES (
     'Santo Domingo, RD'
 ) ON CONFLICT (email) DO NOTHING;
 
+SELECT * FROM user_passwords;;
+
 -- Insert admin password (you should change this)
 INSERT INTO user_passwords (user_id, password)
 SELECT id, '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8Kz8KzK' -- password: admin123
@@ -145,6 +147,10 @@ ON CONFLICT DO NOTHING;
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_passwords ENABLE ROW LEVEL SECURITY;
+
+-- Users can read their own password
+CREATE POLICY "Users can read own password" ON user_passwords
+    FOR SELECT USING (auth.uid()::text = user_id::text);
 ALTER TABLE user_instruments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE offers ENABLE ROW LEVEL SECURITY;
