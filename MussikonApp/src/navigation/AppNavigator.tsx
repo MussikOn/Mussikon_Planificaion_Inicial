@@ -31,11 +31,11 @@ const AppNavigator: React.FC = () => {
       <ConnectionStatusBanner />
       <Stack.Navigator id={undefined} screenOptions={{ headerShown: false }}>
         {user?.role === 'admin' ? (
-          <Stack.Screen name="Admin" component={AdminNavigator} />
+          <Stack.Screen name="admin" component={AdminNavigator} />
         )
          : 
          (
-          <Stack.Screen name="Main" component={TabNavigator} />
+          <Stack.Screen name="(authenticated)" component={TabNavigator} />
         )
         }
       </Stack.Navigator>

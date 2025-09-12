@@ -1,4 +1,5 @@
 // import CreateOfferScreen from '../../src/screens/CreateOfferScreen';
+import CreateOfferScreen from '../../src/screens/CreateOfferScreen';
 import { useLocalSearchParams } from 'expo-router';
 
 export default function CreateOfferPage() {
@@ -9,4 +10,5 @@ export default function CreateOfferPage() {
   }
 
   // return <CreateOfferScreen requestId={requestId} />;
+  return <CreateOfferScreen requestId={requestId} />;
 }

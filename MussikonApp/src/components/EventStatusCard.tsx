@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
-import { ElegantIcon, CancelRequestModal } from './index';
+import ElegantIcon from './ElegantIcon';
+import CancelRequestModal from './CancelRequestModal';
 import { colors } from '../theme/colors';
 import { apiService } from '../services/api';
 import ErrorHandler from '../utils/errorHandler';

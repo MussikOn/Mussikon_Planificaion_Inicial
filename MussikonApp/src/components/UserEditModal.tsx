@@ -10,7 +10,8 @@ import {
   Platform,
 } from 'react-native';
 import { theme } from '../theme/theme';
-import { Button, ElegantIcon } from './';
+import Button from './Button';
+import ElegantIcon from './ElegantIcon';
 import ErrorHandler from '../utils/errorHandler';
 
 interface User {

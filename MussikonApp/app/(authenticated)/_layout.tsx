@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
-import { Stack, Redirect } from 'expo-router';
+import { Stack, Redirect, Tabs } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
-import BottomTabNavigator from '../../src/components/BottomTabNavigator';
 import { theme } from '../../src/theme/theme';
 
 const AuthenticatedLayout: React.FC = () => {
@@ -22,17 +21,59 @@ const AuthenticatedLayout: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      {/* Main Content */}
-      <View style={styles.mainContent}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="admin/musicianlistscreen" options={{ headerShown: false }} />
-        </Stack>
-      </View>
-      
-      {/* Bottom Tab Navigation */}
-      <BottomTabNavigator />
-    </View>
+    <Tabs screenOptions={{
+      headerShown: false,
+      tabBarActiveTintColor: theme.colors.primary,
+      tabBarInactiveTintColor: theme.colors.text.secondary,
+      tabBarStyle: {
+        backgroundColor: theme.colors.background,
+        borderTopWidth: 0,
+        elevation: 0,
+      },
+      tabBarLabelStyle: {
+        fontSize: 12,
+        fontWeight: 'bold',
+      },
+      tabBarIconStyle: {
+        marginTop: 5,
+      },
+    }}>
+      <Tabs.Screen
+        name="dashboard"
+        options={{
+          title: 'Inicio',
+          tabBarIcon: ({ color }) => <Text style={{ color }}>🏠</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="requests"
+        options={{
+          title: 'Solicitudes',
+          tabBarIcon: ({ color }) => <Text style={{ color }}>📝</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="balance"
+        options={{
+          title: 'Balance',
+          tabBarIcon: ({ color }) => <Text style={{ color }}>💰</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Perfil',
+          tabBarIcon: ({ color }) => <Text style={{ color }}>👤</Text>,
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: 'Admin',
+          tabBarIcon: ({ color }) => <Text style={{ color }}>⚙️</Text>,
+        }}
+      />
+    </Tabs>
   );
 };
 

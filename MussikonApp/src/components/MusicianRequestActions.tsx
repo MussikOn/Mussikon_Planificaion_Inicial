@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { ElegantIcon } from './index';
+import ElegantIcon from './ElegantIcon';
 import { colors } from '../theme/colors';
 import { apiService } from '../services/api';
 import ErrorHandler from '../utils/errorHandler';

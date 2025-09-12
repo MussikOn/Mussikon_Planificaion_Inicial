@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiService } from '../services/api';
 
-interface Request {
+export interface Request {
   id: string;
   event_type: string;
   event_date: string;
@@ -16,6 +16,8 @@ interface Request {
     location: string;
   };
   created_at: string;
+  fee: number;
+  deadline: string;
 }
 
 interface RequestsContextType {

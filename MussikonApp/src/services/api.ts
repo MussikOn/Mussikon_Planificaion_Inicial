@@ -510,7 +510,7 @@ class ApiService {
   }
 
   // Request Details
-  async getRequestById(requestId: string, token?: string): Promise<{ success: boolean; data: any }> {
+  async getRequestById(requestId: string, token?: string): Promise<{ success: boolean; data: any; message?: string }> {
     if (token) {
       return this.makeAuthenticatedRequest(`/requests/${requestId}`, token);
     }
@@ -518,7 +518,7 @@ class ApiService {
   }
 
   // Offer Management
-  async createOffer(offerData: any, token?: string): Promise<{ success: boolean; message: string; data: any }> {
+  async createOffer(offerData: any, token?: string): Promise<{ success: boolean; message?: string; data: any }> {
     if (token) {
       return this.makeAuthenticatedRequest('/offers', token, {
         method: 'POST',

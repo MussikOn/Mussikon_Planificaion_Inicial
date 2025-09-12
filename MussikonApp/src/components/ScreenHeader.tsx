@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { ReactNode } from 'react';
 import { theme } from '../theme/theme';
 import Logo from './Logo';
@@ -9,16 +9,23 @@ interface ScreenHeaderProps {
   subtitle?: string;
   showLogo?: boolean;
   rightElement?: ReactNode;
+  onBackPress?: () => void;
 }
 
-const ScreenHeader: React.FC<ScreenHeaderProps> = ({ 
-  title, 
-  subtitle, 
+const ScreenHeader: React.FC<ScreenHeaderProps> = ({
+  title,
+  subtitle,
   showLogo = true,
-  rightElement
+  rightElement,
+  onBackPress
 }) => {
   return (
     <View style={styles.container}>
+      {onBackPress && (
+        <TouchableOpacity onPress={onBackPress} style={styles.backButton}>
+          <Text style={styles.backButtonText}>{'<'}</Text>
+        </TouchableOpacity>
+      )}
       <View style={styles.leftSection}>
         {showLogo && (
           <View style={styles.logoContainer}>
@@ -47,6 +54,16 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'ios' ? 60 : 40,
     paddingBottom: 20,
     paddingHorizontal: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    top: Platform.OS === 'ios' ? 60 : 40,
+    zIndex: 1,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: theme.colors.text.white,
   },
   leftSection: {
     flex: 1,

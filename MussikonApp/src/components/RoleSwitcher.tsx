@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
-import { ElegantIcon } from './index';
+import ElegantIcon from './ElegantIcon';
 
 interface RoleSwitcherProps {
   onRoleChange?: (newRole: 'leader' | 'musician') => void;

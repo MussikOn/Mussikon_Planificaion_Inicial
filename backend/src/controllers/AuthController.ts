@@ -255,13 +255,13 @@ export class AuthController {
   public login = async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password }: LoginRequest = req.body;
-      logger.info(`AuthController: Attempting login for email: ${email}`);
+      logger.info(`1. AuthController: Attempting login for email: ${email}`);
       const { data: user, error: userError } = await supabase
         .from("users")
         .select("id, name, email, phone, status, active_role, role")
         .eq("email", email)
         .single();
-      logger.debug(`AuthController: Raw user data from DB: ${JSON.stringify(user)}`);
+      logger.debug(`1. AuthController: Raw user data from DB: ${JSON.stringify(user)}`);
       if (userError || !user) {
         logger.warn(
           `AuthController: User not found or error fetching user for email: ${email}, Error: ${userError?.message}`
@@ -269,7 +269,7 @@ export class AuthController {
         throw createError("Invalid email or password", 401);
       }
 
-      logger.debug(`AuthController: User found: ${JSON.stringify(user)}`);
+      logger.debug(`2. AuthController: User found: ${JSON.stringify(user)}`);
 
       const { data: passwordData, error: passwordError } = await supabase
         .from("user_passwords")
@@ -281,7 +281,7 @@ export class AuthController {
 
       if (passwordError || !passwordData) {
         logger.warn(
-          `AuthController: Password not found for user ID: ${user.id}, Error: ${passwordError?.message}`
+          `1. AuthController: Password not found for user ID: ${user.id}, Error: ${passwordError?.message}`
         );
         logger.debug(`AuthController: Full password error object: ${JSON.stringify(passwordError)}`);
         throw createError("Invalid email or password", 401);
