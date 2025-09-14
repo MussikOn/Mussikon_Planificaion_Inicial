@@ -35,7 +35,7 @@ const AppNavigator: React.FC = () => {
         )
          : 
          (
-          <Stack.Screen name="(authenticated)" component={TabNavigator} />
+          <Stack.Screen name="Main" component={TabNavigator} />
         )
         }
       </Stack.Navigator>
