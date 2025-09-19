@@ -92,6 +92,7 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
   }, [requestDetails, token]);
 
   const handleCreateOffer = async () => {
+    console.log('Botón Crear Oferta presionado');
     if (!requestDetails || selectedDiscountPercentage === null) {
       Alert.alert('Error', 'Selecciona un porcentaje de descuento.');
       return;
@@ -108,11 +109,11 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
 
       const offerData = {
         request_id: requestDetails.id,
-        musician_id: user?.id, // This should come from authenticated user context
+        // musician_id: user?.id, // This should come from authenticated user context
         proposed_price: finalBudget,
         availability_confirmed: true,
-        deadline: new Date().toISOString(), // Placeholder, adjust as needed
-        status: 'pending',
+        // deadline: new Date().toISOString(), // Placeholder, adjust as needed
+        // status: 'pending',
       };
 
       const response = await apiService.createOffer(offerData);
@@ -162,7 +163,6 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
           <Text style={styles.cardText}>Monto extra del líder (no se descuenta): DOP {requestDetails.extra_amount.toFixed(2)}</Text>
           <Text style={styles.cardText}>Fecha límite: {new Date(requestDetails.deadline).toLocaleDateString()}</Text>
         </Card>
-
         <Text style={styles.sectionTitle}>Selecciona Descuento sobre el Monto Base</Text>
         <View style={styles.discountButtonsContainer}>
           {[0, 2, 4, 5].map((percentage) => (
@@ -175,7 +175,6 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
             />
           ))}
         </View>
-
         {selectedDiscountPercentage !== null && requestDetails && (
           <View style={styles.discountSummaryContainer}>
             {priceCalc && (
@@ -193,7 +192,6 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
             )}
           </View>
         )}
-
         <Button
           title={loading ? 'Creando Oferta...' : 'Crear Oferta'}
           onPress={handleCreateOffer}
