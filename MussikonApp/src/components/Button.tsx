@@ -131,7 +131,11 @@ const Button: React.FC<ButtonProps> = ({
         />
       ) : (
         <>
-          {icon && <>{icon}</>}
+          {icon && (
+            typeof icon === 'string' || typeof icon === 'number'
+              ? <Text style={[getTextStyle(), textStyle]}>{icon}</Text>
+              : icon
+          )}
           <Text style={[getTextStyle(), textStyle]}>{title}</Text>
         </>
       )}

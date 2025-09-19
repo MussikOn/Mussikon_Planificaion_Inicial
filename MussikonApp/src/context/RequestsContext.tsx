@@ -5,6 +5,8 @@ export interface Request {
   id: string;
   event_type: string;
   event_date: string;
+  start_time: string;
+  end_time: string;
   location: string;
   extra_amount: number;
   description: string;

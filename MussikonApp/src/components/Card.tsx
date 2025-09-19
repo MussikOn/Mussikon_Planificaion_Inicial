@@ -4,6 +4,7 @@ import {
   StyleSheet,
   ViewStyle,
   TouchableOpacity,
+  Text,
 } from 'react-native';
 import { theme } from '../theme/theme';
 
@@ -38,6 +39,13 @@ const Card: React.FC<CardProps> = ({
     };
   };
 
+  const renderChildren = () => {
+    if (typeof children === 'string' || typeof children === 'number') {
+      return <Text>{children}</Text>;
+    }
+    return children;
+  };
+
   if (onPress) {
     return (
       <TouchableOpacity
@@ -45,14 +53,14 @@ const Card: React.FC<CardProps> = ({
         onPress={onPress}
         activeOpacity={0.8}
       >
-        {children}
+        {renderChildren()}
       </TouchableOpacity>
     );
   }
 
   return (
     <View style={[getCardStyle(), style]}>
-      {children}
+      {renderChildren()}
     </View>
   );
 };

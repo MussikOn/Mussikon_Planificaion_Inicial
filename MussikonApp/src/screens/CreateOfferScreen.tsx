@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   Text,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 
 import { apiService } from '../services/api';
@@ -17,6 +18,8 @@ import ScreenHeader from '../components/ScreenHeader';
 import Card from '../components/Card'; // Import Card component
 import { Request } from '../context/RequestsContext'; // Corrected import path for Request
 import { useAuth } from '../context/AuthContext';
+import { priceCalculationService, PriceCalculation } from '../services/priceCalculationService';
+import GradientBackground from '../components/GradientBackground';
 
 interface CreateOfferScreenProps {
   requestId: string;
@@ -28,9 +31,10 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
   const [requestDetails, setRequestDetails] = useState<Request | null>(null); // Renamed from 'request'
   const [loading, setLoading] = useState(false);
   const [loadingRequest, setLoadingRequest] = useState(true); // Renamed from 'requestLoading'
-  const [selectedDiscountPercentage, setSelectedDiscountPercentage] = useState<number | null>(null);
-  const [discountedAmount, setDiscountedAmount] = useState<number | null>(null);
-  const { user } = useAuth();
+  const [selectedDiscountPercentage, setSelectedDiscountPercentage] = useState<number | null>(0);
+  const [baseAfterDiscount, setBaseAfterDiscount] = useState<number | null>(null);
+  const { user, token } = useAuth();
+  const [priceCalc, setPriceCalc] = useState<PriceCalculation | null>(null);
 
   useEffect(() => {
     const fetchRequestDetails = async () => {
@@ -57,25 +61,50 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
   }, [requestId, user?.id]);
 
   useEffect(() => {
-    if (requestDetails && selectedDiscountPercentage !== null) {
-      const originalFee = requestDetails.extra_amount;
-      const finalAmount = originalFee * (1 - selectedDiscountPercentage / 100);
-      setDiscountedAmount(finalAmount);
+    if (priceCalc && selectedDiscountPercentage !== null) {
+      const base = priceCalc.musician_earnings || 0;
+      const discounted = base * (1 - selectedDiscountPercentage / 100);
+      setBaseAfterDiscount(discounted);
     } else {
-      setDiscountedAmount(null);
+      setBaseAfterDiscount(null);
     }
-  }, [requestDetails, selectedDiscountPercentage]);
+  }, [priceCalc, selectedDiscountPercentage]);
+
+  // Load base price calculation for the request so musicians can see the base amount
+  useEffect(() => {
+    const loadPrice = async () => {
+      if (!requestDetails) return;
+      try {
+        const result = await priceCalculationService.calculatePrice(
+          requestDetails.start_time,
+          requestDetails.end_time,
+          undefined,
+          token || undefined
+        );
+        if (result.success && result.data) {
+          setPriceCalc(result.data);
+        }
+      } catch (e) {
+        // ignore UI error here; screen still works
+      }
+    };
+    loadPrice();
+  }, [requestDetails, token]);
 
   const handleCreateOffer = async () => {
     if (!requestDetails || selectedDiscountPercentage === null) {
-      Alert.alert('Error', 'Please select a discount percentage.');
+      Alert.alert('Error', 'Selecciona un porcentaje de descuento.');
       return;
     }
 
     setLoading(true);
     try {
-      const originalFee = requestDetails.extra_amount;
-      const finalBudget = originalFee * (1 - selectedDiscountPercentage / 100); // Calculate final budget with discount
+      const extraFromLeader = requestDetails.extra_amount;
+      const baseNetToMusician = priceCalc?.musician_earnings || 0;
+      const discountedBase = selectedDiscountPercentage !== null
+        ? baseNetToMusician * (1 - selectedDiscountPercentage / 100)
+        : baseNetToMusician;
+      const finalBudget = discountedBase + extraFromLeader; // total a cobrar por el músico (base con descuento + extra sin cambios)
 
       const offerData = {
         request_id: requestDetails.id,
@@ -88,14 +117,14 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
 
       const response = await apiService.createOffer(offerData);
       if (response.success) {
-        Alert.alert('Success', 'Offer created successfully!');
+        Alert.alert('Éxito', '¡Oferta creada exitosamente!');
         navigation.goBack();
       } else {
-        Alert.alert('Error', response.message || 'Failed to create offer.');
+        Alert.alert('Error', response.message || 'No se pudo crear la oferta.');
       }
     } catch (error) {
       console.error('Error creating offer:', error);
-      Alert.alert('Error', 'Failed to create offer.');
+      Alert.alert('Error', 'No se pudo crear la oferta.');
     } finally {
       setLoading(false);
     }
@@ -105,7 +134,7 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading request details...</Text>
+        <Text style={styles.loadingText}>Cargando detalles...</Text>
       </View>
     );
   }
@@ -113,25 +142,30 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
   if (!requestDetails) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorText}>Request details not found.</Text>
+        <Text style={styles.errorText}>No se encontraron detalles de la solicitud.</Text>
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScreenHeader title="Create Offer" onBackPress={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={styles.container}> {/* ScrollView moved outside ScreenHeader */}
+    <GradientBackground>
+      <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+        <ScreenHeader title="Crear Oferta" onBackPress={() => navigation.goBack()} />
         <Card style={styles.card}>
-          <Text style={styles.cardTitle}>Request Details</Text>
-          <Text style={styles.cardText}>Description: {requestDetails.description}</Text>
-          <Text style={styles.cardText}>Original Fee: DOP {requestDetails.extra_amount.toFixed(2)}</Text>
-          <Text style={styles.cardText}>Deadline: {new Date(requestDetails.deadline).toLocaleDateString()}</Text>
+          <Text style={styles.cardTitle}>Detalles de la Solicitud</Text>
+          <Text style={styles.cardText}>Descripción: {requestDetails.description}</Text>
+          {priceCalc && (
+            <Text style={styles.cardText}>
+              Monto base estimado (sin descuento): DOP {priceCalc.musician_earnings.toFixed(2)}
+            </Text>
+          )}
+          <Text style={styles.cardText}>Monto extra del líder (no se descuenta): DOP {requestDetails.extra_amount.toFixed(2)}</Text>
+          <Text style={styles.cardText}>Fecha límite: {new Date(requestDetails.deadline).toLocaleDateString()}</Text>
         </Card>
 
-        <Text style={styles.sectionTitle}>Select Discount</Text>
+        <Text style={styles.sectionTitle}>Selecciona Descuento sobre el Monto Base</Text>
         <View style={styles.discountButtonsContainer}>
-          {[2, 4, 5].map((percentage) => (
+          {[0, 2, 4, 5].map((percentage) => (
             <Button
               key={percentage}
               title={`${percentage}%`}
@@ -144,30 +178,46 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
 
         {selectedDiscountPercentage !== null && requestDetails && (
           <View style={styles.discountSummaryContainer}>
-            <Text style={styles.discountSummaryText}>
-              Discount: DOP {(requestDetails.extra_amount - (discountedAmount || 0))?.toFixed(2) || '0.00'}
-            </Text>
-            <Text style={styles.discountSummaryText}>
-              Final Budget: DOP {discountedAmount?.toFixed(2) || '0.00'}
-            </Text>
+            {priceCalc && (
+              <>
+                <Text style={styles.discountSummaryText}>
+                  Base con descuento: DOP {(baseAfterDiscount ?? priceCalc.musician_earnings).toFixed(2)}
+                </Text>
+                <Text style={styles.discountSummaryText}>
+                  Extra del líder: DOP {requestDetails.extra_amount.toFixed(2)}
+                </Text>
+                <Text style={styles.discountSummaryText}>
+                  Total estimado a cobrar (base con descuento + extra): DOP {(((baseAfterDiscount ?? priceCalc.musician_earnings)) + requestDetails.extra_amount).toFixed(2)}
+                </Text>
+              </>
+            )}
           </View>
         )}
 
         <Button
-          title={loading ? 'Creating Offer...' : 'Create Offer'}
+          title={loading ? 'Creando Oferta...' : 'Crear Oferta'}
           onPress={handleCreateOffer}
           disabled={loading || selectedDiscountPercentage === null}
           style={styles.createOfferButton}
           textStyle={styles.createOfferButtonText}
         />
       </ScrollView>
-    </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: theme.spacing.md,
+    flex: 1,
+    ...(Platform.OS === 'web' && {
+      maxWidth: 800,
+      alignSelf: 'center',
+      width: '100%'
+    })
+  },
+  contentContainer: {
+    paddingHorizontal: Platform.OS === 'web' ? 24 : 16,
+    paddingBottom: Platform.OS === 'web' ? 100 : 80,
   },
   centered: {
     flex: 1,
@@ -202,13 +252,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: theme.typography.sizes.lg,
     fontWeight: 'bold',
-    color: theme.colors.text.primary,
+    color: theme.colors.white,
     marginBottom: theme.spacing.md,
     textAlign: 'center',
   },
   discountButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexWrap: 'wrap',
+    gap: Platform.OS === 'web' ? 12 : 8,
     marginBottom: theme.spacing.md,
   },
   discountButton: {
@@ -216,7 +267,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.borders.radius.sm, // Corrected from borderRadius
-    width: '30%',
+    minWidth: 80,
+    flexGrow: 1,
     alignItems: 'center',
   },
   selectedDiscountButton: {
@@ -224,7 +276,8 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.borders.radius.sm, // Corrected from borderRadius
-    width: '30%',
+    minWidth: 80,
+    flexGrow: 1,
     alignItems: 'center',
   },
   discountButtonText: {
