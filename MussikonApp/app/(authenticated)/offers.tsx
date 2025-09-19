@@ -1,6 +1,6 @@
-// import React from 'react';
-// import { OffersListScreen } from '../../src/screens';
+import React from 'react';
+import { RequestsListScreen } from '../../src/screens';
 
-// export default function OffersRoute() {
-//   return <OffersListScreen />;
-// }
+
+export default function OffersRoute() {
+  return <RequestsListScreen />;}

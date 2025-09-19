@@ -1,6 +1,8 @@
 // Setup script for Mussikon Backend
 const fs = require('fs');
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 console.log('🚀 Setting up Mussikon Backend...\n');
 

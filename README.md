@@ -87,6 +87,30 @@ Mussikon es una plataforma móvil que conecta músicos cristianos con líderes d
 - **Notificaciones:** Push nativas básicas
 - **Maps:** Sin integración (solo texto de ubicación)
 
+## Configuración de la Base de Datos (Supabase)
+
+Debido a las limitaciones de Supabase para ejecutar scripts SQL directamente desde el backend, la configuración de la base de datos debe realizarse manualmente. Sigue estos pasos:
+
+1.  **Generar el Esquema SQL:**
+    Navega al directorio `backend` y ejecuta el siguiente comando:
+    ```bash
+    npm run setup-db
+    ```
+    Este comando mostrará el contenido del archivo `database/complete_sql.sql` en tu terminal.
+
+2.  **Copiar el Esquema:**
+    Copia todo el contenido SQL que se muestra en la terminal.
+
+3.  **Ejecutar en Supabase SQL Editor:**
+    *   Ve a tu proyecto Supabase en el navegador.
+    *   Navega a la sección "SQL Editor" (o "SQL") en el panel lateral.
+    *   Haz clic en "New query" (o "Nueva consulta").
+    *   Pega el contenido SQL copiado en el editor.
+    *   Haz clic en "Run" (o "Ejecutar") para crear las tablas y funciones necesarias.
+
+4.  **Verificar la Configuración:**
+    Una vez ejecutado el script, verifica que las tablas (`users`, `user_passwords`, etc.) y las funciones se hayan creado correctamente en tu base de datos Supabase.
+
 ## Estado del Proyecto
 
 🚧 **En Desarrollo** - Documentación y planificación completada, listo para implementación.

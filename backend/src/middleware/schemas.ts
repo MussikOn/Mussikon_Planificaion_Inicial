@@ -43,7 +43,7 @@ export const createRequestSchema = Joi.object({
 
 export const createOfferSchema = Joi.object({
   request_id: Joi.string().uuid().required(),
-  proposed_price: Joi.number().min(600).required(),
+  proposed_price: Joi.number().required(),
   availability_confirmed: Joi.boolean().required(),
   message: Joi.string().max(500).optional()
 });

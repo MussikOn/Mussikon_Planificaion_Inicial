@@ -75,12 +75,13 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
     setLoading(true);
     try {
       const originalFee = requestDetails.extra_amount;
-      const finalBudget = originalFee * (1 - selectedDiscountPercentage / 100);
+      const finalBudget = originalFee * (1 - selectedDiscountPercentage / 100); // Calculate final budget with discount
 
       const offerData = {
-        requestId: requestDetails.id,
-        musicianId: user?.id, // This should come from authenticated user context
-        budget: finalBudget,
+        request_id: requestDetails.id,
+        musician_id: user?.id, // This should come from authenticated user context
+        proposed_price: finalBudget,
+        availability_confirmed: true,
         deadline: new Date().toISOString(), // Placeholder, adjust as needed
         status: 'pending',
       };
