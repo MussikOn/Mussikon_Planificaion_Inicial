@@ -58,7 +58,7 @@ export class RequestController {
 
       // Apply pagination
       query = query.range(offset, offset + limit - 1);
-
+      console.info('Query:', (await query).data);
       const { data: requests, error } = await query;
 
       if (error) {
