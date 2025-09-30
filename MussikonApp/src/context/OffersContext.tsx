@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiService } from '../services/api';
 
-interface Offer {
+export interface Offer {
   id: string;
   proposed_price: number;
   availability_confirmed: boolean;

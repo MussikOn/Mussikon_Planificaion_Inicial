@@ -271,7 +271,7 @@ class ApiService {
   }
 
   // Requests
-  async getRequests(filters?: any, token?: string): Promise<{ success: boolean; data: any[]; pagination?: any }> {
+  async getRequests(filters?: any, token?: string): Promise<{ success: boolean; data: any[]; pagination?: any; message?: string }> {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.keys(filters).forEach(key => {
@@ -321,7 +321,7 @@ class ApiService {
   }
 
   // Offers
-  async getOffers(filters?: any, token?: string): Promise<{ success: boolean; data: any[] }> {
+  async getOffers(filters?: any, token?: string): Promise<{ success: boolean; data: any[]; message?: string }> {
     const queryParams = new URLSearchParams();
     if (filters) {
       Object.keys(filters).forEach(key => {

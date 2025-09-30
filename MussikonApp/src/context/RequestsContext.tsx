@@ -20,6 +20,7 @@ export interface Request {
   created_at: string;
   fee: number;
   deadline: string;
+  estimated_base_amount?: number;
 }
 
 interface RequestsContextType {

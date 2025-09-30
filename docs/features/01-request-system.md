@@ -4,275 +4,296 @@
 
 El sistema de solicitudes permite a los líderes de iglesias publicar sus necesidades musicales y recibir ofertas de músicos calificados.
 
-## Flujo de Solicitudes
+## MVP - Sistema de Solicitudes
 
-### 1. Creación de Solicitud
+### Flujo de Solicitudes
 
-#### Información Básica
-- **Tipo de Evento:**
-  - Servicio dominical
-  - Boda cristiana
-  - Conferencia
-  - Retiro juvenil
-  - Evento especial
-  - Funeral cristiano
-  - Bautizo
+#### 1. Creación de Solicitud
 
-- **Instrumento Necesario:**
-  - Guitarrista
-  - Pianista
-  - Baterista
-  - Bajista
-  - Cantante
-  - Violinista
-  - Trompetista
-  - Saxofonista
-  - Banda completa
+##### Información Básica
+- [ ] **Tipo de Evento:**
+  - [ ] Servicio dominical
+  - [ ] Boda cristiana
+  - [ ] Conferencia
+  - [ ] Retiro juvenil
+  - [ ] Evento especial
+  - [ ] Funeral cristiano
+  - [ ] Bautizo
+  - [ ] Concierto
+  - [ ] Festival
+  - [ ] funeral
+  - [ ] Otros eventos especiales => Especificar en la descripción.
 
-#### Detalles del Evento
-- **Fecha y Hora:**
-  - Fecha del evento
-  - Hora de inicio
-  - Hora de finalización
-  - Duración total
-  - Tiempo de preparación
+- [ ] **Instrumento Necesario:**
+  - [ ] Guitarrista => especificar si es electrico o acustico.
+  - [ ] Pianista
+  - [ ] Baterista
+  - [ ] Bajista
+  - [ ] Cantante
+  - [ ] Violinista
+  - [ ] Trompetista
+  - [ ] Saxofonista
+  - [ ] Banda completa
+  - [ ] Tambora
+  - [ ] Conga
+  - [ ] Bongo
+  - [ ] Otros instrumentos => Especificar en la descripción.
 
-- **Ubicación:**
-  - Dirección completa
-  - Instrucciones especiales
-  - Estacionamiento disponible
-  - Acceso para músicos
-  - Coordenadas GPS
+##### Detalles del Evento
+- [ ] **Fecha y Hora:**
+  - [ ] Fecha del evento
+  - [ ] Hora de inicio
+  - [ ] Hora de finalización
+  - [ ] Duración total
+  - [ ] Tiempo de preparación => Especificar en la descripción.
 
-#### Presupuesto y Términos
-- **Rango de Precio:**
-  - Precio mínimo: 600 DOP
-  - Precio máximo: Presupuesto disponible
-  - Tipo de pago: Por hora o por evento
+- [ ] **Ubicación:**
+  - [ ] Dirección completa
+  - [ ] Instrucciones especiales => Especificar en la descripción.
+  - [ ] Estacionamiento disponible
+  - [ ] Acceso para músicos
+  - [ ] Coordenadas GPS
 
-- **Términos Especiales:**
-  - Equipos disponibles
-  - Requisitos especiales
-  - Notas adicionales
-  - Condiciones de pago
+##### Presupuesto y Términos
+- [ ] **Rango de Precio:**
+  - [ ] Precio mínimo: 600 DOP
+  - [ ] Precio máximo: Presupuesto disponible
+  - [ ] Tipo de pago: Por hora y por evento
 
-### 2. Validación de Solicitud
+- [ ] **Términos Especiales:**
+  - [ ] Equipos disponibles => Responsabilidad del líder.
+  - [ ] Requisitos especiales => Especificar en la descripción.
+  - [ ] Notas adicionales => Especificar en la descripción.
+  - [ ] Condiciones de pago.
+  - [ ] Canciones que se tocarán => Especificar en la descripción opcional.
 
-#### Validación Automática
-- **Precio mínimo:** Verificar 600 DOP
-- **Fecha válida:** No puede ser en el pasado
-- **Ubicación válida:** Dirección verificable
-- **Datos completos:** Información requerida
+#### 2. Validación de Solicitud
 
-#### Validación Manual
-- **Contenido apropiado:** Revisar descripción
-- **Términos justos:** Evaluar condiciones
-- **Disponibilidad real:** Verificar viabilidad
-- **Cumplimiento:** Reglas de la plataforma
+##### Validación Automática
+- [ ] **Precio mínimo:** Verificar 600 DOP
+- [ ] **Fecha válida:** No puede ser en el pasado
+- [ ] **Ubicación válida:** Dirección verificable por Google Maps
+- [ ] **Datos completos:** Información requerida para la solicitud.
 
-### 3. Publicación de Solicitud
+#### 3. Publicación de Solicitud
 
-#### Estado de la Solicitud
-- **Borrador:** En edición
-- **Pendiente:** Esperando validación
-- **Publicada:** Disponible para ofertas
-- **Cerrada:** No acepta más ofertas
-- **Cancelada:** Cancelada por el líder
+##### Estado de la Solicitud
+- [ ] **Borrador:** En edición
+- [ ] **Pendiente:** Esperando validación
+- [ ] **Publicada:** Disponible para ofertas
+- [ ] **Cerrada:** No acepta más ofertas
+- [ ] **Cancelada:** Cancelada por el líder
 
-#### Visibilidad
-- **Músicos cercanos:** Radio de búsqueda
-- **Filtros aplicados:** Instrumento, precio, fecha
-- **Notificaciones:** Push a músicos relevantes
-- **Búsqueda:** Visible en búsquedas
+##### Visibilidad
+- [ ] **Músicos cercanos:** Radio de búsqueda
+- [ ] **Filtros aplicados:** Instrumento, precio, fecha
+- [ ] **Búsqueda:** Visible en búsquedas
 
-### 4. Gestión de Ofertas
+#### 4. Gestión de Ofertas
 
-#### Recibir Ofertas
-- **Notificaciones:** Nuevas ofertas recibidas
-- **Lista de ofertas:** Todas las ofertas
-- **Filtros:** Por precio, calificación, distancia
-- **Ordenamiento:** Por relevancia, precio, tiempo
+##### Recibir Ofertas
+- [ ] **Notificaciones:** Nuevas ofertas recibidas
+- [ ] **Lista de ofertas:** Todas las ofertas
+- [ ] **Filtros:** Por precio, calificación, distancia
+- [ ] **Ordenamiento:** Por relevancia, precio, tiempo
 
-#### Evaluar Ofertas
-- **Perfil del músico:** Información completa
-- **Portafolio:** Videos y audio
-- **Calificaciones:** Reviews anteriores
-- **Experiencia:** Trabajos similares
+##### Evaluar Ofertas
+- [ ] **Perfil del músico:** Información completa
+- [ ] **Portafolio:** Videos y audio
+- [ ] **Calificaciones:** Reviews anteriores
+- [ ] **Experiencia:** Trabajos similares
 
-#### Comunicación
-- **Chat directo:** Con cada músico
-- **Preguntas específicas:** Sobre el evento
-- **Negociación:** Términos y condiciones
-- **Aclaraciones:** Dudas y detalles
+##### Comunicación
+- [ ] **Chat directo:** Con cada músico
+- [ ] **Preguntas específicas:** Sobre el evento
+- [ ] **Negociación:** Términos y condiciones
+- [ ] **Aclaraciones:** Dudas y detalles
 
-### 5. Selección y Contratación
+#### 5. Selección y Contratación
 
-#### Proceso de Selección
-- **Evaluación:** Comparar ofertas
-- **Criterios:** Precio, calidad, disponibilidad
-- **Decisión:** Seleccionar mejor oferta
-- **Notificación:** Informar al músico
+##### Proceso de Selección
+- [ ] **Evaluación:** Comparar ofertas
+- [ ] **Criterios:** Precio, calidad, disponibilidad
+- [ ] **Decisión:** Seleccionar mejor oferta
+- [ ] **Notificación:** Informar al músico
 
-#### Confirmación
-- **Aceptación mutua:** Ambas partes confirman
-- **Términos finales:** Acuerdo definitivo
-- **Pago inicial:** 50% del total
-- **Coordinación:** Detalles del evento
+##### Confirmación
+- [ ] **Aceptación mutua:** Ambas partes confirman
+- [ ] **Términos finales:** Acuerdo definitivo
+- [ ] **Pago inicial:** 50% del total
+- [ ] **Coordinación:** Detalles del evento
 
-## Tipos de Solicitudes
+### Sistema de Filtros
 
-### Por Urgencia
+##### Filtros para Músicos
+- [ ] **Ubicación:** Radio de búsqueda
+- [ ] **Precio:** Rango mínimo y máximo
+- [ ] **Fecha:** Fecha específica o rango
+- [ ] **Instrumento:** Instrumento específico
+- [ ] **Tipo de evento:** Categoría del evento
+- [ ] **Urgencia:** Tiempo de respuesta
 
-#### Inmediata (1-2 horas)
-- **Costo adicional:** 200 DOP
-- **Disponibilidad:** Solo músicos premium
-- **Proceso:** Validación express
-- **Tiempo límite:** 30 minutos para ofertas
+##### Filtros para Líderes
+- [ ] **Músicos cercanos:** Por distancia
+- [ ] **Calificación:** Mínimo de estrellas
+- [ ] **Experiencia:** Años mínimos
+- [ ] **Precio:** Rango de ofertas
+- [ ] **Disponibilidad:** Fecha específica
+- [ ] **Instrumento:** Instrumento específico
 
-#### Hoy (2-8 horas)
-- **Costo adicional:** 100 DOP
-- **Disponibilidad:** Músicos disponibles
-- **Proceso:** Validación rápida
-- **Tiempo límite:** 1 hora para ofertas
+### Notificaciones
 
-#### Mañana
-- **Costo adicional:** 50 DOP
-- **Disponibilidad:** Músicos con disponibilidad
-- **Proceso:** Validación estándar
-- **Tiempo límite:** 2 horas para ofertas
+##### Para Líderes
+- [ ] **Nueva oferta:** Músico hizo oferta
+- [ ] **Mensaje:** Músico envió mensaje
+- [ ] **Recordatorio:** Evento próximo
+- [ ] **Confirmación:** Músico confirmó
 
-#### Esta Semana
-- **Costo adicional:** 0 DOP
-- **Disponibilidad:** Todos los músicos
-- **Proceso:** Validación estándar
-- **Tiempo límite:** 4 horas para ofertas
+##### Para Músicos
+- [ ] **Nueva solicitud:** Solicitud en tu área
+- [ ] **Oferta seleccionada:** Tu oferta fue elegida
+- [ ] **Mensaje:** Líder envió mensaje
+- [ ] **Recordatorio:** Evento próximo
 
-#### Próximo Mes
-- **Costo adicional:** 0 DOP
-- **Disponibilidad:** Todos los músicos
-- **Proceso:** Validación estándar
-- **Tiempo límite:** 8 horas para ofertas
+## Versión Avanzada - Sistema de Solicitudes
 
-### Por Tipo de Evento
+### Flujo de Solicitudes
 
-#### Servicio Dominical
-- **Duración:** 2-4 horas
-- **Precio:** 1,500-3,000 DOP
-- **Requisitos:** Experiencia en alabanza
-- **Equipos:** Básicos de iglesia
+#### 2. Validación de Solicitud
 
-#### Boda Cristiana
-- **Duración:** 4-8 horas
-- **Precio:** 3,000-8,000 DOP
-- **Requisitos:** Experiencia en bodas
-- **Equipos:** Profesionales
+##### Validación Manual
+- [ ] **Contenido apropiado:** Revisar descripción
+- [ ] **Términos justos:** Evaluar condiciones
+- [ ] **Disponibilidad real:** Verificar viabilidad
+- [ ] **Cumplimiento:** Reglas de la plataforma
 
-#### Conferencia
-- **Duración:** 1-3 días
-- **Precio:** 2,000-5,000 DOP
-- **Requisitos:** Experiencia en conferencias
-- **Equipos:** Portátiles
+#### 3. Publicación de Solicitud
 
-#### Retiro Juvenil
-- **Duración:** 2-5 días
-- **Precio:** 1,500-4,000 DOP
-- **Requisitos:** Experiencia con jóvenes
-- **Equipos:** Básicos
+##### Visibilidad
+- [ ] **Notificaciones:** Push a músicos relevantes
 
-#### Evento Especial
-- **Duración:** 2-6 horas
-- **Precio:** 2,000-6,000 DOP
-- **Requisitos:** Experiencia específica
-- **Equipos:** Según necesidad
+### Tipos de Solicitudes
 
-### Por Instrumento
+#### Por Urgencia
 
-#### Guitarrista
-- **Precio:** 600-1,200 DOP/hora
-- **Requisitos:** Guitarra acústica/eléctrica
-- **Experiencia:** Mínimo 1 año
-- **Equipos:** Amplificador, cables
+##### Inmediata (1-2 horas)
+- [ ] **Costo adicional:** 200 DOP
+- [ ] **Disponibilidad:** Solo músicos premium
+- [ ] **Proceso:** Validación express
+- [ ] **Tiempo límite:** 30 minutos para ofertas
 
-#### Pianista
-- **Precio:** 800-1,500 DOP/hora
-- **Requisitos:** Piano/teclado
-- **Experiencia:** Mínimo 2 años
-- **Equipos:** Piano/teclado
+##### Hoy (2-8 horas)
+- [ ] **Costo adicional:** 100 DOP
+- [ ] **Disponibilidad:** Músicos disponibles
+- [ ] **Proceso:** Validación rápida
+- [ ] **Tiempo límite:** 1 hora para ofertas
 
-#### Baterista
-- **Precio:** 1,000-1,800 DOP/hora
-- **Requisitos:** Batería completa
-- **Experiencia:** Mínimo 2 años
-- **Equipos:** Batería, platillos
+##### Mañana
+- [ ] **Costo adicional:** 50 DOP
+- [ ] **Disponibilidad:** Músicos con disponibilidad
+- [ ] **Proceso:** Validación estándar
+- [ ] **Tiempo límite:** 2 horas para ofertas
 
-#### Bajista
-- **Precio:** 600-1,200 DOP/hora
-- **Requisitos:** Bajo eléctrico
-- **Experiencia:** Mínimo 1 año
-- **Equipos:** Amplificador, cables
+##### Esta Semana
+- [ ] **Costo adicional:** 0 DOP
+- [ ] **Disponibilidad:** Todos los músicos
+- [ ] **Proceso:** Validación estándar
+- [ ] **Tiempo límite:** 4 horas para ofertas
 
-#### Cantante
-- **Precio:** 800-1,500 DOP/hora
-- **Requisitos:** Voz entrenada
-- **Experiencia:** Mínimo 1 año
-- **Equipos:** Micrófono, monitor
+##### Próximo Mes
+- [ ] **Costo adicional:** 0 DOP
+- [ ] **Disponibilidad:** Todos los músicos
+- [ ] **Proceso:** Validación estándar
+- [ ] **Tiempo límite:** 8 horas para ofertas
 
-#### Violinista
-- **Precio:** 1,000-1,800 DOP/hora
-- **Requisitos:** Violín profesional
-- **Experiencia:** Mínimo 3 años
-- **Equipos:** Violín, arco
+#### Por Tipo de Evento
 
-## Sistema de Filtros
+##### Servicio Dominical
+- [ ] **Duración:** 2-4 horas
+- [ ] **Precio:** 1,500-3,000 DOP
+- [ ] **Requisitos:** Experiencia en alabanza
+- [ ] **Equipos:** Básicos de iglesia
 
-### Filtros para Músicos
-- **Ubicación:** Radio de búsqueda
-- **Precio:** Rango mínimo y máximo
-- **Fecha:** Fecha específica o rango
-- **Instrumento:** Instrumento específico
-- **Tipo de evento:** Categoría del evento
-- **Urgencia:** Tiempo de respuesta
+##### Boda Cristiana
+- [ ] **Duración:** 4-8 horas
+- [ ] **Precio:** 3,000-8,000 DOP
+- [ ] **Requisitos:** Experiencia en bodas
+- [ ] **Equipos:** Profesionales
 
-### Filtros para Líderes
-- **Músicos cercanos:** Por distancia
-- **Calificación:** Mínimo de estrellas
-- **Experiencia:** Años mínimos
-- **Precio:** Rango de ofertas
-- **Disponibilidad:** Fecha específica
-- **Instrumento:** Instrumento específico
+##### Conferencia
+- [ ] **Duración:** 1-3 días
+- [ ] **Precio:** 2,000-5,000 DOP
+- [ ] **Requisitos:** Experiencia en conferencias
+- [ ] **Equipos:** Portátiles
 
-## Notificaciones
+##### Retiro Juvenil
+- [ ] **Duración:** 2-5 días
+- [ ] **Precio:** 1,500-4,000 DOP
+- [ ] **Requisitos:** Experiencia con jóvenes
+- [ ] **Equipos:** Básicos
 
-### Para Líderes
-- **Nueva oferta:** Músico hizo oferta
-- **Mensaje:** Músico envió mensaje
-- **Recordatorio:** Evento próximo
-- **Confirmación:** Músico confirmó
+##### Evento Especial
+- [ ] **Duración:** 2-6 horas
+- [ ] **Precio:** 2,000-6,000 DOP
+- [ ] **Requisitos:** Experiencia específica
+- [ ] **Equipos:** Según necesidad
 
-### Para Músicos
-- **Nueva solicitud:** Solicitud en tu área
-- **Oferta seleccionada:** Tu oferta fue elegida
-- **Mensaje:** Líder envió mensaje
-- **Recordatorio:** Evento próximo
+#### Por Instrumento
 
-## Métricas y Analytics
+##### Guitarrista
+- [ ] **Precio:** 600-1,200 DOP/hora
+- [ ] **Requisitos:** Guitarra acústica/eléctrica
+- [ ] **Experiencia:** Mínimo 1 año
+- [ ] **Equipos:** Amplificador, cables
 
-### Métricas de Solicitudes
-- **Tasa de finalización:** % de solicitudes completadas
-- **Tiempo promedio:** Tiempo para recibir ofertas
-- **Número de ofertas:** Promedio por solicitud
-- **Precio promedio:** Precio final acordado
+##### Pianista
+- [ ] **Precio:** 800-1,500 DOP/hora
+- [ ] **Requisitos:** Piano/teclado
+- [ ] **Experiencia:** Mínimo 2 años
+- [ ] **Equipos:** Piano/teclado
 
-### Métricas de Calidad
-- **Satisfacción:** Calificación promedio
-- **Cancelaciones:** Tasa de cancelación
-- **Disputas:** Número de disputas
-- **Recomendaciones:** % de recomendaciones
+##### Baterista
+- [ ] **Precio:** 1,000-1,800 DOP/hora
+- [ ] **Requisitos:** Batería completa
+- [ ] **Experiencia:** Mínimo 2 años
+- [ ] **Equipos:** Batería, platillos
+
+##### Bajista
+- [ ] **Precio:** 600-1,200 DOP/hora
+- [ ] **Requisitos:** Bajo eléctrico
+- [ ] **Experiencia:** Mínimo 1 año
+- [ ] **Equipos:** Amplificador, cables
+
+##### Cantante
+- [ ] **Precio:** 800-1,500 DOP/hora
+- [ ] **Requisitos:** Voz entrenada
+- [ ] **Experiencia:** Mínimo 1 año
+- [ ] **Equipos:** Micrófono, monitor
+
+##### Violinista
+- [ ] **Precio:** 1,000-1,800 DOP/hora
+- [ ] **Requisitos:** Violín profesional
+- [ ] **Experiencia:** Mínimo 3 años
+- [ ] **Equipos:** Violín, arco
+
+### Métricas y Analytics
+
+##### Métricas de Solicitudes
+- [ ] **Tasa de finalización:** % de solicitudes completadas
+- [ ] **Tiempo promedio:** Tiempo para recibir ofertas
+- [ ] **Número de ofertas:** Promedio por solicitud
+- [ ] **Precio promedio:** Precio final acordado
+
+##### Métricas de Calidad
+- [ ] **Satisfacción:** Calificación promedio
+- [ ] **Cancelaciones:** Tasa de cancelación
+- [ ] **Disputas:** Número de disputas
+- [ ] **Recomendaciones:** % de recomendaciones
 
 ## Referencias
 
-- [Sistema de Ofertas](./02-offer-system.md)
-- [Sistema de Calificaciones](./03-rating-system.md)
-- [Sistema de Notificaciones](./04-notification-system.md)
-- [Guía de Líderes](../usage/01-leader-guide.md)
-- [Reglas de Negocio](../business/01-business-rules.md)
+- [ ] [Sistema de Ofertas](./02-offer-system.md)
+- [ ] [Sistema de Calificaciones](./03-rating-system.md)
+- [ ] [Sistema de Notificaciones](./04-notification-system.md)
+- [ ] [Guía de Líderes](../usage/01-leader-guide.md)
+- [ ] [Reglas de Negocio](../business/01-business-rules.md)

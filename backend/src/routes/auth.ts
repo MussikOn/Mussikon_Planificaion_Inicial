@@ -100,7 +100,7 @@ router.post('/register', validateRequest(registerSchema), authController.registe
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         application/x-www-form-urlencoded:
  *           schema:
  *             type: object
  *             required:

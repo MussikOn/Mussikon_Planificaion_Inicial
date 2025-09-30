@@ -18,7 +18,6 @@ import ScreenHeader from '../components/ScreenHeader';
 import Card from '../components/Card'; // Import Card component
 import { Request } from '../context/RequestsContext'; // Corrected import path for Request
 import { useAuth } from '../context/AuthContext';
-import { priceCalculationService, PriceCalculation } from '../services/priceCalculationService';
 import GradientBackground from '../components/GradientBackground';
 
 interface CreateOfferScreenProps {
@@ -34,7 +33,6 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
   const [selectedDiscountPercentage, setSelectedDiscountPercentage] = useState<number | null>(0);
   const [baseAfterDiscount, setBaseAfterDiscount] = useState<number | null>(null);
   const { user, token } = useAuth();
-  const [priceCalc, setPriceCalc] = useState<PriceCalculation | null>(null);
 
   useEffect(() => {
     const fetchRequestDetails = async () => {
@@ -61,35 +59,14 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
   }, [requestId, user?.id]);
 
   useEffect(() => {
-    if (priceCalc && selectedDiscountPercentage !== null) {
-      const base = priceCalc.musician_earnings || 0;
+    if (requestDetails && selectedDiscountPercentage !== null) {
+      const base = requestDetails.estimated_base_amount || 0;
       const discounted = base * (1 - selectedDiscountPercentage / 100);
       setBaseAfterDiscount(discounted);
     } else {
       setBaseAfterDiscount(null);
     }
-  }, [priceCalc, selectedDiscountPercentage]);
-
-  // Load base price calculation for the request so musicians can see the base amount
-  useEffect(() => {
-    const loadPrice = async () => {
-      if (!requestDetails) return;
-      try {
-        const result = await priceCalculationService.calculatePrice(
-          requestDetails.start_time,
-          requestDetails.end_time,
-          undefined,
-          token || undefined
-        );
-        if (result.success && result.data) {
-          setPriceCalc(result.data);
-        }
-      } catch (e) {
-        // ignore UI error here; screen still works
-      }
-    };
-    loadPrice();
-  }, [requestDetails, token]);
+  }, [requestDetails, selectedDiscountPercentage]);
 
   const handleCreateOffer = async () => {
     console.log('Botón Crear Oferta presionado');
@@ -101,7 +78,7 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
     setLoading(true);
     try {
       const extraFromLeader = requestDetails.extra_amount;
-      const baseNetToMusician = priceCalc?.musician_earnings || 0;
+      const baseNetToMusician = requestDetails.estimated_base_amount || 0;
       const discountedBase = selectedDiscountPercentage !== null
         ? baseNetToMusician * (1 - selectedDiscountPercentage / 100)
         : baseNetToMusician;
@@ -155,9 +132,9 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
         <Card style={styles.card}>
           <Text style={styles.cardTitle}>Detalles de la Solicitud</Text>
           <Text style={styles.cardText}>Descripción: {requestDetails.description}</Text>
-          {priceCalc && (
+          {requestDetails.estimated_base_amount !== undefined && (
             <Text style={styles.cardText}>
-              Monto base estimado (sin descuento): DOP {priceCalc.musician_earnings.toFixed(2)}
+              Monto base estimado (sin descuento): DOP {requestDetails.estimated_base_amount.toFixed(2)}
             </Text>
           )}
           <Text style={styles.cardText}>Monto extra del líder (no se descuenta): DOP {requestDetails.extra_amount.toFixed(2)}</Text>
@@ -177,16 +154,16 @@ const CreateOfferScreen: React.FC<CreateOfferScreenProps> = ({ requestId }) => {
         </View>
         {selectedDiscountPercentage !== null && requestDetails && (
           <View style={styles.discountSummaryContainer}>
-            {priceCalc && (
+            {requestDetails.estimated_base_amount !== undefined && (
               <>
                 <Text style={styles.discountSummaryText}>
-                  Base con descuento: DOP {(baseAfterDiscount ?? priceCalc.musician_earnings).toFixed(2)}
+                  Base con descuento: DOP {(baseAfterDiscount ?? requestDetails.estimated_base_amount).toFixed(2)}
                 </Text>
                 <Text style={styles.discountSummaryText}>
                   Extra del líder: DOP {requestDetails.extra_amount.toFixed(2)}
                 </Text>
                 <Text style={styles.discountSummaryText}>
-                  Total estimado a cobrar (base con descuento + extra): DOP {(((baseAfterDiscount ?? priceCalc.musician_earnings)) + requestDetails.extra_amount).toFixed(2)}
+                  Total estimado a cobrar (base con descuento + extra): DOP {(((baseAfterDiscount ?? requestDetails.estimated_base_amount)) + requestDetails.extra_amount).toFixed(2)}
                 </Text>
               </>
             )}

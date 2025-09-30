@@ -22,7 +22,11 @@ CREATE TABLE IF NOT EXISTS musician_availability (
 -- =====================================================
 ALTER TABLE requests 
 ADD COLUMN IF NOT EXISTS start_time TIME,
-ADD COLUMN IF NOT EXISTS end_time TIME;
+ADD COLUMN IF NOT EXISTS end_time TIME,
+ADD COLUMN IF NOT EXISTS estimated_base_amount DECIMAL(10,2) DEFAULT 0.00;
+
+select * from requests;
+
 
 -- 3. CREAR TABLA DE CONFIGURACIÓN DE PRECIOS
 -- =====================================================

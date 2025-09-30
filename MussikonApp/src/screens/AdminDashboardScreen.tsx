@@ -161,6 +161,19 @@ const AdminDashboardScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.actionCard}
                 onPress={() => {
+                  router.push('/admin/request-offer-management');
+                }}
+              >
+                <Text style={styles.actionIcon}>📝</Text>
+                <Text style={styles.actionTitle}>Gestión de Solicitudes y Ofertas</Text>
+                <Text style={styles.actionDescription}>
+                  Administrar solicitudes y ofertas
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.actionCard}
+                onPress={() => {
                   router.push('/admin/musicianlistscreen');
                 }}
               >
@@ -170,26 +183,10 @@ const AdminDashboardScreen: React.FC = () => {
                   {stats?.users.pending || 0} músicos pendientes
                 </Text>
               </TouchableOpacity>
-
               <TouchableOpacity
                 style={styles.actionCard}
                 onPress={() => {
-                  // TODO: Navigate to requests list
-
-                }}
-              >
-                <Text style={styles.actionIcon}>📝</Text>
-                <Text style={styles.actionTitle}>Ver Solicitudes</Text>
-                <Text style={styles.actionDescription}>
-                  {stats?.requests.active || 0} solicitudes activas
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.actionCard}
-                onPress={() => {
-                  // TODO: Navigate to offers list
-
+                  router.push('/admin/request-offer-management');
                 }}
               >
                 <Text style={styles.actionIcon}>💰</Text>

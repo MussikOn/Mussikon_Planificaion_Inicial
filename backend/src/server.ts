@@ -64,6 +64,7 @@ app.use(
     customSiteTitle: "Mussikon API Documentation",
     swaggerOptions: {
       persistAuthorization: true,
+      defaultModelRendering: 'model', // This will display individual fields instead of a single JSON input
     },
   })
 );

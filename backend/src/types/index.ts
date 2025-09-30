@@ -106,6 +106,7 @@ export interface Request {
   end_time: string;
   location: string;
   extra_amount: number; // Monto extra opcional para el músico
+  estimated_base_amount?: number;
   description?: string;
   required_instrument: string;
   status: 'active' | 'closed' | 'cancelled';
@@ -125,6 +126,7 @@ export interface CreateRequestRequest {
   end_time: string;
   location: string;
   extra_amount?: number; // Monto extra opcional para el músico
+  estimated_base_amount?: number;
   description?: string;
   required_instrument: string;
 }

@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import supabase from '../config/database';
 import { AppError, createError } from '../utils/errorHandler';
+import { pricingService } from '../services/pricingService';
 import { CreateRequestRequest, RequestFilters } from '../types'; 
 import { socketService } from '../server';
 import { logger } from '../utils/logger';
@@ -58,7 +59,6 @@ export class RequestController {
 
       // Apply pagination
       query = query.range(offset, offset + limit - 1);
-      console.info('Query:', (await query).data);
       const { data: requests, error } = await query;
 
       if (error) {
@@ -202,8 +202,21 @@ export class RequestController {
         leader_id: userId,
         ...requestData,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
+
+      // Calculate estimated_base_amount
+      const priceCalculation = await pricingService.calculatePrice(
+        requestData.start_time,
+        requestData.end_time
+      );
+
+      if (priceCalculation && priceCalculation.musician_earnings) {
+        newRequest.estimated_base_amount = priceCalculation.musician_earnings;
+      } else {
+        logger.warn(`Could not calculate estimated_base_amount for new request ${newRequest.id}`);
+        newRequest.estimated_base_amount = 0; // Default to 0 if calculation fails
+      }
 
       const { data: request, error } = await supabase
         .from('requests')
@@ -324,6 +337,32 @@ export class RequestController {
       }
 
       updateData.updated_at = new Date().toISOString();
+
+      // Recalculate estimated_base_amount if start_time or end_time are updated
+      if (updateData.start_time || updateData.end_time) {
+        // Fetch current request to get existing start_time/end_time if not provided in updateData
+        const { data: currentRequest } = await supabase
+          .from('requests')
+          .select('start_time, end_time')
+          .eq('id', id)
+          .single();
+
+        const newStartTime = updateData.start_time || currentRequest?.start_time;
+        const newEndTime = updateData.end_time || currentRequest?.end_time;
+
+        if (newStartTime && newEndTime) {
+          const priceCalculation = await pricingService.calculatePrice(
+            newStartTime,
+            newEndTime
+          );
+          if (priceCalculation && priceCalculation.musician_earnings) {
+            updateData.estimated_base_amount = priceCalculation.musician_earnings;
+          } else {
+            logger.warn(`Could not recalculate estimated_base_amount for request ${id}`);
+            // Optionally, set to 0 or keep existing value if calculation fails
+          }
+        }
+      }
 
       const { data: updatedRequest, error } = await supabase
         .from('requests')

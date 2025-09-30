@@ -22,7 +22,8 @@ import { Button, ElegantIcon } from '../components';
 import ErrorHandler from '../utils/errorHandler';
 import { router } from 'expo-router';
 
-interface Request {
+
+export interface Request {
   id: string;
   event_type: string;
   event_date: string;
@@ -30,6 +31,7 @@ interface Request {
   end_time: string;
   location: string;
   extra_amount: number;
+  budget?: number;
   description: string;
   required_instrument: string;
   status: string;
@@ -46,6 +48,7 @@ interface Request {
     location: string;
   };
   created_at: string;
+  estimated_base_amount?: number; // Estimated base amount for musician earnings
 }
 
 const RequestsListScreen: React.FC = () => {
@@ -246,6 +249,13 @@ const RequestsListScreen: React.FC = () => {
         <ElegantIcon name="location" size={16} color={theme.colors.text.secondary} />
         <Text style={styles.location}>{item.location}</Text>
       </View>
+      
+      {item.estimated_base_amount !== undefined && (
+        <View style={styles.requestInfoRow}>
+          <ElegantIcon name="money" size={16} color={theme.colors.text.secondary} />
+          <Text style={styles.instrument}>Monto base estimado: DOP {item.estimated_base_amount.toFixed(2)}</Text>
+        </View>
+      )}
       
       {item.description && (
         <Text style={styles.description} numberOfLines={2}>

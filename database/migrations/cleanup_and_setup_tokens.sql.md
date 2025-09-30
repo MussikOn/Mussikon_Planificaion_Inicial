@@ -262,4 +262,4 @@ SELECT 'Sistema de verificación por email y recuperación de contraseña config
 **Línea 160-163**: Estas líneas finales son para propósitos de confirmación o depuración.
 - `select * from users;`: Selecciona todos los usuarios, posiblemente para verificar el estado de la tabla `users`.
 - `SELECT 'Políticas limpiadas y tablas configuradas exitosamente' AS status;`: Devuelve un mensaje de estado indicando que las políticas se limpiaron y las tablas se configuraron.
-- `SELECT 'Sistema de verificación por email y recuperación de contraseña configurado completamente' AS final_status;`: Devuelve un mensaje de estado final confirmando la configuración completa de los sistemas de verificación de correo electrónico y recuperación de contraseña.
+- `SELECT 'Sistema de verificación por email y recuperación de contraseña configurado completamente' AS final_status;`: Devuelve un mensaje de estado final confirmando la configuración completa de los sistemas de verificación de correo electrónico y recuperación de contraseña.

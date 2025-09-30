@@ -40,3 +40,6 @@ CREATE TRIGGER trigger_update_request_updated_at
     BEFORE UPDATE ON requests
     FOR EACH ROW
     EXECUTE FUNCTION update_request_updated_at();
+
+
+select * from requests;
