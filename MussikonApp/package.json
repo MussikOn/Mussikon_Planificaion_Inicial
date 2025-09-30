@@ -24,7 +24,6 @@
     "@react-navigation/stack": "^7.4.8",
     "@supabase/supabase-js": "^2.57.2",
     "@types/jwt-decode": "^2.2.1",
-    "@types/react-native": "^0.72.8",
     "axios": "^1.11.0",
     "expo": "~53.0.23",
     "expo-audio": "~0.4.9",

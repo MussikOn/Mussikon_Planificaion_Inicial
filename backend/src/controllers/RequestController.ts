@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import supabase from '../config/database';
 import { AppError, createError } from '../utils/errorHandler';
 import { pricingService } from '../services/pricingService';
+import { availabilityService } from '../services/availabilityService';
 import { CreateRequestRequest, RequestFilters } from '../types'; 
 import { socketService } from '../server';
 import { logger } from '../utils/logger';
@@ -32,8 +33,72 @@ export class RequestController {
       if (userRole === 'leader') {
         query = query.eq('leader_id', userId);
       } else if (userRole === 'musician') {
-        // Los músicos ven todas las solicitudes activas
+          // Fetch accepted requests for the musician
+          const { data: acceptedRequests, error: acceptedRequestsError } = await supabase
+            .from('requests')
+            .select('event_date, start_time, end_time')
+            .eq('accepted_by_musician_id', userId)
+            .eq('musician_status', 'accepted');
+
+          if (acceptedRequestsError) {
+            logger.error('Supabase error fetching accepted requests:', acceptedRequestsError);
+            throw createError('Failed to fetch accepted requests', 500);
+          }
+
+        // Extract time ranges from accepted requests
+        const acceptedTimeRanges = acceptedRequests.map(req => ({
+          event_date: req.event_date,
+          start_time: req.start_time,
+          end_time: req.end_time,
+        }));
+
+        // Los músicos ven todas las solicitudes activas que no se superponen con sus solicitudes aceptadas
         query = query.eq('status', 'active');
+
+        // Filter out requests that overlap with accepted requests
+        if (acceptedTimeRanges.length > 0) {
+          // This part will be tricky with Supabase RLS. We might need to fetch all active requests
+          // and then filter them in memory, or use a complex RLS policy.
+          // For now, let's assume we can add a filter here. This will likely require a custom function in Supabase.
+          // For demonstration, let's assume a simple filter for now.
+          // This is a placeholder for the actual Supabase filtering logic.
+          // A more robust solution would involve a custom Supabase function or a more advanced query.
+          // For now, we'll fetch all active requests and filter them in memory.
+          const { data: allActiveRequests, error: allActiveRequestsError } = await supabase
+            .from('requests')
+            .select(`
+              *,
+              leader:users!requests_leader_id_fkey(id, name, church_name, location)
+            `)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false });
+
+          if (allActiveRequestsError) {
+            throw createError('Failed to fetch all active requests', 500);
+          }
+
+          const availabilityChecks = await Promise.all(allActiveRequests.map(async (activeRequest) => {
+            const isAvailable = await availabilityService.checkAvailability({
+              musician_id: userId,
+              date: activeRequest.event_date,
+              start_time: activeRequest.start_time,
+              end_time: activeRequest.end_time
+            });
+            return { request: activeRequest, isAvailable };
+          }));
+
+          const filteredRequests = availabilityChecks
+            .filter(item => item.isAvailable) // Keep only available requests (no conflict)
+            .map(item => item.request);
+
+          // Replace the query with the filtered results for pagination
+          // This approach has performance implications for large datasets.
+          // A better solution would be to implement this filtering directly in Supabase.
+          query = supabase.from('requests').select(`
+            *,
+            leader:users!requests_leader_id_fkey(id, name, church_name, location)
+          `).in('id', filteredRequests.map(req => req.id));
+        }
       }
       // Los admins ven todas las solicitudes (sin filtro adicional)
 
@@ -291,9 +356,19 @@ export class RequestController {
           throw createError('Acceso denegado. No tienes permisos para ver esta solicitud.', 403);
         }
       } else if (userRole === 'musician') {
-        // Musicians can see active requests
-        if (request.status !== 'active') {
-          throw createError('Acceso denegado. Solo puedes ver solicitudes activas.', 403);
+        // Musicians can see active requests, or requests they have an offer for, or requests they are assigned to.
+        const hasOffer = request.offers.some((offer: any) => offer.musician_id === userId);
+        const isAssignedMusician = request.musician_id === userId;
+
+        logger.debug(`Backend: Musician access check for request ${id}:`);
+        logger.debug(`  userId: ${userId}`);
+        logger.debug(`  userRole: ${userRole}`);
+        logger.debug(`  request.status: ${request.status}`);
+        logger.debug(`  hasOffer: ${hasOffer}`);
+        logger.debug(`  isAssignedMusician: ${isAssignedMusician}`);
+
+        if (request.status !== 'active' && !hasOffer && !isAssignedMusician) {
+          throw createError('Acceso denegado. No tienes permisos para ver esta solicitud.', 403);
         }
       }
       // Admins can see all requests (no additional check needed)
@@ -323,17 +398,20 @@ export class RequestController {
     try {
       const { id } = req.params;
       const userId = (req as any).user.userId;
+      const userRole = (req as any).user.role; // Get user role
       const updateData = req.body;
 
-      // Check if user owns the request
-      const { data: request } = await supabase
-        .from('requests')
-        .select('leader_id')
-        .eq('id', id)
-        .single();
+      // Check if user owns the request or if the user is an admin
+      if (userRole !== 'admin') { // Only apply leader_id check if not an admin
+        const { data: request } = await supabase
+          .from('requests')
+          .select('leader_id')
+          .eq('id', id)
+          .single();
 
-      if (!request || request.leader_id !== userId) {
-        throw createError('Unauthorized to update this request', 403);
+        if (!request || request.leader_id !== userId) {
+          throw createError('Unauthorized to update this request', 403);
+        }
       }
 
       updateData.updated_at = new Date().toISOString();

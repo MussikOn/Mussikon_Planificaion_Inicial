@@ -27,6 +27,7 @@ interface Request {
   event_time: string;
   location: string;
   extra_amount: number;
+  estimated_base_amount?: number; // Add this line
   description: string;
   required_instrument: string;
   status: string;
@@ -74,8 +75,10 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
   const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
 
   useEffect(() => {
-    fetchRequestDetails();
-  }, [requestId]);
+    if (token) {
+      fetchRequestDetails();
+    }
+  }, [requestId, token]);
 
   const fetchRequestDetails = async () => {
     try {
@@ -305,12 +308,14 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
         />
 
         {/* Event Status Card */}
-        <EventStatusCard
-          requestId={requestId}
-          userRole={user?.role || 'musician'}
-          onStatusUpdate={fetchRequestDetails}
-          token={token}
-        />
+        {(user?.role === 'leader' || user?.role === 'admin') && (
+          <EventStatusCard
+            requestId={requestId}
+            userRole={user?.role || 'musician'}
+            onStatusUpdate={fetchRequestDetails}
+            token={token}
+          />
+        )}
 
         {/* Musician Request Actions */}
         {user?.role === 'musician' && (
@@ -357,6 +362,16 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
                   {request.extra_amount > 0 ? `$${request.extra_amount.toLocaleString()} DOP` : 'Sin monto extra'}
                 </Text>
               </View>
+
+              {request.estimated_base_amount !== undefined && (
+                <View style={styles.infoItem}>
+                  <ElegantIcon name="money" size={20} color={theme.colors.primary} />
+                  <Text style={styles.infoLabel}>Monto Base Estimado:</Text>
+                  <Text style={styles.infoValue}>
+                    {`$${request.estimated_base_amount.toLocaleString()} DOP`}
+                  </Text>
+                </View>
+              )}
 
               <View style={styles.infoItem}>
                 <ElegantIcon name="music" size={20} color={theme.colors.primary} />
@@ -459,23 +474,24 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
                       <Text style={styles.offerDate}>
                         {formatDate(offer.created_at)}
                       </Text>
-                      
-                      {canManageOffers() && offer.status === 'pending' && (
-                        <View style={styles.offerActions}>
-                          <TouchableOpacity
-                            style={[styles.actionButton, styles.rejectButton]}
-                            onPress={() => handleRejectOffer(offer.id)}
-                          >
-                            <Text style={styles.rejectButtonText}>Rechazar</Text>
-                          </TouchableOpacity>
-                          <TouchableOpacity
-                            style={[styles.actionButton, styles.selectButton]}
-                            onPress={() => handleSelectOffer(offer.id)}
-                          >
-                            <Text style={styles.selectButtonText}>Seleccionar</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
+                    </View>
+
+                    {canManageOffers() && offer.status === 'pending' && (
+                      <View style={styles.offerActions}>
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.rejectButton]}
+                          onPress={() => handleRejectOffer(offer.id)}
+                        >
+                          <Text style={styles.rejectButtonText}>Rechazar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.actionButton, styles.selectButton]}
+                          onPress={() => handleSelectOffer(offer.id)}
+                        >
+                          <Text style={styles.selectButtonText}>Seleccionar</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
 
                       {offer.status === 'selected' && (
                         <View style={styles.selectedBadge}>
@@ -491,7 +507,7 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
                         </View>
                       )}
                     </View>
-                  </View>
+                  // </View>
                 ))}
               </View>
             )}
@@ -647,6 +663,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderWidth: 1,
     borderColor: theme.colors.lightGray,
+    flexDirection: 'column',
+    justifyContent: 'space-between',
     ...(Platform.OS === 'web' && {
       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
     }),
@@ -699,10 +717,13 @@ const styles = StyleSheet.create({
   },
   offerActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 4, // Reduced gap
+    flexWrap: 'wrap',
+    marginTop: 'auto',
   },
   rejectButton: {
     backgroundColor: theme.colors.error,
+    flexShrink: 1, // Allow button to shrink
   },
   rejectButtonText: {
     color: theme.colors.white,
@@ -711,6 +732,7 @@ const styles = StyleSheet.create({
   },
   selectButton: {
     backgroundColor: theme.colors.success,
+    flexShrink: 1, // Allow button to shrink
   },
   selectButtonText: {
     color: theme.colors.white,

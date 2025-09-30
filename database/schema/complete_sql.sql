@@ -46,10 +46,15 @@ CREATE TABLE IF NOT EXISTS requests (
     extra_amount DECIMAL(10,2) DEFAULT 0 CHECK (extra_amount >= 0),
     description TEXT,
     required_instrument VARCHAR(100) NOT NULL,
+    accepted_by_musician_id UUID REFERENCES users(id) ON DELETE SET NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed', 'cancelled')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+ALTER TABLE requests
+ADD COLUMN accepted_by_musician_id UUID REFERENCES users(id) ON DELETE SET NULL;
+
+select * from requests;
 
 -- Offers table (musician offers for requests)
 CREATE TABLE IF NOT EXISTS offers (

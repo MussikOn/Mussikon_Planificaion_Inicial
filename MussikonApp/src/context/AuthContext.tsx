@@ -200,20 +200,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const verifyToken  = async (token: string | null) => {
     try {
-        // Debugging logs
       if (!token) return true; // Consider null/undefined token as expired/invalid
       const decoded: any = jwtDecode(token);
       if(!decoded.exp) {
-        console.log('Token has no expiration (exp) claim.');
         return true;
       }
       const now = Date.now() / 1000;
-      console.log(`Token expiration (exp): ${new Date(decoded.exp * 1000).toISOString()}`);
-      console.log(`Current time (now): ${new Date(now * 1000).toISOString()}`);
-      console.log(`Is token expired? ${decoded.exp < now}`);
       return decoded.exp < now;
     } catch (error) {
-      console.error('\n\nError verifying token:', error,'\n\n');
       return true; // Considerar el token como expirado/inválido si hay un error al decodificarlo
     }
   };

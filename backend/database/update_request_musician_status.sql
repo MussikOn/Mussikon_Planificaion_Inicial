@@ -20,10 +20,10 @@ CREATE OR REPLACE FUNCTION can_musician_accept_request(request_id UUID, musician
 RETURNS BOOLEAN AS $$
 DECLARE
     request_record RECORD;
-    current_time TIMESTAMP WITH TIME ZONE;
+    _current_time TIMESTAMP WITH TIME ZONE;
 BEGIN
     -- Get current time
-    current_time := NOW();
+    _current_time := NOW();
     
     -- Get request details
     SELECT event_date, start_time, musician_status, accepted_by_musician_id
@@ -48,8 +48,8 @@ BEGIN
     
     -- Check if current time is within 15 minutes of event start time
     -- Allow accepting 15 minutes before scheduled time
-    IF current_time >= (request_record.event_date + request_record.start_time - INTERVAL '15 minutes') 
-       AND current_time <= (request_record.event_date + request_record.start_time + INTERVAL '1 hour') THEN
+    IF _current_time >= (request_record.event_date + request_record.start_time - INTERVAL '15 minutes') 
+       AND _current_time <= (request_record.event_date + request_record.start_time + INTERVAL '1 hour') THEN
         RETURN TRUE;
     END IF;
     
@@ -62,10 +62,10 @@ CREATE OR REPLACE FUNCTION can_musician_reject_request(request_id UUID, musician
 RETURNS BOOLEAN AS $$
 DECLARE
     request_record RECORD;
-    current_time TIMESTAMP WITH TIME ZONE;
+    _current_time TIMESTAMP WITH TIME ZONE;
 BEGIN
     -- Get current time
-    current_time := NOW();
+    _current_time := NOW();
     
     -- Get request details
     SELECT event_date, start_time, musician_status, accepted_by_musician_id
@@ -89,7 +89,7 @@ BEGIN
     END IF;
     
     -- Can reject at any time before the event starts
-    IF current_time < (request_record.event_date + request_record.start_time) THEN
+    IF _current_time < (request_record.event_date + request_record.start_time) THEN
         RETURN TRUE;
     END IF;
     
