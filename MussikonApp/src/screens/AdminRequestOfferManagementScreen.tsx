@@ -1,11 +1,105 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Modal, Button, Alert } from 'react-native';
-import GradientBackground from '../../src/components/GradientBackground';
-import { theme } from '../../src/theme/theme';
-import { apiService } from '../../src/services/api';
-import { useAuth } from '../../src/context/AuthContext';
-import { Request } from '../../src/screens/RequestsListScreen';
-import { Offer } from '../../src/context/OffersContext';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  Platform,
+  Alert,
+  ScrollView,
+} from 'react-native';
+import { useAuth } from '../context/AuthContext';
+import { apiService } from '../services/api';
+import { theme } from '../theme/theme';
+import GradientBackground from '../components/GradientBackground';
+import { Request } from './RequestsListScreen';
+import { Offer } from '../context/OffersContext';
+import { Button } from '../components';
+import ErrorHandler from '../utils/errorHandler';
+import { Ionicons } from '@expo/vector-icons';
+
+// Componente de tabla genérico
+interface TableProps<T> {
+  headers: { key: string; label: string; render?: (item: T) => React.ReactNode }[];
+  data: T[];
+  renderRow: (item: T, index: number) => React.ReactNode;
+}
+
+function Table<T>({ headers, data, renderRow }: TableProps<T>) {
+  return (
+    <View style={tableStyles.tableContainer}>
+      <View style={tableStyles.tableHeader}>
+        {headers.map((header) => (
+          <Text key={header.key} style={tableStyles.columnHeader}>
+            {header.label}
+          </Text>
+        ))}
+      </View>
+      <ScrollView style={tableStyles.tableBody}>
+        {data.length > 0 ? (
+          data.map((item, index) => renderRow(item, index))
+        ) : (
+          <Text style={tableStyles.noDataText}>No hay datos para mostrar.</Text>
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
+const tableStyles = StyleSheet.create({
+  tableContainer: {
+    backgroundColor: theme.colors.background,
+    borderRadius: 10,
+    marginVertical: 10,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  columnHeader: {
+    flex: 1,
+    color: theme.colors.white,
+    fontWeight: 'bold',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  tableBody: {
+    maxHeight: 400, // Altura máxima para el scroll
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    alignItems: 'center',
+  },
+  tableCell: {
+    flex: 1,
+    color: theme.colors.text.primary,
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  noDataText: {
+    textAlign: 'center',
+    padding: 20,
+    color: theme.colors.text.secondary,
+    fontSize: 14,
+  },
+});
 
 const AdminRequestOfferManagementScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'requests' | 'offers'>('requests');
@@ -50,6 +144,26 @@ const AdminRequestOfferManagementScreen: React.FC = () => {
     }
   };
 
+
+
+  const fetchOffers = async () => {
+    setLoadingOffers(true);
+    setErrorOffers(null);
+    try {
+      const response = await apiService.getOffers(token || undefined);
+      if (response.success) {
+        setOffers(response.data);
+      } else {
+        setErrorOffers(response.message || 'Error al cargar ofertas');
+      }
+    } catch (err) {
+      setErrorOffers('Error de red o servidor al cargar ofertas');
+      console.error(err);
+    } finally {
+      setLoadingOffers(false);
+    }
+  };
+
   const handleViewDetails = (request: Request) => {
     setSelectedRequest(request);
     setIsDetailModalVisible(true);
@@ -80,47 +194,11 @@ const AdminRequestOfferManagementScreen: React.FC = () => {
     }
   };
 
-  const renderRequestItem = ({ item }: { item: Request }) => {
-    const isExpanded = expandedRequests[item.id];
-    return (
-      <TouchableOpacity onPress={() => handleViewDetails(item)} style={styles.requestItem}>
-        <Text style={styles.requestItemText}>ID: {item.id}</Text>
-        <Text style={styles.requestItemText}>Tipo de Evento: {item.event_type}</Text>
-        <Text style={styles.requestItemText}>Fecha: {item.event_date}</Text>
-        <Text style={styles.requestItemText}>Ubicación: {item.location}</Text>
-        <Text style={styles.requestItemText}>Monto Base Estimado: {item.estimated_base_amount ? `$${item.estimated_base_amount.toFixed(2)}` : 'N/A'}</Text>
-        <TouchableOpacity
-          onPress={() => setExpandedRequests(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-          style={styles.previewButton}
-        >
-          <Text style={styles.previewButtonText}>{isExpanded ? 'Ocultar Previsualización' : 'Ver Previsualización'}</Text>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.previewContainer}>
-            <Text style={styles.previewText}>Descripción: {item.description || 'No disponible'}</Text>
-            {/* Puedes añadir más campos de previsualización aquí */}
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
-
-  const fetchOffers = async () => {
-    setLoadingOffers(true);
-    setErrorOffers(null);
-    try {
-      const response = await apiService.getOffers(undefined, token || undefined);
-      if (response.success) {
-        setOffers(response.data);
-      } else {
-        setErrorOffers(response.message || 'Error al cargar ofertas');
-      }
-    } catch (err) {
-      setErrorOffers('Error de red o servidor');
-      console.error(err);
-    } finally {
-      setLoadingOffers(false);
-    }
+  const toggleRequestExpansion = (requestId: string) => {
+    setExpandedRequests(prev => ({
+      ...prev,
+      [requestId]: !prev[requestId]
+    }));
   };
 
   const handleViewOfferDetails = (offer: Offer) => {
@@ -128,88 +206,86 @@ const AdminRequestOfferManagementScreen: React.FC = () => {
     setIsOfferDetailModalVisible(true);
   };
 
-  const handleAcceptOffer = async () => {
-    if (!selectedOffer || !token) return;
+  const handleAcceptOffer = async (offerId: string) => {
+    if (!token) return;
     try {
-      const response = await apiService.selectOffer(selectedOffer.id, token);
+      const response = await apiService.acceptOffer(offerId, token);
       if (response.success) {
         Alert.alert('Éxito', 'Oferta aceptada correctamente.');
-        setIsOfferDetailModalVisible(false);
         fetchOffers();
-        fetchRequests(); // Refresh requests as well, as offer status might affect request status
+        setIsOfferDetailModalVisible(false);
       } else {
         Alert.alert('Error', response.message || 'Error al aceptar la oferta.');
       }
-    } catch (err) {
-      Alert.alert('Error', 'Error de red o servidor al aceptar la oferta.');
-      console.error(err);
+    } catch (error) {
+      Alert.alert('Error', 'Error de red al aceptar la oferta.');
     }
   };
 
-  const handleRejectOffer = async () => {
-    if (!selectedOffer || !token) return;
+  const handleRejectOffer = async (offerId: string) => {
+    if (!token) return;
     try {
-      const response = await apiService.rejectOffer(selectedOffer.id, token);
+      const response = await apiService.rejectOffer(offerId, token);
       if (response.success) {
         Alert.alert('Éxito', 'Oferta rechazada correctamente.');
-        setIsOfferDetailModalVisible(false);
         fetchOffers();
-        fetchRequests(); // Refresh requests as well
+        setIsOfferDetailModalVisible(false);
       } else {
         Alert.alert('Error', response.message || 'Error al rechazar la oferta.');
       }
-    } catch (err) {
-      Alert.alert('Error', 'Error de red o servidor al rechazar la oferta.');
-      console.error(err);
+    } catch (error) {
+      Alert.alert('Error', 'Error de red al rechazar la oferta.');
     }
   };
 
-  const renderOfferItem = ({ item }: { item: Offer }) => {
-    const isExpanded = expandedOffers[item.id];
-    return (
-      <TouchableOpacity onPress={() => handleViewOfferDetails(item)} style={styles.requestItem}>
-        <Text style={styles.requestItemText}>ID Oferta: {item.id}</Text>
-        <Text style={styles.requestItemText}>Músico: {item.musician.name}</Text>
-        <Text style={styles.requestItemText}>Precio Propuesto: ${item.proposed_price.toFixed(2)}</Text>
-        <Text style={styles.requestItemText}>Estado: {item.status}</Text>
-        <TouchableOpacity
-          onPress={() => setExpandedOffers(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-          style={styles.previewButton}
-        >
-          <Text style={styles.previewButtonText}>{isExpanded ? 'Ocultar Previsualización' : 'Ver Previsualización'}</Text>
-        </TouchableOpacity>
-        {isExpanded && (
-          <View style={styles.previewContainer}>
-            <Text style={styles.previewText}>Mensaje: {item.message || 'No disponible'}</Text>
-            <Text style={styles.previewText}>Solicitud: {item.request.event_type} en {item.request.location}</Text>
-            {/* Puedes añadir más campos de previsualización aquí */}
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
-
-  if (loading || loadingOffers) {
-    return (
-      <GradientBackground>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Cargando datos...</Text>
+  const renderRequestItem = useCallback(
+    ({ item }: { item: Request }) => (
+      <View style={tableStyles.tableRow}>
+        <Text style={tableStyles.tableCell}>{item.event_type}</Text>
+        <Text style={tableStyles.tableCell}>{new Date(item.event_date).toLocaleDateString()}</Text>
+        <Text style={tableStyles.tableCell}>{item.location}</Text>
+        <Text style={tableStyles.tableCell}>{item.status}</Text>
+        <View style={tableStyles.tableCell}>
+          <TouchableOpacity
+            onPress={() => handleViewDetails(item)}
+            style={styles.actionButton}
+          >
+            <Ionicons name="eye" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => toggleRequestExpansion(item.id)}
+            style={styles.actionButton}
+          >
+            <Ionicons
+              name={expandedRequests[item.id] ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              color={theme.colors.text.secondary}
+            />
+          </TouchableOpacity>
         </View>
-      </GradientBackground>
-    );
-  }
+      </View>
+    ),
+    [expandedRequests, handleViewDetails, toggleRequestExpansion]
+  );
 
-  if (error || errorOffers) {
-    return (
-      <GradientBackground>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {error || errorOffers}</Text>
-          <Button title="Reintentar" onPress={() => { fetchRequests(); fetchOffers(); }} />
+  const renderOfferItem = useCallback(
+    ({ item }: { item: Offer }) => (
+      <View style={tableStyles.tableRow}>
+        <Text style={tableStyles.tableCell}>{item.musician.name}</Text>
+        <Text style={tableStyles.tableCell}>{item.proposed_price}</Text>
+        <Text style={tableStyles.tableCell}>{item.status}</Text>
+        <View style={tableStyles.tableCell}>
+          <TouchableOpacity
+            onPress={() => handleViewOfferDetails(item)}
+            style={styles.actionButton}
+          >
+            <Ionicons name="eye" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
         </View>
-      </GradientBackground>
-    );
-  }
+      </View>
+    ),
+    [handleViewOfferDetails]
+  );
 
   return (
     <GradientBackground>
@@ -221,48 +297,117 @@ const AdminRequestOfferManagementScreen: React.FC = () => {
             style={[styles.tabButton, activeTab === 'requests' && styles.activeTabButton]}
             onPress={() => setActiveTab('requests')}
           >
-            <Text style={[styles.tabButtonText, activeTab === 'requests' && styles.activeTabButtonText]}>Solicitudes</Text>
+            <Text style={styles.tabButtonText}>Solicitudes</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tabButton, activeTab === 'offers' && styles.activeTabButton]}
             onPress={() => setActiveTab('offers')}
           >
-            <Text style={[styles.tabButtonText, activeTab === 'offers' && styles.tabButtonText]}>Ofertas</Text>
+            <Text style={styles.tabButtonText}>Ofertas</Text>
           </TouchableOpacity>
         </View>
 
-        {activeTab === 'requests' ? (
-          <View style={styles.contentContainer}>
-            <Text style={styles.sectionTitle}>Lista de Solicitudes</Text>
-            <FlatList
-              data={requests}
-              renderItem={renderRequestItem}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContentContainer}
-              ListEmptyComponent={
-                <View style={styles.emptyListContainer}>
-                  <Text style={styles.emptyListText}>No hay solicitudes disponibles.</Text>
-                </View>
-              }
-            />
-          </View>
-        ) : (
-          <View style={styles.contentContainer}>
-            <Text style={styles.sectionTitle}>Lista de Ofertas</Text>
-            <FlatList
-              data={offers}
-              renderItem={renderOfferItem}
-              keyExtractor={(item) => item.id}
-              contentContainerStyle={styles.listContentContainer}
-              ListEmptyComponent={
-                <View style={styles.emptyListContainer}>
-                  <Text style={styles.emptyListText}>No hay ofertas disponibles.</Text>
-                </View>
-              }
-            />
+        {activeTab === 'requests' && (
+          <View style={styles.listContainer}>
+            {loading ? (
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            ) : error ? (
+              <Text style={styles.errorText}>{error}</Text>
+            ) : (
+              <Table
+                headers={[
+                  { key: 'event_type', label: 'Tipo de Evento' },
+                  { key: 'event_date', label: 'Fecha' },
+                  { key: 'location', label: 'Ubicación' },
+                  { key: 'status', label: 'Estado' },
+                  { key: 'actions', label: 'Acciones' },
+                ]}
+                data={requests}
+                renderRow={(item) => (
+                  <View style={tableStyles.tableRow} key={item.id}>
+                    <Text style={tableStyles.tableCell}>{item.event_type}</Text>
+                    <Text style={tableStyles.tableCell}>{new Date(item.event_date).toLocaleDateString()}</Text>
+                    <Text style={tableStyles.tableCell}>{item.location}</Text>
+                    <Text style={tableStyles.tableCell}>{item.status}</Text>
+                    <View style={tableStyles.tableCell}>
+                      <TouchableOpacity
+                        onPress={() => handleViewDetails(item)}
+                        style={styles.actionButton}
+                      >
+                        <Ionicons name="eye" size={20} color={theme.colors.primary} />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => toggleRequestExpansion(item.id)}
+                        style={styles.actionButton}
+                      >
+                        <Ionicons
+                          name={expandedRequests[item.id] ? 'chevron-up' : 'chevron-down'}
+                          size={20}
+                          color={theme.colors.text.secondary}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              />
+            )}
+            {Object.keys(expandedRequests).map((requestId) => {
+              const request = requests.find((r) => r.id === requestId);
+              return (
+                request && (
+                  <View key={requestId} style={styles.expandedContent}>
+                    <Text style={styles.expandedText}>
+                      Descripción: {request.description}
+                    </Text>
+                    <Text style={styles.expandedText}>
+                      Instrumento Requerido: {request.required_instrument}
+                    </Text>
+                    <Text style={styles.expandedText}>
+                      Monto Estimado: {request.estimated_base_amount}
+                    </Text>
+                  </View>
+                )
+              );
+            })}
           </View>
         )}
 
+        {activeTab === 'offers' && (
+          <View style={styles.listContainer}>
+            {loadingOffers ? (
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+            ) : errorOffers ? (
+              <Text style={styles.errorText}>{errorOffers}</Text>
+            ) : (
+              <Table
+                headers={[
+                  { key: 'musician.name', label: 'Músico' },
+                  { key: 'proposed_price', label: 'Precio Propuesto' },
+                  { key: 'status', label: 'Estado' },
+                  { key: 'actions', label: 'Acciones' },
+                ]}
+                data={offers}
+                renderRow={(item) => (
+                  <View style={tableStyles.tableRow} key={item.id}>
+                    <Text style={tableStyles.tableCell}>{item.musician.name}</Text>
+                    <Text style={tableStyles.tableCell}>{item.proposed_price}</Text>
+                    <Text style={tableStyles.tableCell}>{item.status}</Text>
+                    <View style={tableStyles.tableCell}>
+                      <TouchableOpacity
+                        onPress={() => handleViewOfferDetails(item)}
+                        style={styles.actionButton}
+                      >
+                        <Ionicons name="eye" size={20} color={theme.colors.primary} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              />
+            )}
+          </View>
+        )}
+
+        {/* Request Detail Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -273,27 +418,30 @@ const AdminRequestOfferManagementScreen: React.FC = () => {
             <View style={styles.modalView}>
               <Text style={styles.modalTitle}>Detalles de la Solicitud</Text>
               {selectedRequest && (
-                <View>
-                  <Text style={styles.modalText}>ID: {selectedRequest.id}</Text>
+                <ScrollView>
                   <Text style={styles.modalText}>Tipo de Evento: {selectedRequest.event_type}</Text>
-                  <Text style={styles.modalText}>Fecha: {selectedRequest.event_date}</Text>
+                  <Text style={styles.modalText}>Fecha: {new Date(selectedRequest.event_date).toLocaleDateString()}</Text>
+                  <Text style={styles.modalText}>Hora de Inicio: {selectedRequest.start_time}</Text>
+                  <Text style={styles.modalText}>Hora de Fin: {selectedRequest.end_time}</Text>
                   <Text style={styles.modalText}>Ubicación: {selectedRequest.location}</Text>
+                  <Text style={styles.modalText}>Monto Extra: {selectedRequest.extra_amount}</Text>
                   <Text style={styles.modalText}>Descripción: {selectedRequest.description}</Text>
-                  <Text style={styles.modalText}>Presupuesto: {selectedRequest.budget ? `$${selectedRequest.budget.toFixed(2)}` : 'N/A'}</Text>
-                  <Text style={styles.modalText}>Monto Base Estimado: {selectedRequest.estimated_base_amount ? `$${selectedRequest.estimated_base_amount.toFixed(2)}` : 'N/A'}</Text>
-                  {/* Otros detalles de la solicitud */}
+                  <Text style={styles.modalText}>Instrumento Requerido: {selectedRequest.required_instrument}</Text>
+                  <Text style={styles.modalText}>Estado: {selectedRequest.status}</Text>
+                  <Text style={styles.modalText}>Monto Base Estimado: {selectedRequest.estimated_base_amount}</Text>
                   <Button
-                    title={recalculating ? "Recalculando..." : "Recalcular Monto"}
+                    title="Recalcular Monto"
                     onPress={handleRecalculateAmount}
-                    disabled={recalculating}
+                    style={styles.recalculateButton}
                   />
-                </View>
+                </ScrollView>
               )}
               <Button title="Cerrar" onPress={() => setIsDetailModalVisible(false)} />
             </View>
           </View>
         </Modal>
 
+        {/* Offer Detail Modal */}
         <Modal
           animationType="slide"
           transparent={true}
@@ -304,23 +452,26 @@ const AdminRequestOfferManagementScreen: React.FC = () => {
             <View style={styles.modalView}>
               <Text style={styles.modalTitle}>Detalles de la Oferta</Text>
               {selectedOffer && (
-                <View>
-                  <Text style={styles.modalText}>ID Oferta: {selectedOffer.id}</Text>
+                <ScrollView>
                   <Text style={styles.modalText}>Músico: {selectedOffer.musician.name}</Text>
-                  <Text style={styles.modalText}>Teléfono: {selectedOffer.musician.phone}</Text>
-                  <Text style={styles.modalText}>Ubicación Músico: {selectedOffer.musician.location}</Text>
-                  <Text style={styles.modalText}>Precio Propuesto: ${selectedOffer.proposed_price.toFixed(2)}</Text>
+                  <Text style={styles.modalText}>Precio Propuesto: {selectedOffer.proposed_price}</Text>
                   <Text style={styles.modalText}>Mensaje: {selectedOffer.message}</Text>
                   <Text style={styles.modalText}>Estado: {selectedOffer.status}</Text>
-                  <Text style={styles.modalText}>Solicitud Asociada: {selectedOffer.request.event_type} en {selectedOffer.request.location}</Text>
-                  {/* Otros detalles de la oferta */}
-                  {selectedOffer.status === 'pending' && (
-                    <View style={styles.offerActionsContainer}>
-                      <Button title="Aceptar Oferta" onPress={handleAcceptOffer} color={theme.colors.success} />
-                      <Button title="Rechazar Oferta" onPress={handleRejectOffer} color={theme.colors.error} />
-                    </View>
-                  )}
-                </View>
+                  <Text style={styles.modalText}>Creada: {new Date(selectedOffer.created_at).toLocaleDateString()}</Text>
+                  <Text style={styles.modalText}>Actualizada: {new Date(selectedOffer.updated_at).toLocaleDateString()}</Text>
+                  <View style={styles.offerActionsContainer}>
+                    <Button
+                      title="Aceptar"
+                      onPress={() => handleAcceptOffer(selectedOffer.id)}
+                      style={styles.acceptButton}
+                    />
+                    <Button
+                      title="Rechazar"
+                      onPress={() => handleRejectOffer(selectedOffer.id)}
+                      style={styles.rejectButton}
+                    />
+                  </View>
+                </ScrollView>
               )}
               <Button title="Cerrar" onPress={() => setIsOfferDetailModalVisible(false)} />
             </View>
@@ -480,6 +631,52 @@ const styles = StyleSheet.create({
   previewText: {
     color: 'white',
     fontSize: 12,
+  },
+  actionButton: {
+    backgroundColor: '#007bff',
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
+  },
+  listContainer: {
+    marginTop: 10,
+  },
+  expandedContent: {
+    padding: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  expandedText: {
+    color: 'white',
+    fontSize: 14,
+    marginBottom: 5,
+  },
+  recalculateButton: {
+    backgroundColor: '#ffc107',
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
+  },
+  acceptButton: {
+    backgroundColor: '#28a745',
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
+  },
+  rejectButton: {
+    backgroundColor: '#dc3545',
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 5,
   },
 });
 

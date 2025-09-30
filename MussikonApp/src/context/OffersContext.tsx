@@ -8,6 +8,7 @@ export interface Offer {
   message: string;
   status: string;
   created_at: string;
+  updated_at: string;
   request: {
     id: string;
     event_type: string;

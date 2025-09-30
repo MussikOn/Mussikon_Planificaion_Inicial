@@ -531,7 +531,7 @@ class ApiService {
     });
   }
 
-  async selectOffer(offerId: string, token?: string): Promise<{ success: boolean; message: string }> {
+  async selectOffer(offerId: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
     if (token) {
       return this.makeAuthenticatedRequest(`/offers/${offerId}/select`, token, {
         method: 'POST',
@@ -542,7 +542,18 @@ class ApiService {
     });
   }
 
-  async rejectOffer(offerId: string, token?: string): Promise<{ success: boolean; message: string }> {
+  async acceptOffer(offerId: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
+    if (token) {
+      return this.makeAuthenticatedRequest(`/offers/${offerId}/accept`, token, {
+        method: 'POST',
+      });
+    }
+    return this.makeRequest(`/offers/${offerId}/accept`, {
+      method: 'POST',
+    });
+  }
+
+  async rejectOffer(offerId: string, token?: string): Promise<{ success: boolean; message: string; data?: any }> {
     if (token) {
       return this.makeAuthenticatedRequest(`/offers/${offerId}/reject`, token, {
         method: 'POST',
