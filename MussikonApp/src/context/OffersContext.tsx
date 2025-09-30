@@ -21,6 +21,7 @@ export interface Offer {
     };
   };
   musician: {
+    id: string;
     name: string;
     phone: string;
     location: string;

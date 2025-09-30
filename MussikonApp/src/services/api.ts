@@ -265,6 +265,13 @@ class ApiService {
     });
   }
 
+  public async post<T>(path: string, data: any, token?: string): Promise<T> {
+    return this.makeRequest<T>(path, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // Health check
   async healthCheck(): Promise<{ status: string; timestamp: string }> {
     return this.makeRequest('/health');

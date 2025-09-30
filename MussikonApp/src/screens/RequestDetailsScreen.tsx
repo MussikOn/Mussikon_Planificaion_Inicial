@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,54 +11,20 @@ import {
   Modal,
 } from 'react-native';
 import { router } from 'expo-router';
+
 import { theme } from '../theme/theme';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 import { apiService } from '../services/api';
+import { availabilityService } from '../services/availabilityService';
+import { Request } from '../context/RequestsContext';
+import { Offer } from '../context/OffersContext';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
 import { Button, ElegantIcon, EventStatusCard, MusicianRequestActions } from '../components';
 import ErrorHandler from '../utils/errorHandler';
 
-interface Request {
-  id: string;
-  event_type: string;
-  event_date: string;
-  event_time: string;
-  location: string;
-  extra_amount: number;
-  estimated_base_amount?: number; // Add this line
-  description: string;
-  required_instrument: string;
-  status: string;
-  leader: {
-    id: string;
-    name: string;
-    church_name: string;
-    location: string;
-    phone: string;
-  };
-  created_at: string;
-  offers?: Offer[];
-}
 
-interface Offer {
-  id: string;
-  proposed_price: number;
-  message: string;
-  status: string;
-  created_at: string;
-  musician: {
-    id: string;
-    name: string;
-    phone: string;
-    location: string;
-    instruments?: Array<{
-      instrument: string;
-      years_experience: number;
-    }>;
-  };
-}
 
 interface RequestDetailsScreenProps {
   requestId: string;
@@ -252,11 +218,42 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
     }
   };
 
-  const canMakeOffer = () => {
-    return (user?.role === 'musician' || user?.role === 'admin') && 
-           request?.status === 'active' &&
-           !offers.some(offer => offer.musician.id === user?.id);
+  const canMakeOffer = async () => {
+    if (!(user?.role === 'musician' || user?.role === 'admin') || (request?.status !== 'active' && request?.status !== 'cancelled') || offers.some(offer => offer.musician.id === user?.id && request?.status !== 'cancelled')) {
+      return false;
+    }
+
+    if (!request || !user?.id) {
+      return false;
+    }
+
+    const availability = await availabilityService.checkAvailability({
+      musician_id: user.id,
+      date: request.event_date,
+      start_time: request.start_time,
+      end_time: request.end_time
+    });
+
+    return availability.is_available;
   };
+
+  const [canOffer, setCanOffer] = useState(false);
+
+  const hasUserMadeOffer = useMemo(() => {
+    return user?.role === 'musician' && offers.some(offer => offer.musician.id === user?.id);
+  }, [user, offers]);
+
+  const shouldShowOfferSentMessage = useMemo(() => {
+    return hasUserMadeOffer && request?.status !== 'cancelled';
+  }, [hasUserMadeOffer, request?.status]);
+
+  useEffect(() => {
+    const checkOfferAbility = async () => {
+      const result = await canMakeOffer();
+      setCanOffer(result);
+    };
+    checkOfferAbility();
+  }, [user, request, offers]);
 
   const canManageOffers = () => {
     return (user?.role === 'leader' || user?.role === 'admin') && 
@@ -346,7 +343,7 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
               <View style={styles.infoItem}>
                 <ElegantIcon name="clock" size={20} color={theme.colors.primary} />
                 <Text style={styles.infoLabel}>Hora:</Text>
-                <Text style={styles.infoValue}>{formatTime(request.event_time)}</Text>
+                <Text style={styles.infoValue}>{formatTime(request.start_time)}</Text>
               </View>
 
               <View style={styles.infoItem}>
@@ -430,7 +427,11 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Ofertas ({offers.length})</Text>
-              {canMakeOffer() && (
+              {shouldShowOfferSentMessage ? (
+                <View style={styles.offerSentContainer}>
+                  <Text style={styles.offerSentText}>Solicitud enviada</Text>
+                </View>
+              ) : canOffer && (
                 <Button
                   title="Hacer Oferta"
                   onPress={handleMakeOffer}
@@ -443,7 +444,11 @@ const RequestDetailsScreen: React.FC<RequestDetailsScreenProps> = ({ requestId }
               <View style={styles.emptyOffers}>
                 <ElegantIcon name="music" size={48} color={theme.colors.text.secondary} />
                 <Text style={styles.emptyText}>No hay ofertas aún</Text>
-                {canMakeOffer() && (
+                {hasUserMadeOffer ? (
+                  <View style={styles.offerSentContainer}>
+                    <Text style={styles.offerSentText}>Solicitud enviada</Text>
+                  </View>
+                ) : canOffer && (
                   <Button
                     title="Ser el primero en ofertar"
                     onPress={handleMakeOffer}
@@ -794,6 +799,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-});
-
-export default RequestDetailsScreen;
+  offerSentContainer: {
+    backgroundColor: theme.colors.secondary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  offerSentText: {
+    color: theme.colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+ });
+ 
+ export default RequestDetailsScreen;
