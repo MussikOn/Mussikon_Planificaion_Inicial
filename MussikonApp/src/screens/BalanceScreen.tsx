@@ -78,7 +78,12 @@ const BalanceScreen: React.FC = () => {
 
       const response = await apiService.getUserBalance(token);
       if (response.success) {
-        setBalance(response.data);
+        setBalance({
+          available_balance: Number(response.data.available_balance) || 0,
+          total_earnings: Number(response.data.total_earnings) || 0,
+          pending_balance: Number(response.data.pending_balance) || 0,
+          withdrawn_balance: Number(response.data.withdrawn_balance) || 0,
+        });
       } else {
         console.error('Failed to fetch balance:', response);
       }
@@ -111,12 +116,11 @@ const BalanceScreen: React.FC = () => {
     setRefreshing(false);
   };
 
-  const formatCurrency = (amount: number, currency: string = 'DOP') => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2
-    }).format(amount);
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return 'RD$0.00'; // Default to RD$0.00 or another appropriate placeholder
+    }
+    return `RD$${value.toFixed(2)}`;
   };
 
   const getTransactionIcon = (type: string) => {

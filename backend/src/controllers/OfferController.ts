@@ -421,6 +421,7 @@ export class OfferController {
         .from('requests')
         .update({ 
           status: 'accepted',
+          accepted_by_musician_id: offer.musician_id,
           updated_at: new Date().toISOString()
         })
         .eq('id', offer.request_id);

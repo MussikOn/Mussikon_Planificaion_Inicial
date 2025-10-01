@@ -175,6 +175,51 @@ router.get('/my-requests', authMiddleware, requestController.getLeaderRequests);
 
 /**
  * @swagger
+ * /api/requests/accepted:
+ *   get:
+ *     summary: Obtener solicitudes aceptadas para el usuario autenticado (líder o músico)
+ *     tags: [Solicitudes]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de solicitudes aceptadas obtenida exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     allOf:
+ *                       - $ref: '#/components/schemas/Request'
+ *                       - type: object
+ *                         properties:
+ *                           leader:
+ *                             $ref: '#/components/schemas/User'
+ *                           acceptedMusician:
+ *                             $ref: '#/components/schemas/User'
+ *       403:
+ *         description: Acceso denegado. Rol de usuario no válido.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get('/accepted', authMiddleware, requestController.getAcceptedRequests);
+
+/**
+ * @swagger
  * /api/requests:
  *   post:
  *     summary: Crear nueva solicitud musical

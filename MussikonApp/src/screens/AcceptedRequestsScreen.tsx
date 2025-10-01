@@ -5,9 +5,29 @@ import { apiService } from '../services/api';
 import GradientBackground from '../components/GradientBackground';
 import ScreenHeader from '../components/ScreenHeader';
 import ErrorHandler from '../utils/errorHandler';
-import { Request } from '../context/RequestsContext';
 import { theme } from '../theme/theme';
 import { router } from 'expo-router';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Request {
+  id: string;
+  event_type: string;
+  event_date: string;
+  event_time: string;
+  location: string;
+  extra_amount: number;
+  description: string;
+  required_instrument: string;
+  status: string;
+  created_at: string;
+  leader: User;
+  acceptedMusician?: User;
+}
 
 const AcceptedRequestsScreen = () => {
   const { user, token } = useAuth();
@@ -22,7 +42,7 @@ const AcceptedRequestsScreen = () => {
   const fetchAcceptedRequests = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getMusicianAcceptedRequests({}, token || undefined);
+      const response = await apiService.getAcceptedRequests(token || undefined);
       if (response.success) {
         setRequests(response.data || []);
       } else {
@@ -51,6 +71,10 @@ const AcceptedRequestsScreen = () => {
       <Text style={styles.requestLocation}>{item.location}</Text>
       <Text style={styles.requestInstrument}>Instrumento: {item.required_instrument}</Text>
       <Text style={styles.requestStatus}>Estado: {item.status}</Text>
+      <Text style={styles.requestLeader}>Líder: {item.leader.name}</Text>
+      {item.acceptedMusician && (
+        <Text style={styles.requestMusician}>Músico Aceptado: {item.acceptedMusician.name}</Text>
+      )}
     </TouchableOpacity>
   );
 
@@ -139,6 +163,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: theme.colors.success,
+    marginBottom: 3,
+  },
+  requestLeader: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
+    marginBottom: 3,
+  },
+  requestMusician: {
+    fontSize: 14,
+    color: theme.colors.text.secondary,
   },
   emptyContainer: {
     flex: 1,

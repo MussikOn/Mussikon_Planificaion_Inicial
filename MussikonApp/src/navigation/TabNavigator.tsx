@@ -51,16 +51,18 @@ const TabNavigator: React.FC = () => {
         }}
       />
       
-      <Tab.Screen
-        name="AcceptedRequests"
-        component={AcceptedRequestsScreen}
-        options={{
-          tabBarLabel: 'Aceptadas',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>✅</Text>
-          ),
-        }}
-      />
+      {((user?.active_role === 'leader' || user?.role === 'leader') || (user?.active_role === 'musician' || user?.role === 'musician')) && (
+        <Tab.Screen
+          name="AcceptedRequests"
+          component={AcceptedRequestsScreen}
+          options={{
+            tabBarLabel: 'Aceptadas',
+            tabBarIcon: ({ color }) => (
+              <Text style={{ fontSize: 20, color }}>✅</Text>
+            ),
+          }}
+        />
+      )}
       
       {user?.role === 'musician' && (
         <Tab.Screen

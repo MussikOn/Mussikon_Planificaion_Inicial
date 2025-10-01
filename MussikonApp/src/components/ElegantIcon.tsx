@@ -110,6 +110,8 @@ const ElegantIcon: React.FC<ElegantIconProps> = ({
     'coins': '🪙',
     'budget': '💰',
     'price': '$',
+    'wallet': '💰',
+    'trending-up': '📈',
     
     // Communication icons
     'message': '💬',

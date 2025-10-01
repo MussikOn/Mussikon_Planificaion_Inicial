@@ -780,6 +780,12 @@ class ApiService {
     }
     return this.makeRequest('/balances/my-balance');
   }
+    async getAcceptedRequests(token?: string): Promise<ApiResponse<Request[]>> {
+    return this.makeRequest<ApiResponse<Request[]>>('/requests/accepted', {
+      method: 'GET',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+    });
+  }
 
   async getUserTransactions(filters?: any, token?: string): Promise<{ success: boolean; data?: any[] }> {
     const queryParams = new URLSearchParams();
@@ -800,5 +806,28 @@ class ApiService {
   }
 }
 
+
 export const apiService = new ApiService();
 export default apiService;
+
+  export interface ApiResponse<T> {
+    success: boolean;
+    data?: T;
+    message?: string;
+    pagination?: any;
+  }
+  
+  export interface Request {
+    id: string;
+    event_type: string;
+    event_date: string;
+    event_time: string;
+    location: string;
+    extra_amount: number;
+    description: string;
+    required_instrument: string;
+    status: string;
+    created_at: string;
+    leader: User;
+    acceptedMusician?: User;
+  }

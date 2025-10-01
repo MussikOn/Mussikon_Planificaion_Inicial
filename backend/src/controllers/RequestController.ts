@@ -31,8 +31,8 @@ export class RequestController {
       if (userRole === 'leader') {
         query = query.eq('leader_id', userId);
       } else if (userRole === 'musician') {
-        // Los músicos ven todas las solicitudes activas
-        query = query.eq('status', 'active');
+        // Los músicos ven todas las solicitudes activas que no han sido aceptadas por nadie
+        query = query.eq('status', 'active').is('accepted_by_musician_id', null);
       }
       // Los admins ven todas las solicitudes (sin filtro adicional)
 
@@ -1227,6 +1227,38 @@ export class RequestController {
         success: false,
         message: 'Error interno del servidor'
       });
+    }
+  };
+  
+  public getAcceptedRequests = async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user.userId;
+      const userRole = (req as any).user.active_role || (req as any).user.role;
+  
+      let query = supabase
+        .from('requests')
+        .select('*, leader:users!requests_leader_id_fkey(id, name, church_name, location), acceptedMusician:users!requests_accepted_by_musician_id_fkey(id, name)')
+        .eq('status', 'accepted');
+  
+      if (userRole === 'leader') {
+        query = query.eq('leader_id', userId);
+      } else if (userRole === 'musician') {
+        query = query.eq('accepted_by_musician_id', userId);
+      } else {
+        return res.status(403).json({ success: false, message: 'Acceso denegado. Rol de usuario no válido.' });
+      }
+  
+      const { data: requests, error } = await query;
+  
+      if (error) {
+        console.error('Error fetching accepted requests:', error);
+        return res.status(500).json({ success: false, message: 'Error interno del servidor al obtener solicitudes aceptadas.' });
+      }
+  
+      return res.status(200).json({ success: true, data: requests });
+    } catch (error) {
+      console.error('Excepción al obtener solicitudes aceptadas:', error);
+      return res.status(500).json({ success: false, message: 'Error interno del servidor.' });
     }
   };
 }
