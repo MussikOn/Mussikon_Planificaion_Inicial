@@ -296,6 +296,24 @@ class ApiService {
     return this.makeRequest(endpoint);
   }
 
+  async getMusicianAcceptedRequests(filters?: any, token?: string): Promise<{ success: boolean; data: any[]; pagination?: any; message?: string }> {
+    const queryParams = new URLSearchParams();
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          queryParams.append(key, filters[key]);
+        }
+      });
+    }
+    const queryString = queryParams.toString();
+    const endpoint = queryString ? `/requests/musician-accepted-requests?${queryString}` : '/requests/musician-accepted-requests';
+    
+    if (token) {
+      return this.makeAuthenticatedRequest(endpoint, token);
+    }
+    return this.makeRequest(endpoint);
+  }
+
   async getLeaderRequests(filters?: any, token?: string): Promise<{ success: boolean; data: any[]; pagination?: any }> {
     const queryParams = new URLSearchParams();
     if (filters) {

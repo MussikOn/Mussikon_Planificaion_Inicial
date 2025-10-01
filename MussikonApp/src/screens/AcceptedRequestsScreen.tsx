@@ -22,7 +22,7 @@ const AcceptedRequestsScreen = () => {
   const fetchAcceptedRequests = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getRequests({ status: 'accepted' }, token || undefined);
+      const response = await apiService.getMusicianAcceptedRequests({}, token || undefined);
       if (response.success) {
         setRequests(response.data || []);
       } else {
