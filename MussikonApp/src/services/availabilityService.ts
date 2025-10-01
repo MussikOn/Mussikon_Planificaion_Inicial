@@ -15,11 +15,11 @@ interface AvailabilityResponse {
 
 const checkAvailability = async (data: AvailabilityCheck): Promise<AvailabilityResponse> => {
   try {
-    const response = await apiService.post<{ data: AvailabilityResponse }>('/availability/check', data);
-    return response.data;
+    const response = await apiService.post<AvailabilityResponse>('/availability/check', data);
+    return response;
   } catch (error: any) {
     console.error('Error checking availability:', error.response?.data || error.message);
-    throw error;
+    return { is_available: false, message: error.response?.data?.message || error.message };
   }
 };
 

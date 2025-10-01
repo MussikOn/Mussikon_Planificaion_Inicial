@@ -1,7 +1,7 @@
 // Configuración de la API
 import axios from 'axios';
-export const URL_SERVER = 'http://192.168.100.101:3000';
-// export const URL_SERVER = 'http://192.168.56.130:3000';
+// export const URL_SERVER = 'http://192.168.100.101:3000';
+export const URL_SERVER = 'http://192.168.56.130:3000';
 // export const URL_SERVER = 'http://172.20.10.4:3000';
 const API_BASE_URL = `${URL_SERVER}/api`;
 

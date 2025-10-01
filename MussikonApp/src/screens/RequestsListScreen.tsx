@@ -96,9 +96,8 @@ const RequestsListScreen: React.FC = () => {
         // Leaders only see their own requests
         response = await apiService.getLeaderRequests(filters, token || undefined);
       } else if (user?.role === 'musician') {
-        // Musicians see all active requests
-        const requestFilters = { ...filters, status: 'active' };
-        response = await apiService.getRequests(requestFilters, token || undefined);
+        // Musicians see all active requests, filtered by backend logic
+        response = await apiService.getRequests(filters, token || undefined);
       } else if (user?.role === 'admin') {
         // Admins see all requests
         response = await apiService.getRequests(filters, token || undefined);

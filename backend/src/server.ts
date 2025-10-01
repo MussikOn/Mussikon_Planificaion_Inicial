@@ -16,6 +16,7 @@ import adminRoutes from "./routes/admin";
 import notificationRoutes from "./routes/notifications";
 import pricingRoutes from "./routes/pricing";
 import balanceRoutes from "./routes/balances";
+import availabilityRoutes from "./routes/availability";
 import { AppError } from "./utils/errorHandler";
 import { logger } from "./utils/logger";
 import { initializeSocketService } from "./services/socketService";
@@ -78,6 +79,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/pricing", pricingRoutes);
 app.use("/api/balances", balanceRoutes);
+app.use("/api/availability", availabilityRoutes);
 
 // 404 handler
 app.use("*", (req: Request, res: Response) => {

@@ -109,7 +109,7 @@ export interface Request {
   estimated_base_amount?: number;
   description?: string;
   required_instrument: string;
-  status: 'active' | 'closed' | 'cancelled';
+  status: 'active' | 'closed' | 'cancelled' | 'accepted';
   event_status: 'scheduled' | 'started' | 'completed' | 'cancelled';
   event_started_at?: string;
   event_completed_at?: string;

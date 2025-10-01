@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Platform, Text } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { DashboardScreen, RequestsListScreen, ProfileScreen, BalanceScreen } from '../screens';
+import { DashboardScreen, RequestsListScreen, ProfileScreen, BalanceScreen, AcceptedRequestsScreen } from '../screens';
 import AdminTabNavigator from './AdminTabNavigator';
 
 const Tab = createBottomTabNavigator();
@@ -47,6 +47,17 @@ const TabNavigator: React.FC = () => {
            tabBarLabel: (user?.active_role === 'leader' || user?.role === 'leader') ? 'Mis Solicitudes' : 'Solicitudes',
           tabBarIcon: ({ color }) => (
             <Text style={{ fontSize: 20, color }}>📝</Text>
+          ),
+        }}
+      />
+      
+      <Tab.Screen
+        name="AcceptedRequests"
+        component={AcceptedRequestsScreen}
+        options={{
+          tabBarLabel: 'Aceptadas',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>✅</Text>
           ),
         }}
       />

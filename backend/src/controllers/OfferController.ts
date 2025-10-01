@@ -369,6 +369,22 @@ export class OfferController {
         throw createError('Failed to select offer', 500);
       }
 
+      // Update request status to 'accepted' and assign musician
+      const { error: updateRequestError } = await supabase
+        .from('requests')
+        .update({
+          status: 'accepted',
+          musician_id: offer.musician_id,
+          musician_status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', offer.request_id);
+
+      if (updateRequestError) {
+        logger.error('Failed to update request status after offer selection:', updateRequestError);
+        throw createError('Failed to update request status', 500);
+      }
+
       // Reject all other offers for this request
       const { error: rejectError } = await supabase
         .from('offers')
@@ -404,7 +420,7 @@ export class OfferController {
       const { error: closeRequestError } = await supabase
         .from('requests')
         .update({ 
-          status: 'closed',
+          status: 'accepted',
           updated_at: new Date().toISOString()
         })
         .eq('id', offer.request_id);

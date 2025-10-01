@@ -15,3 +15,4 @@ export { default as UsersManagementScreen } from './UsersManagementScreen';
 export { default as PricingManagementScreen } from './PricingManagementScreen';
 export { default as BalanceScreen } from './BalanceScreen';
 export { default as AdminRequestOfferManagementScreen } from './AdminRequestOfferManagementScreen';
+export { default as AcceptedRequestsScreen } from './AcceptedRequestsScreen';

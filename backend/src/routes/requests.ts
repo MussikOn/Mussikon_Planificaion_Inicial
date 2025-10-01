@@ -125,7 +125,7 @@ router.get('/', authMiddleware, requestController.getRequests);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [active, closed, cancelled]
+ *           enum: [active, closed, cancelled, accepted]
  *         description: Filtrar por estado
  *       - in: query
  *         name: page
