@@ -376,6 +376,7 @@ export class OfferController {
           status: 'accepted',
           musician_id: offer.musician_id,
           musician_status: 'accepted',
+          accepted_by_musician_id: offer.musician_id,
           updated_at: new Date().toISOString()
         })
         .eq('id', offer.request_id);
@@ -417,18 +418,21 @@ export class OfferController {
       }
 
       // Close the request
-      const { error: closeRequestError } = await supabase
-        .from('requests')
-        .update({ 
-          status: 'accepted',
-          accepted_by_musician_id: offer.musician_id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', offer.request_id);
+      // This block is redundant as the request status is already updated above
+      // and accepted_by_musician_id is also set above.
+      // Removing this block to avoid duplicate updates and potential conflicts.
+      // const { error: closeRequestError } = await supabase
+      //   .from('requests')
+      //   .update({ 
+      //     status: 'accepted',
+      //     accepted_by_musician_id: offer.musician_id,
+      //     updated_at: new Date().toISOString()
+      //   })
+      //   .eq('id', offer.request_id);
 
-      if (closeRequestError) {
-        logger.error('Failed to close request:', closeRequestError);
-      }
+      // if (closeRequestError) {
+      //   logger.error('Failed to close request:', closeRequestError);
+      // }
 
       res.status(200).json({
         success: true,

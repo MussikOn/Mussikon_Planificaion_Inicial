@@ -112,10 +112,61 @@ CREATE TABLE public.requests (
   event_started_at timestamp with time zone,
   event_completed_at timestamp with time zone,
   started_by_musician_id uuid,
+  musician_id uuid,
+  musician_status character varying DEFAULT 'pending'::character varying CHECK (musician_status::text = ANY (ARRAY['pending'::character varying, 'accepted'::character varying, 'rejected'::character varying, 'completed'::character varying, 'cancelled'::character varying]::text[])),
+  accepted_by_musician_id uuid,
   CONSTRAINT requests_pkey PRIMARY KEY (id),
   CONSTRAINT requests_started_by_musician_id_fkey FOREIGN KEY (started_by_musician_id) REFERENCES public.users(id),
-  CONSTRAINT requests_leader_id_fkey FOREIGN KEY (leader_id) REFERENCES public.users(id)
+  CONSTRAINT requests_leader_id_fkey FOREIGN KEY (leader_id) REFERENCES public.users(id),
+  CONSTRAINT requests_musician_id_fkey FOREIGN KEY (musician_id) REFERENCES public.users(id),
+  CONSTRAINT requests_accepted_by_musician_id_fkey FOREIGN KEY (accepted_by_musician_id) REFERENCES public.users(id)
 );
+
+
+-- Añadir musician_id si no existe
+DO $$ BEGIN
+    ALTER TABLE public.requests ADD COLUMN musician_id uuid;
+EXCEPTION
+    WHEN duplicate_column THEN RAISE NOTICE 'column musician_id already exists in public.requests.';
+END $$;
+
+-- Añadir musician_status si no existe
+DO $$ BEGIN
+    ALTER TABLE public.requests ADD COLUMN musician_status TEXT;
+EXCEPTION
+    WHEN duplicate_column THEN RAISE NOTICE 'column musician_status already exists in public.requests.';
+END $$;
+
+-- Añadir accepted_by_musician_id si no existe
+DO $$ BEGIN
+    ALTER TABLE public.requests ADD COLUMN accepted_by_musician_id uuid;
+EXCEPTION
+    WHEN duplicate_column THEN RAISE NOTICE 'column accepted_by_musician_id already exists in public.requests.';
+END $$;
+
+-- Añadir la clave foránea para musician_id si no existe
+DO $$ BEGIN
+    ALTER TABLE public.requests ADD CONSTRAINT requests_musician_id_fkey FOREIGN KEY (musician_id) REFERENCES public.users(id) ON DELETE SET NULL;
+EXCEPTION
+    WHEN duplicate_object THEN RAISE NOTICE 'constraint requests_musician_id_fkey already exists on public.requests.';
+END $$;
+
+-- Añadir la clave foránea para accepted_by_musician_id si no existe
+DO $$ BEGIN
+    ALTER TABLE public.requests ADD CONSTRAINT requests_accepted_by_musician_id_fkey FOREIGN KEY (accepted_by_musician_id) REFERENCES public.users(id) ON DELETE SET NULL;
+EXCEPTION
+    WHEN duplicate_object THEN RAISE NOTICE 'constraint requests_accepted_by_musician_id_fkey already exists on public.requests.';
+END $$;
+
+-- Añadir la restricción CHECK para musician_status si no existe
+DO $$ BEGIN
+    ALTER TABLE public.requests ADD CONSTRAINT musician_status_check CHECK (musician_status IN ('pending', 'accepted', 'rejected', 'cancelled'));
+EXCEPTION
+    WHEN duplicate_object THEN RAISE NOTICE 'constraint musician_status_check already exists on public.requests.';
+END $$;
+
+
+
 CREATE TABLE public.user_balances (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL UNIQUE,
