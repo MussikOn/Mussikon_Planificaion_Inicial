@@ -830,4 +830,5 @@ export default apiService;
     created_at: string;
     leader: User;
     acceptedMusician?: User;
+    budget?: number; // Add budget field
   }

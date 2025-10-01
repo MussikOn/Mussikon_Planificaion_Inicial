@@ -22,6 +22,7 @@ export interface Request {
   fee: number;
   deadline: string;
   estimated_base_amount?: number;
+  budget?: number; // Add budget field
 }
 
 interface RequestsContextType {

@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
     church_name VARCHAR(255),
     location VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    budget DECIMAL(10,2)
 );
 
 -- User passwords table (separate for security)

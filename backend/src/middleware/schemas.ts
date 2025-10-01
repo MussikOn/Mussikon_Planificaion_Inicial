@@ -38,7 +38,8 @@ export const createRequestSchema = Joi.object({
   location: Joi.string().min(2).max(200).required(),
   extra_amount: Joi.number().min(0).optional(),
   description: Joi.string().max(1000).optional(),
-  required_instrument: Joi.string().required()
+  required_instrument: Joi.string().required(),
+  budget: Joi.number().min(0).optional()
 });
 
 export const createOfferSchema = Joi.object({

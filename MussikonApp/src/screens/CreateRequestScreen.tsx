@@ -19,7 +19,7 @@ import ScreenHeader from '../components/ScreenHeader';
 import { Button, ElegantIcon } from '../components';
 import ErrorHandler from '../utils/errorHandler';
 import PriceCalculator from '../components/PriceCalculator';
-import { priceCalculationService } from '../services/priceCalculationService';
+import { priceCalculationService, PriceCalculation } from '../services/priceCalculationService';
 
 const CreateRequestScreen: React.FC = () => {
   const { user, token } = useAuth();
@@ -39,6 +39,7 @@ const CreateRequestScreen: React.FC = () => {
     extra_amount: '', // Monto extra opcional para el músico
     required_instrument: '',
     description: '',
+    budget: '', // Add budget field
   });
 
   const eventTypes = [
@@ -185,6 +186,10 @@ const CreateRequestScreen: React.FC = () => {
     return true;
   };
 
+  const handlePriceCalculated = (calculation: PriceCalculation) => {
+    setFormData(prev => ({ ...prev, budget: calculation.total.toString() }));
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -200,6 +205,7 @@ const CreateRequestScreen: React.FC = () => {
         extra_amount: formData.extra_amount ? parseFloat(formData.extra_amount) : 0,
         required_instrument: formData.required_instrument,
         description: formData.description.trim(),
+        budget: formData.budget ? parseFloat(formData.budget) : 0, // Include budget
       };
 
       const response = await apiService.createRequest(requestData, token || undefined);
@@ -386,6 +392,7 @@ const CreateRequestScreen: React.FC = () => {
               startTime={formData.start_time}
               endTime={formData.end_time}
               token={token}
+              onPriceCalculated={handlePriceCalculated} // Pass the callback
               showDetails={false} // Leaders don't see detailed breakdown
             />
           )}

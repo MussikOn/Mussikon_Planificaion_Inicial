@@ -129,6 +129,7 @@ export interface CreateRequestRequest {
   estimated_base_amount?: number;
   description?: string;
   required_instrument: string;
+  budget?: number;
 }
 
 // Offer Types
